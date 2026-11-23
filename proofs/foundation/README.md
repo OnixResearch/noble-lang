@@ -714,6 +714,7 @@ premise.
 | PO-05 ownership | Effects layer: `Effects.owners_step` (OWN-PO-1 for this model: every typed step permutes the owner multiset of stack plus frame-held resources and keeps the live set and fresh counter, except a permitted `acquire`, which adds exactly the fresh id, and a permitted `release`, which consumes exactly the released id; `dip`, `restore`, both branch steps, `run` and `compose` included), `own_preserve` (the owners are a permutation of the host live set, no duplicates, fresh ids), `live_change` (the live set changes only by a recorded, permitted `acquire` or `release`; moves are permutations), `reachable_sound`, `move_then_release`, `dip_holds_resource_in_frame` (the stack-only count fails while a held resource sits in a frame), `branch_carries_resource`, `forged_frame_refused` | `WT E c`, `Own c` | temporaries/heap, borrowing, abnormal-stop cleanup (state is preserved but not cleaned, frames included), aggregates, whole language (#3) |
 | PO-06 recursive eligibility | MC1: `program_duplicable`. Effects layer: `ValT.rfree`/`OpT.rfree`/`CodeT.rfree` (typed programs contain no resource at any nesting depth), `KontT.rfree` and `typed_rfree` (every stack program is resource-free; the continuation is too, except that a `restore` frame may hold a resource token directly), `program_expecting_resource_is_copyable` | `WT E c` | aggregates (pairs/lists) and named captures (MC1 aggregates carry no resources; this layer has no aggregates), #3/#11 vocabulary |
 | PO-05/PO-06 extended model (aggregates, named definitions, case forms, heap) | `OwnershipModel.owners_step` (OWN-PO-1 over the extended language, with `acquire`, `release` and `alloc` as the declared transitions), `own_preserve`, `own_reach`, `live_change`, `typed_rfree`, `ValT.rfree`, `ValT.programsRFree`, `CodeT.rfree`, `KontT.rfree`, `HeapT.rfree`, `quote_capture_rfree`, `alloc_store_rfree`, `reachable_sound`; structure: `preserve`, `preserve_reach`, `progress`, `CodeT.append`, `CodeT.appendKont`; heap: `heap_safe_step`, `heap_safe_reach`, `init_heap_safe`; controls: `pair_unpair_round_trip`, `sum_case_selects_arm`, `list_case_selects_arm`, `call_runs_named_body`, `call_interface_exact`, `alloc_then_drop_keeps_cell`, `run_pins_program`, `dip_holds_aggregate_in_frame`, and the resource negatives `dup_pair_res_untypable`, `drop_sum_res_untypable`, `drop_list_res_untypable`, `alloc_res_untypable` | `WT D E c` (stack, continuation frames and heap included); `Reach D H (init p)` with cell-free source and `DefsCellFree D` for `reachable_sound` | the whole language; OWN-PO-2 (no borrow profile selected), OWN-PO-4..7 lowering/runtime/host-ledger correspondence, storage reclamation and heap reads |
+| PO-04/PO-05/PO-06 wiring T/O/F models | `step_trace_any`, `step_trace`, `effect_sound`, `trace_within_bound`, `trace_prefix`, `halted_no_step`, `halted_reach_eq`, `halted_trace_final`, `step_append_code`, `reach_append_code`, `execFrom_append`, `execFrom_then`; word executions `first_execFrom`, `second_execFrom`, `split_execFrom`, `fanout_execFrom`, `left_inl_execFrom`, `left_inr_execFrom`, `right_inr_execFrom`, `right_inl_execFrom`, `choose_inl_execFrom`, `choose_inr_execFrom`, `join_inl_execFrom`, `join_inr_execFrom`, `ifte_true_execFrom`, `ifte_false_execFrom`, `quote_run_execFrom`, `compose_run_execFrom`, `dip_execFrom`, `dipValue_execFrom`, `runValue_execFrom`; law statements `then_left_id`, `then_right_id`, `then_assoc`, `apply_quote`, `apply_compose`, `under_fuse`, `pair_unpair_exec`, `unpair_pair_exec`, `swap_swap_exec`, `first_fuse`, `split_first_second`, `fanout_dup_pair_split`, `left_beta_inl`, `left_beta_inr`, `branch_true`, `branch_false`, `behavioral_not_identity`; counterexamples `exchange_changes_trace`, `exchange_changes_failure_point`; F model `typed_not_stuck`, `underflow_stuck`, `wrong_shape_stuck`, `result_error_is_normal`, `retireOne_live`, `retireOne_retired`, `retireOne_idempotent`, `retireOne_identity`, `retire_live`, `retire_retired`, `retire_single_idempotent`, `retire_next`, `retired_never_reacquired`, `retire_then_acquire_keeps_retired`, `normal_cleanup_is_guest`, `abnormal_cleanup_is_host`; O controls `under_holds_resource_in_frame`, `owners_track_multiplicity`, `fanout_at_resource_untypable`, `project_first_at_resource_untypable`, `quote_at_resource_untypable`, `pair_with_resource_not_copy`, `sum_with_resource_not_copy`, `list_with_resource_not_copy`, `program_interface_resource_is_copyable` | the extended ownership model's step relation, an explicit trace history, and the host boundary; the committed words are instruction sequences, so each ownership claim is an `OwnershipModel.owners_step` instance | the resolved T/O/F law-matrix entries and the wire frame bundle: resource-admitting execution does not exist (the backend admits no resource type), so no T/O/F matrix entry is claimed and no frame bundle is packaged |
 | PO-07 construction/execution | `construction_is_pure`, `latent_effect_not_performed`, `PExpr.exec_code`, `PExpr.exec_code_run`, `BehEq.append`, `BehEq.run`, `compose_assoc`, `compose_identity` | normal returns; `BehEq` observation | effectful laws (same host responses, ordered traces), allocation/quota (deliberately not promised) |
 | PO-08 recipe/quotation/reflection | `quote_laws`, `reflect_compose`, `PExpr.exec_code_reflect`, `exec_quote_program_run_run` | — | recipe *normalization* (MC1 does not normalize), named-definition reflection |
 | negative: behavior ≠ recipe | `behavior_is_not_recipe` (`1 1 +` vs `2`; `BehEq` is not a congruence under `reflect`) | — | — |
@@ -4488,6 +4489,75 @@ borrowing (the owner selected no borrow profile), abnormal cleanup, and any
 lowering, runtime or host-ledger correspondence (OWN-PO-4..7). No theorem in
 this module says anything about the Rust checker, emitted Wasm or the host
 ledger.
+
+## Wiring trace, ownership and failure models (`NobleFoundation/WiringLaws.lean`)
+
+This module develops the T, O and F observation models that
+`resource-safe-wiring-laws` names, over the extended ownership language. It
+does not change `OwnershipModel`; the wiring words are instruction sequences
+in that language, so every ownership result is an `OwnershipModel.owners_step`
+instance and there is no second ownership judgment.
+
+- **T.** `step_trace_any` says every step either keeps the trace or appends
+  one event; `step_trace` adds the declared-bound membership for typed
+  configurations; `effect_sound` and `trace_within_bound` carry that to every
+  finite prefix, including denied and failed requests; `trace_prefix` says a
+  reached trace has the starting trace as a prefix. `step_append_code`,
+  `reach_append_code` and `execFrom_append` make `p ++ q` run `p` to
+  completion and only then `q`.
+- **Wiring words.** `first_execFrom`, `second_execFrom`, `split_execFrom`,
+  `fanout_execFrom`, `left_inl_execFrom`, `left_inr_execFrom`,
+  `right_inr_execFrom`, `right_inl_execFrom`, `choose_inl_execFrom`,
+  `choose_inr_execFrom`, `join_inl_execFrom`, `join_inr_execFrom`,
+  `ifte_true_execFrom` and `ifte_false_execFrom` are the model runs of the
+  design's derived words. `quote_run_execFrom` and `compose_run_execFrom`
+  cover L4.
+- **Per-law T statements.** `then_left_id`, `then_right_id`, `then_assoc`,
+  `apply_quote`, `apply_compose`, `under_fuse`, `pair_unpair_exec`,
+  `unpair_pair_exec`, `swap_swap_exec`, `first_fuse`, `split_first_second`,
+  `fanout_dup_pair_split`, `left_beta_inl`, `left_beta_inr`, `branch_true`
+  and `branch_false`. `behavioral_not_identity` is L14: equal result and
+  trace, different program.
+- **L9 counterexamples.** `exchange_changes_trace` gives the two orders the
+  same normal result and different traces `1,2` versus `2,1` under T.
+  `exchange_changes_failure_point` gives a host that permits the first
+  request and denies the second: both orders abort, but the failed request
+  and the recorded cleanup point differ. Earlier effects are not rolled
+  back, and `halted_reach_eq`/`halted_trace_final` show that no later program
+  starts after a halt.
+- **O.** `under_holds_resource_in_frame` shows a held resource in exactly one
+  `restore` frame with an empty stack-only owner count; `owners_track_multiplicity`
+  shows a pair holding the same resource twice contributes two owners and
+  cannot satisfy `Own` with a duplicate-free live set;
+  `fanout_at_resource_untypable`, `project_first_at_resource_untypable` and
+  `quote_at_resource_untypable` are the O11-7 refusals at `dup`, `drop` and
+  `quote`. `pair_with_resource_not_copy`, `sum_with_resource_not_copy` and
+  `list_with_resource_not_copy` are the recursive exclusions, while
+  `program_interface_resource_is_copyable` shows a Program interface may
+  mention a resource without making the Program value resource-owning.
+- **F.** The step relation has `running`, `denied` and `failed`; trap,
+  cancellation and quota exhaustion are host-profile classes
+  (`FailureClass`, `Outcome`). `typed_not_stuck` shows typed running
+  configurations are never stuck; `underflow_stuck` and `wrong_shape_stuck`
+  are untyped stuck states, not traps; `result_error_is_normal` shows an
+  ordinary error value is a normal return. The host boundary model proves
+  `retireOne_live`, `retireOne_retired`, `retireOne_idempotent`,
+  `retireOne_identity`, `retire_live`, `retire_retired`,
+  `retire_single_idempotent`, `retire_next`, `retired_never_reacquired` and
+  `retire_then_acquire_keeps_retired`. `normal_cleanup_is_guest` keeps the
+  normal-path claim with the guest; `abnormal_cleanup_is_host` shows a halted
+  guest cannot run cleanup, so the host retirement model is a separate
+  claim. The boundary model states the single-id repeat-retirement rule; the
+  general list form is not claimed here.
+
+Every theorem is a model claim. The resolved T/O/F law-matrix entries and
+the `wire@1.frame-laws` bundle remain unclaimed: the selected backend admits
+no resource type (`crates/noble-cli/src/core/runtime/abi.json` says "No
+resource types are admitted by this backend"; lowering and worker ingress
+refuse non-`Data` values at
+`crates/noble-wasm/src/component/lower/operations.rs` and
+`crates/noble-cli/src/core/worker_value.rs`). Resource-admitting execution is
+therefore still an open implementation gate, and no frame bundle is packaged.
 
 ## Historical revision-1 checked interaction-net contract (issue #37, phase 1)
 

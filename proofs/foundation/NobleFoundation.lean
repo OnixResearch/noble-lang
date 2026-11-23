@@ -141,3 +141,4 @@ import NobleFoundation.GuardedRewrite
 import NobleFoundation.GuardedRewriteCorpus
 import NobleFoundation.SizeChangeSound
 import NobleFoundation.RecurrentBitCell
+import NobleFoundation.WiringLaws

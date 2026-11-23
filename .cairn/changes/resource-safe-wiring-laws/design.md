@@ -518,6 +518,36 @@ MEASURED with the prebuilt development CLI on 2026-11-20:
 - Boundary measurements: with 254 identities consumed, `split` (4 more) is refused while `project_first` (1 more, 255 of 256) is admitted and a program that instantiates nothing still runs. With 252 consumed, the effectful `split` (5 more) is refused; with 251 it runs and its trace records both `test.emit` requests in order. A fresh session admits both forms.
 - No default budget changed. `wire::split_refusal_is_the_session_cumulative_budget` in `crates/noble-cli/tests/smoke.rs` pins the refusal, its diagnostic, the absence of any guest or host request, and the admitted neighbours, so the budget cannot move silently.
 
+### Resource-admitting execution (2026-11-23)
+
+**Status: not implemented; no T/O/F matrix entry is claimed.** The selected
+backend admits no resource type. The minimal support the frame bundle and the
+resolved T/O/F entries need is not a bounded edit in one crate:
+
+- `crates/noble-cli/src/core/runtime/abi.json` has no `Resource` value tag or
+  cell layout, and its `signature_grammar` states "No resource types are
+  admitted by this backend";
+- `crates/noble-wasm/src/component/lower/operations.rs` refuses non-`Data`
+  operands at `dup` and `drop`, so a resource value has no lowering path;
+- `crates/noble-cli/src/core/worker_value.rs` refuses non-`Data` worker
+  ingress, so no resource can enter an invocation through the worker
+  boundary;
+- `crates/noble-kernel/src/types/data.rs` excludes `Resource` (and `LiveRef`)
+  recursively from `Data`; `crates/noble-kernel/src/contracts.rs` refuses a
+  resource-bearing nominal in a live slot;
+- `crates/noble-wasm/src/signatures.rs` can intern resource type identities
+  for source checking, but the runtime has no tag, transfer or retirement
+  path for one.
+
+A resource-admitting implementation would therefore need a new ABI tag and
+representation, lowering for construction/move/acquire/release and invocation
+transfers, worker ingress and egress, host retirement across an invocation
+boundary, and a test adapter. That is a cross-crate runtime feature, not a
+reviewable slice of this change. The Lean model in
+`proofs/foundation/NobleFoundation/WiringLaws.lean` states the T/O/F
+properties it can, and the frozen `OwnershipModel`; the matrix entries and
+`wire@1.frame-laws` stay open until that execution profile exists.
+
 ## Coordination
 
 - **#2 (GPU) and #14 (numeric graph):** the Decision 6 analysis is only an input to their separate eligibility and cost models.
