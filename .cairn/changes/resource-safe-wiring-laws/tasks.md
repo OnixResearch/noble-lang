@@ -88,6 +88,18 @@
   `retired_never_reacquired`, `retire_then_acquire_keeps_retired`,
   `normal_cleanup_is_guest`, `abnormal_cleanup_is_host`.
 
+  Obligation mapping: PO-04/V-MODEL-04 through `effect_sound`,
+  `trace_within_bound` and `trace_prefix`; PO-05/V-RESOURCE-01 through the
+  `Own` invariant, `owners_track_multiplicity` and
+  `under_holds_resource_in_frame`; PO-06/V-RESOURCE-02 through
+  `pair_with_resource_not_copy`, `sum_with_resource_not_copy`,
+  `list_with_resource_not_copy`, `program_interface_resource_is_copyable`,
+  `fanout_at_resource_untypable`, `project_first_at_resource_untypable` and
+  `quote_at_resource_untypable`; V-MODEL-03 through `typed_not_stuck`,
+  `underflow_stuck`, `wrong_shape_stuck` and `result_error_is_normal`;
+  V-RESOURCE-03 through `normal_cleanup_is_guest`,
+  `abnormal_cleanup_is_host` and the separate host-boundary lemmas.
+
   Resource-admitting execution is **not** developed, so the box stays
   unchecked and no T/O/F law-matrix entry or `wire@1.frame-laws` package is
   claimed. The selected backend admits no resource type:
