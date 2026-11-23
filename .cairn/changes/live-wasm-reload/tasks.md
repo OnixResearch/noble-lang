@@ -387,8 +387,26 @@ from a fresh receipt that observes [24, 21] and every other expected field,
 including the case's own `[ addone ]` submission held in flight at the
 `in-flight-execution` seam.
 
-- [ ] [serial] Implement resident live CLI/reload/watch, complete dependent rebuild, atomic safepoint publication, stable typed stack and bounded code retirement. r[K-LIVE-01] r[H-LIVE-01] r[H-LIVE-02] r[H-LIVE-03] r[DX-LIVE-01]
-- [ ] [serial] Exercise every LIVE case against actual source, selected VM and hostile controls with source-bound receipts and separately classify proof/assumptions before acceptance. r[V-LIVE-01] r[EV-LIVE-01]
+- [x] [serial] Implement resident live CLI/reload/watch, complete dependent rebuild, atomic safepoint publication, stable typed stack and bounded code retirement. r[K-LIVE-01] r[H-LIVE-01] r[H-LIVE-02] r[H-LIVE-03] r[DX-LIVE-01]
+  Evidence 2026-11-22 (batch 6): implemented and exercised by the promoted LIVE cases of
+  `verification/live-cases/acceptance-2026-11-22-b6.json`: resident `noble live repl`/`:reload`
+  and `noble live watch --source` (LIVE-01, LIVE-05); complete dependent rebuild for host reloads
+  (LIVE-02); atomic safepoint publication with the ACK after commit and in-flight frames on their
+  old generation (LIVE-01, the LIVE-02 seam); stable typed stack (`:generation`, every report's
+  `stack`); bounded code retirement (`retired_code_spans`, `--max-retained-generations`, LIVE-05's
+  budget refusal). Recorded deviations: the declared profile selects modules through
+  `--declared-modules --bindings MANIFEST`, not DX-LIVE-01's `--module FILE ...`; a guest self-edit
+  proposal whose definition has a current effective dependent is refused rather than rebuilt
+  (K-LIVE-02 profile).
+- [x] [serial] Exercise every LIVE case against actual source, selected VM and hostile controls with source-bound receipts and separately classify proof/assumptions before acceptance. r[V-LIVE-01] r[EV-LIVE-01]
+  Evidence 2026-11-22 (batch 6): one run of the LIVE gate on clean `0143b7b9` observed every
+  field of LIVE-01..10 (102 commands, 124 reports); receipt
+  `verification/live-cases/acceptance-2026-11-22-b6.json` (`sha256:ceb6ea602f1482730e2efd464d08158c354d7e637c5c3a143a8597d28f7fc9e5`,
+  source revision `sha256:97cac934…`). LIVE-08 and LIVE-10 are promoted for the first time and
+  LIVE-01..07 and 09 are re-cited from it. The receipt's non-claims classify proof and assumptions
+  per case: every promoted case keeps proof open, and LIVE-08's Lean recheck, LIVE-10's two
+  feature-build fault models (decision 41) and LIVE-02's script (decision 21a) are explicit
+  assumptions there.
   Progress 2026-11-22 (integrator decision 42): LIVE-08's proof-required admission is implemented
   as a bounded live profile. `noble live repl --require-proof NAME` makes every admission of
   `NAME` consume one offer staged by `:evidence ABS_CONTRACT ABS_PROOF`. The offer is rechecked by
@@ -402,7 +420,10 @@ including the case's own `[ addone ]` submission held in flight at the
   LIVE-08 field, including the old source's emitted bytes served for the new candidate through the
   existing byte seam (expected refusal: `artifact-replay`). The task is ticked when the batch-6 gate
   receipt promoting LIVE-01..10 is retained.
-- [ ] [serial] Complete host-granted guest self-edit with compiler-bound originating identity, effectful generation observation, typed pure Program proposal during actual Wasm invocation, bounded enqueue, post-return independent admission and one-use generation CAS; exercise LIVE-09/10 including retained-old-Program denial, rearm, traps, effects and guest/file provenance. Keep both cases absent/not-run until executed. r[K-LIVE-02] r[H-LIVE-04]
+- [x] [serial] Complete host-granted guest self-edit with compiler-bound originating identity, effectful generation observation, typed pure Program proposal during actual Wasm invocation, bounded enqueue, post-return independent admission and one-use generation CAS; exercise LIVE-09/10 including retained-old-Program denial, rearm, traps, effects and guest/file provenance. Keep both cases absent/not-run until executed. r[K-LIVE-02] r[H-LIVE-04]
+  Evidence 2026-11-22 (batch 6): LIVE-09 is re-cited and LIVE-10 promoted from
+  `verification/live-cases/acceptance-2026-11-22-b6.json` (integrator decision 41 for LIVE-10's
+  dropped foreign-session variant and its two feature-build fault models).
 
   Progress (live-seams, 2026-11-20): LIVE-09 is executed and promoted by the receipt above (two real children, generations 1→2, derived `[ 2 + ]`/`[ 3 + ]`, refused effect-increasing file restore, grant retention, file/compiler provenance). LIVE-10 is executed for every representable variant (old-Program owner-mismatch denial, rearm, stale generation, replayed proposal, work-quota trap, retained-generation budget, unsupported `[ ]` recipe, snapshot tamper, tampered candidate bytes, static refusals, positive B commit) and remains `absent`/`not-run` because `foreign-session-grant` has no cross-session grant input and `shadow-stage-failure` plus the enqueue/publication generation CAS need host seams this slice did not add. Task 4 stays open for those two case variants or a separately owner-approved case amendment.
   Progress 2026-11-22 (integrator decision 41): LIVE-10's two remaining host-callback variants and
