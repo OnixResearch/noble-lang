@@ -24,7 +24,9 @@ pub(crate) const VIEW_SCHEMA: &str = "noble-goal-view/v1";
 
 /// The Lean release the pinned consumer accepts; `workflow::USAGE` states it.
 const LEAN_RELEASE: &str = "4.35.0";
-const ALLOWED_AXIOMS: [&str; 3] = ["propext", "Classical.choice", "Quot.sound"];
+/// The consumer's allowed axioms; live-slot selected-target evidence declares
+/// exactly these as its assumptions.
+pub(crate) const ALLOWED_AXIOMS: [&str; 3] = ["propext", "Classical.choice", "Quot.sound"];
 const KEY_FORMAT: &str = "<module>@<version>/<declaration>/<revision>[/<site-path>]";
 const STACK_ORDER: &str = "bottom-first; the last entry is top";
 const PARTIAL_CORRECTNESS: &str = "partial-correctness";

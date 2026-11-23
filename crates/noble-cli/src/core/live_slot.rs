@@ -13,6 +13,8 @@ use std::sync::{
     Arc, Condvar, Mutex,
 };
 
+#[path = "live_slot_evidence.rs"]
+mod evidence;
 #[path = "live_slot_origin.rs"]
 mod origin;
 
@@ -458,6 +460,8 @@ struct Slot {
     output: Vec<String>,
     ceiling: Vec<String>,
     proof_required: bool,
+    /// The exact contract a proof-required slot's evidence must prove.
+    claim: Option<String>,
 }
 
 struct Authority {
@@ -469,6 +473,8 @@ struct Authority {
     grants: Vec<Value>,
     resources: Vec<Resource>,
     slots: BTreeMap<String, Slot>,
+    /// The consumer's wall-clock budget for one selected-target evidence recheck.
+    proof_timeout_ms: u64,
 }
 
 struct Candidate {
@@ -525,6 +531,8 @@ struct CompositeOwner {
     saved_cell: Value,
     identity: Value,
     manifest: Value,
+    /// The closed quotation this target instantiates, for selected-target evidence.
+    subject: Option<String>,
 }
 
 struct ReplayOwner {
@@ -978,6 +986,14 @@ fn refusal(stage: &str, diagnostic: &str) -> Value {
         "outcome":"refused", "diagnostic":diagnostic})
 }
 
+/// A selected-target evidence refusal: decided before the worker sees the
+/// publication, so nothing is published or executed.
+fn evidence_refusal(code: &str, diagnostic: &str, record: Value) -> Value {
+    json!({"schema":"noble-live-slot-report/v1", "stage":"selected-target-evidence",
+        "outcome":"refused", "refusal":code, "diagnostic":diagnostic,
+        "evidence_admission":record, "guest_requests":0, "protected_operations":0})
+}
+
 fn operator_pipe() -> Result<(), String> {
     let metadata = std::fs::metadata("/proc/self/fd/0")
         .map_err(|error| format!("cannot identify host operator ingress: {error}"))?;
@@ -1178,6 +1194,7 @@ fn load_authority(path: &std::path::Path) -> Result<Authority, String> {
             "resources",
             "slots",
             "sources",
+            "proofTimeoutMs",
         ],
     )?;
     let owner = text(&manifest, "owner", 256)?.to_owned();
@@ -1186,6 +1203,13 @@ fn load_authority(path: &std::path::Path) -> Result<Authority, String> {
         .and_then(Value::as_u64)
         .filter(|quota| (1..=16384).contains(quota))
         .ok_or_else(|| reject("authority requires a bounded retention quota"))?;
+    let proof_timeout_ms = match manifest.get("proofTimeoutMs") {
+        None => crate::workflow::DEFAULT_TIMEOUT,
+        Some(value) => value
+            .as_u64()
+            .filter(|limit| (1..=crate::workflow::MAX_TIMEOUT).contains(limit))
+            .ok_or_else(|| reject("authority proofTimeoutMs must be from 1 through 600000"))?,
+    };
     let effects = strings(&manifest, "effects", 4)?;
     let mut seen = BTreeSet::new();
     for name in &effects {
@@ -1316,6 +1340,7 @@ fn load_authority(path: &std::path::Path) -> Result<Authority, String> {
                 "output",
                 "effectCeiling",
                 "proofRequired",
+                "claim",
             ],
         )?;
         let name = id(row, "slotId")?;
@@ -1326,6 +1351,15 @@ fn load_authority(path: &std::path::Path) -> Result<Authority, String> {
             .get("proofRequired")
             .and_then(Value::as_bool)
             .ok_or_else(|| reject("slot proofRequired must be explicit"))?;
+        // A proof-required slot may select the exact contract its evidence
+        // must prove; without one it refuses every publication.
+        let claim = row
+            .get("claim")
+            .map(|_| text(row, "claim", 8192).map(str::to_owned))
+            .transpose()?;
+        if claim.is_some() && !proof_required {
+            return Err(reject("only a proof-required slot selects a claim"));
+        }
         if slots
             .insert(
                 name,
@@ -1334,6 +1368,7 @@ fn load_authority(path: &std::path::Path) -> Result<Authority, String> {
                     output,
                     ceiling,
                     proof_required,
+                    claim,
                 },
             )
             .is_some()
@@ -1350,6 +1385,7 @@ fn load_authority(path: &std::path::Path) -> Result<Authority, String> {
         grants: checked_grants,
         resources,
         slots,
+        proof_timeout_ms,
     })
 }
 
@@ -2098,6 +2134,11 @@ impl Host {
             "define" => return self.define(request),
             "install" => return self.install(request),
             "candidate" => return self.stage_candidate(request),
+            // Selected-target evidence decides before anything reaches the
+            // worker; only an admitted record publishes.
+            "publish" if request.get("evidence").is_some() => {
+                return self.evidence_publication(request);
+            }
             "publish" | "rollback" => {
                 object(
                     request,
@@ -2864,6 +2905,102 @@ impl Host {
         Ok(manifest)
     }
 
+    /// Publish one checked returned target into a proof-required slot with
+    /// one selected-target evidence record (LSLOT-05). The record is decided
+    /// before anything reaches the worker; a refusal publishes and executes
+    /// nothing, and an admitted record never changes the target's identity.
+    fn evidence_publication(&mut self, request: &Value) -> Result<Value, String> {
+        object(
+            request,
+            &[
+                "operation",
+                "slot",
+                "owner",
+                "expected_epoch",
+                "expected_incarnation",
+                "expected_generation",
+                "evidence",
+            ],
+        )?;
+        let slot = id(request, "slot")?;
+        self.require_grant("publish", Some(&slot), None)?;
+        let contract = self
+            .authority
+            .slots
+            .get(&slot)
+            .ok_or_else(|| reject("unregistered selected slot contract"))?
+            .clone();
+        let owner = text(request, "owner", 256)?.to_owned();
+        let composite = self
+            .programs
+            .get(&owner)
+            .and_then(|saved| saved.composite.clone())
+            .ok_or_else(|| {
+                reject("selected-target evidence names no checked returned target owner")
+            })?;
+        let identity = &composite.identity["interface"];
+        if !contract.proof_required
+            || identity["input"] != json!(contract.input)
+            || identity["output"] != json!(contract.output)
+            || identity["effects"] != json!(Vec::<String>::new())
+        {
+            return Err(reject(
+                "selected-target evidence requires a proof-required slot with the target's exact interface",
+            ));
+        }
+        let manifest = self.checked_composite_for_publication(&owner)?;
+        let Some(claim) = contract.claim.as_deref() else {
+            return Ok(evidence_refusal(
+                "claim-unselected",
+                "the proof-required slot selects no claim",
+                json!({"decision":"refused","refusal":"claim-unselected"}),
+            ));
+        };
+        let Some(subject) = composite.subject.as_deref() else {
+            return Ok(evidence_refusal(
+                "subject-unavailable",
+                "the selected target's template has no closed subject",
+                json!({"decision":"refused","refusal":"subject-unavailable"}),
+            ));
+        };
+        let target = evidence::Target {
+            identity: &composite.identity,
+            subject,
+        };
+        let record = match evidence::admit(
+            claim,
+            &target,
+            &request["evidence"],
+            self.authority.proof_timeout_ms,
+        ) {
+            Ok(record) => record,
+            Err(refusal) => {
+                return Ok(evidence_refusal(
+                    &refusal.code,
+                    &refusal.diagnostic,
+                    refusal.record,
+                ));
+            }
+        };
+        let record_sha256 = crate::workflow::intrinsic::sha256(
+            &serde_json::to_vec(&record)
+                .map_err(|_| reject("evidence record cannot be encoded"))?,
+        );
+        let message = json!({"operation":"publish","slot":slot,"owner":owner,
+            "target_manifest":manifest,"proof_required":true,
+            "evidence":{"program_value_id":composite.identity["program_value_id"],
+                "definition_id":composite.identity["definition_id"],
+                "artifact_sha256":composite.identity["artifact_sha256"],
+                "record_sha256":record_sha256},
+            "interface":{"input":contract.input,"output":contract.output,
+                "effectCeiling":contract.ceiling,"proofRequired":true}});
+        let message = self.cas(request, message)?;
+        let mut reply = self.send(&message, &[])?;
+        reply["evidence_admission"] = record;
+        reply["evidence_record_sha256"] = json!(record_sha256);
+        Ok(reply)
+    }
+
     fn publication(&mut self, request: &Value, op: &str) -> Result<Value, String> {
         let slot = id(request, "slot")?;
         self.require_grant(op, Some(&slot), None)?;
@@ -3354,6 +3491,19 @@ impl Host {
                 None
             };
             let mut identity = identity;
+            // A target whose template has no closed rendering keeps its
+            // identity; it simply cannot carry selected-target evidence.
+            let subject = origin::anonymous_target_subject(
+                &origin.checked_metadata,
+                &candidate.programs,
+                position,
+                &candidate.output[position],
+                cell,
+                graph,
+                inputs,
+            )
+            .ok()
+            .flatten();
             let saved = self
                 .programs
                 .get_mut(&owner)
@@ -3370,6 +3520,7 @@ impl Host {
                     saved_cell: cell.clone(),
                     identity: identity.clone(),
                     manifest,
+                    subject,
                 });
             } else {
                 saved.composite_unavailable = true;

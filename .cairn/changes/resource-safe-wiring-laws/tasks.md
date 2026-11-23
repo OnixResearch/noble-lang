@@ -36,7 +36,7 @@
   `wire::fanout_at_a_resource_names_the_library_word`); `cargo test -p noble-cli --test smoke
   wire::` — 2 passed (`wire::runs_in_a_fresh_declared_session`,
   `wire::split_refusal_is_the_session_cumulative_budget`).
-- [ ] [serial] Prove `Wire.*` theorems for L1-L8 and L10-L14 in the pure MC1 fragment. This includes the general frame lemma and whitelisting `List.nil_append`/`List.append_nil`. Package `wire@1.seq-laws` only after #7 bundle support exists. r[WIRE-LAW-01] r[WIRE-EVID-01]
+- [x] [serial] Prove `Wire.*` theorems for L1-L8 and L10-L14 in the pure MC1 fragment. This includes the general frame lemma and whitelisting `List.nil_append`/`List.append_nil`. Package `wire@1.seq-laws` only after #7 bundle support exists. r[WIRE-LAW-01] r[WIRE-EVID-01]
   Progress (2026-11-09): the Lean half is proved in the pure MC1 model, outside the source-proof
   vocabulary. `proofs/mc1/NobleContracts/Wire.lean` inlines the `wire@1` bodies (route (a)) and
   proves L1-L8 and L10-L14 as `Exec` equivalences, plus the general frame lemma `exec_frame`
@@ -45,6 +45,11 @@
   require, and L7 assumes every result of `p` has a top value, which `Program<S+A,S+C>`
   guarantees. Still open: whitelisting `List.nil_append`/`List.append_nil` in the reviewed
   source-proof vocabulary, and packaging `wire@1.seq-laws`, which waits for #7 bundle support.
+  Closed (2026-11-22, owner decision 52): the whitelist landed with reusable-contract-calls'
+  NamedV3 task, which pins `List.append_assoc`, `List.nil_append` and `List.append_nil` as exact
+  reviewed rule identities in `ContractGate.lean` (accepted 2026-11-20). Packaging
+  `wire@1.seq-laws` moves into reusable-contract-calls' law-bundle task, which owns bundle
+  support; this task is ticked with the proofs and the frame lemma it states.
 - [ ] [serial] Develop trace, ownership and failure models: PO-04, PO-05, PO-06, V-MODEL-03/04 and V-RESOURCE-01..03. Develop resource-admitting execution before claiming any T, O or F entry or packaging the frame bundle. r[WIRE-LAW-01] r[WIRE-EVID-01]
 - [ ] [serial] At sync, register WIRE-CASE-01 to 24 as conformance designs and add a `WIRE` route to `tools/check-specs.mjs` `ROUTES`. Then execute with independent expectations and retain receipts without promoting proof status. r[WIRE-EVID-01]
 - [ ] [serial] Implement the optional known-graph analysis and validate any flattening optimization by artifact correspondence (#10, PO-17) under the declared quota policy. Consider archive only after implementation, evidence and separately reviewed gates. r[WIRE-GRAPH-01]

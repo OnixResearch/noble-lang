@@ -134,6 +134,7 @@ class TraceCapacityError extends Error {}
 export class SlotRegistry {
   #current = Object.freeze({ epoch: 0n, map: new Map() });
   #incarnations = new Map();
+  #firstGenerations = new Map();
   #versions = new Map();
   #roots = new Map();
   #frozen = new Map();
@@ -160,7 +161,7 @@ export class SlotRegistry {
 
   constructor({ quota, knownEffects, authorize, performEffect, previewEffect = null, retireTarget,
     retainProgram = null, releaseProgramBackend = null, verifyEvidence = null, maxSlots = 128,
-    traceAdmission = null }) {
+    traceAdmission = null, counterFixture = null }) {
     if (!Number.isSafeInteger(quota) || quota < 1 || quota > 16384
       || !Number.isSafeInteger(maxSlots) || maxSlots < 1 || maxSlots > 16384
       || typeof authorize !== 'function' || typeof performEffect !== 'function'
@@ -181,6 +182,29 @@ export class SlotRegistry {
     this.#releaseProgramBackend = releaseProgramBackend;
     this.#verifyEvidence = verifyEvidence;
     this.#traceAdmission = traceAdmission;
+    if (counterFixture !== null) this.#seedCounters(counterFixture);
+  }
+
+  // In-process fixtures only (LREF-CASE-02); the slot engine never passes one. It starts the
+  // registry at a global epoch, records a slot's last incarnation and the generation of a slot's
+  // first publication, so each counter's maximum is reachable without 2^64 operations.
+  #seedCounters(fixture) {
+    const pairs = (value, label) => {
+      if (!Array.isArray(value) || value.length > SLOT_LIMIT
+        || value.some(pair => !Array.isArray(pair) || pair.length !== 2)) throw Error(`invalid ${label}`);
+      return value.map(([slot, count]) => [slotName(slot), slotInteger(count, label)]);
+    };
+    if (!fixture || typeof fixture !== 'object' || Object.keys(fixture)
+      .some(key => !['epoch', 'incarnations', 'firstGenerations'].includes(key))) {
+      throw Error('invalid counter fixture');
+    }
+    const epoch = slotInteger(fixture.epoch ?? 0n, 'fixture epoch');
+    const incarnations = pairs(fixture.incarnations ?? [], 'fixture incarnation');
+    const generations = pairs(fixture.firstGenerations ?? [], 'fixture first generation');
+    if (generations.some(([, generation]) => generation === 0n)) throw Error('invalid fixture first generation');
+    this.#current = Object.freeze({ epoch, map: new Map() });
+    for (const [slot, incarnation] of incarnations) this.#incarnations.set(slot, incarnation);
+    for (const [slot, generation] of generations) this.#firstGenerations.set(slot, generation);
   }
 
   get epoch() { return this.#current.epoch; }
@@ -313,7 +337,12 @@ export class SlotRegistry {
     this.#retire('candidate-discard');
   }
 
-  #candidate(version, required, evidence) {
+  // Admission (`attested`) also demands the host's one-shot attestation of the
+  // evidence for the publication in progress. A dispatch re-checks a version the
+  // map already admitted: its retained record must still bind the version
+  // exactly, but the publication's attestation was consumed and is not asked
+  // for again.
+  #candidate(version, required, evidence, attested = true) {
     if (!version || this.#versions.get(this.#versionKey(version)) !== version) {
       return 'unadmitted-target';
     }
@@ -323,7 +352,7 @@ export class SlotRegistry {
     if (version.effects.some(effect => !required.ceiling.includes(effect))) return 'effect-ceiling-widened';
     if (required.proofRequired && (version.definitionId === null
       || !exactEvidence(evidence, version)
-      || !this.#verifyEvidence || this.#verifyEvidence(evidence, version) !== true)) {
+      || attested && (!this.#verifyEvidence || this.#verifyEvidence(evidence, version) !== true))) {
       return 'selected-target-evidence-refused';
     }
     return null;
@@ -364,7 +393,7 @@ export class SlotRegistry {
     this.#check();
     slotInteger(expectedEpoch, 'expected global epoch');
     if (expectedEpoch !== 0n || this.epoch !== 0n || this.#current.map.size
-      || this.#incarnations.size || this.#roots.size || this.#nextRoot !== 0n
+      || this.#incarnations.size || this.#firstGenerations.size || this.#roots.size || this.#nextRoot !== 0n
       || this.#frozen.size || this.#saved.size
       || this.#versions.size !== this.#staged.size) {
       return { outcome: 'bootstrap-unavailable', epoch: this.epoch };
@@ -436,12 +465,11 @@ export class SlotRegistry {
     if (!this.#allowed({ operation, slotId: id, version })) {
       return { outcome: 'policy-denied', epoch: this.epoch };
     }
-    if (this.epoch === U64_MAX || previous?.generation === U64_MAX) {
-      return { outcome: 'generation-exhausted', epoch: this.epoch };
-    }
+    if (this.epoch === U64_MAX) return { outcome: 'epoch-exhausted', epoch: this.epoch };
+    if (previous?.generation === U64_MAX) return { outcome: 'generation-exhausted', epoch: this.epoch };
     const incarnation = previous?.incarnation ?? (this.#incarnations.get(id) ?? 0n) + 1n;
     if (incarnation > U64_MAX) return { outcome: 'incarnation-exhausted', epoch: this.epoch };
-    const generation = previous ? previous.generation + 1n : 1n;
+    const generation = previous ? previous.generation + 1n : this.#firstGenerations.get(id) ?? 1n;
     const nextMap = new Map(this.#current.map);
     const admittedEvidence = evidence === null ? null
       : Object.freeze({ ...evidence, captures: Object.freeze(evidence.captures.slice()) });
@@ -468,7 +496,7 @@ export class SlotRegistry {
     if (!this.#allowed({ operation: 'delete', slotId: id, version: previous.version })) {
       return { outcome: 'policy-denied', epoch: this.epoch };
     }
-    if (this.epoch === U64_MAX) return { outcome: 'generation-exhausted', epoch: this.epoch };
+    if (this.epoch === U64_MAX) return { outcome: 'epoch-exhausted', epoch: this.epoch };
     const nextMap = new Map(this.#current.map);
     nextMap.delete(id);
     this.#current = Object.freeze({ epoch: this.epoch + 1n, map: nextMap });
@@ -710,7 +738,7 @@ export class SlotRegistry {
       version: selected.version, rootEpoch: root.state.epoch }) : false;
     const reason = !selected ? 'slot-absent'
       : !authorized ? 'policy-denied'
-        : this.#candidate(selected.version, selected.contract, selected.evidence);
+        : this.#candidate(selected.version, selected.contract, selected.evidence, false);
     this.#trace(root, { operation: 'dispatch', rootEpoch: root.state.epoch.toString(),
       slotId: ref.slotId, incarnation: selected?.incarnation?.toString() ?? null,
       generation: selected?.generation?.toString() ?? null,

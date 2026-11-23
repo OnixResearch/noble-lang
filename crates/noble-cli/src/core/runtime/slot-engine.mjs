@@ -93,6 +93,9 @@ class SlotEngine {
     this.versions = new Map();
     this.compositeVersions = new Map();
     this.savedOwners = new Map();
+    // The one host-attested selected-target evidence record the registry may
+    // accept, set only for the duration of one proof-required publication.
+    this.pendingEvidence = null;
     this.savedCells = new Map();
     this.nextSavedOwner = 0;
     this.saving = null;
@@ -294,7 +297,9 @@ class SlotEngine {
       retireTarget: handle => this.retireTarget(handle),
       retainProgram: (handle, version) => this.retainSaved(handle, version),
       releaseProgramBackend: (handle, version) => this.releaseSaved(handle, version),
-      verifyEvidence: null });
+      verifyEvidence: (evidence, version) => this.pendingEvidence !== null
+        && this.pendingEvidence.version === version
+        && evidence.hostRecordSha256 === this.pendingEvidence.recordSha256 });
     try {
       for (const resource of authority.resources) this.registry.registerNominal(resource);
     } catch (error) {
@@ -1491,7 +1496,7 @@ class SlotEngine {
     return encoded;
   }
 
-  publishReturned(request, saved) {
+  publishReturned(request, saved, hostEvidence = null) {
     if (this.active) return slotReply('candidate-not-staged');
     if (request.program_index !== undefined || !request.target_manifest) {
       return slotReply('unadmitted-target');
@@ -1502,6 +1507,14 @@ class SlotEngine {
       return slotReply('unadmitted-target', { diagnostic: String(error) });
     }
     const { caller, manifestSha256 } = checked;
+    // The host's admitted record must name this worker's own recomputation
+    // of the target and its code-donor manifest.
+    if (hostEvidence && (hostEvidence.artifact_sha256 !== manifestSha256
+      || hostEvidence.program_value_id !== checked.identity.program_value_id
+      || hostEvidence.definition_id !== checked.identity.definition_id)) {
+      return slotReply('selected-target-evidence-refused',
+        { diagnostic: 'host evidence names another target or code-donor manifest' });
+    }
     const handle = saved.handle;
     let version = this.versions.get(handle);
     if (version && (version.artifactSha256 !== manifestSha256
@@ -1515,14 +1528,27 @@ class SlotEngine {
       version = this.returnedCandidate(saved, checked);
       this.versions.set(handle, version);
     }
-    const record = this.registry.publish({ slotId: request.slot,
-      operation: request.operation,
-      expectedEpoch: slotDecimal(request.expected_epoch, 'expected epoch'),
-      expectedIncarnation: request.expected_incarnation == null ? null
-        : slotDecimal(request.expected_incarnation, 'expected incarnation'),
-      expectedGeneration: request.expected_generation == null ? null
-        : slotDecimal(request.expected_generation, 'expected generation'),
-      interface: request.interface, version });
+    // The registry's evidence check compares the record with the exact
+    // version; its verifier accepts only the record the host attested for it.
+    const evidence = hostEvidence && { programValueId: version.programValueId,
+      definitionId: version.definitionId, captures: version.captures,
+      semanticContext: version.semanticContext, claim: version.claim,
+      assumptions: version.assumptions, artifactSha256: version.artifactSha256,
+      hostRecordSha256: hostEvidence.record_sha256 };
+    this.pendingEvidence = hostEvidence && { version, recordSha256: hostEvidence.record_sha256 };
+    let record;
+    try {
+      record = this.registry.publish({ slotId: request.slot,
+        operation: request.operation,
+        expectedEpoch: slotDecimal(request.expected_epoch, 'expected epoch'),
+        expectedIncarnation: request.expected_incarnation == null ? null
+          : slotDecimal(request.expected_incarnation, 'expected incarnation'),
+        expectedGeneration: request.expected_generation == null ? null
+          : slotDecimal(request.expected_generation, 'expected generation'),
+        interface: request.interface, version, evidence });
+    } finally {
+      this.pendingEvidence = null;
+    }
     if (record.outcome === 'published') caller.published = true;
     return slotReply(record.outcome, { epoch: record.epoch.toString(),
       incarnation: record.incarnation?.toString() ?? null,
@@ -1533,9 +1559,17 @@ class SlotEngine {
     if (request.owner !== undefined && request.id !== undefined) return slotReply('publication-refused');
     const saved = request.owner === undefined ? null : this.savedOwners.get(request.owner);
     if (request.proof_required === true || request.interface?.proofRequired === true) {
-      return slotReply('selected-target-evidence-refused', {
-        diagnostic: 'a pinned independent Lean checker receipt bound to exact selected target and installed code donors is unavailable',
-      });
+      const attested = request.evidence;
+      const digest = value => typeof value === 'string' && /^[0-9a-f]{64}$/.test(value);
+      if (!saved || saved.programIndex !== null || request.proof_required !== true
+        || request.interface?.proofRequired !== true || !attested || typeof attested !== 'object'
+        || typeof attested.program_value_id !== 'string' || typeof attested.definition_id !== 'string'
+        || !digest(attested.artifact_sha256) || !digest(attested.record_sha256)) {
+        return slotReply('selected-target-evidence-refused', {
+          diagnostic: 'a proof-required slot publishes only a checked returned target with a host-admitted selected-target evidence record',
+        });
+      }
+      return this.publishReturned(request, saved, attested);
     }
     if (saved && saved.programIndex === null) return this.publishReturned(request, saved);
     const module = this.modules.get(saved ? saved.sourceId : request.id);

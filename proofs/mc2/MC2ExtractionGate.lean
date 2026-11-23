@@ -1,4 +1,5 @@
 import NobleCertificates.Correspondence
+import NobleCertificates.GuardExtracted
 import NobleCertificates.SourceReplay
 import M4Audit
 import Lean
@@ -19,6 +20,11 @@ set_option maxRecDepth 2048
 
 private def strictAxioms : List Name := [``propext, ``Classical.choice, ``Quot.sound]
 
+/-- The modules a strict correspondence theorem may come from: the actual-source
+correspondence lemmas and the extracted guard recognizers' correspondence. -/
+private def strictOwners : List Name :=
+  [`NobleCertificates.Correspondence, `NobleCertificates.GuardExtracted]
+
 private def strictSubjects : List (Name × List Name) := [
   (``NobleCertificates.Correspondence.rule_decode_roundtrip,
     [``noble_contracts.companion.rules.RuleId.decode,
@@ -37,7 +43,52 @@ private def strictSubjects : List (Name × List Name) := [
   (``NobleCertificates.Correspondence.release_requires_proved,
     [``noble_contracts.companion.core.Core.release]),
   (``NobleCertificates.Correspondence.release_rejects_assumptions,
-    [``noble_contracts.companion.core.Core.release])]
+    [``noble_contracts.companion.core.Core.release]),
+  (``NobleCertificates.GuardExtracted.expression_eq,
+    [``noble_contracts.companion.admit.recognize.expression,
+     ``NobleCertificates.GuardExtracted.node]),
+  (``NobleCertificates.GuardExtracted.recognize_eq,
+    [``noble_contracts.companion.guard.recognize,
+     ``NobleCertificates.GuardExtracted.recognizeRust]),
+  (``NobleCertificates.GuardExtracted.templates_of_sound,
+    [``noble_contracts.companion.guard.templates_of,
+     ``NobleCertificates.GuardExtracted.arenaTerm,
+     ``NobleCertificates.GuardExtracted.recognizeTerm,
+     ``NobleCertificates.Correspondence.rustGuard]),
+  (``NobleCertificates.GuardExtracted.templates_of_link,
+    [``noble_contracts.companion.guard.templates_of,
+     ``NobleCertificates.GuardExtracted.arenaTerm,
+     ``NobleContracts.Holds, ``NobleCertificates.GuardPrecondition,
+     ``NobleCertificates.Correspondence.semanticGuard]),
+  (``NobleCertificates.GuardExtracted.templates_of_complete,
+    [``noble_contracts.companion.guard.templates_of,
+     ``NobleCertificates.GuardExtracted.arenaTerm,
+     ``NobleCertificates.GuardExtracted.recognizeTerm,
+     ``NobleCertificates.Correspondence.rustGuard]),
+  (``NobleCertificates.GuardExtracted.is_nil_input_zero_eq,
+    [``noble_contracts.companion.guard_v2.is_nil_input_zero,
+     ``NobleCertificates.GuardExtracted.nilInputZero]),
+  (``NobleCertificates.GuardExtracted.templates_of_v2_sound,
+    [``noble_contracts.companion.guard_v2.templates_of,
+     ``NobleCertificates.GuardExtracted.arenaTerm,
+     ``NobleCertificates.GuardExtracted.recognizeTermV2,
+     ``NobleCertificates.GuardExtracted.rustGuardV2]),
+  (``NobleCertificates.GuardExtracted.templates_of_v2_link,
+    [``noble_contracts.companion.guard_v2.templates_of,
+     ``NobleCertificates.GuardExtracted.arenaTerm,
+     ``NobleContracts.Holds, ``NobleCertificates.GuardPreconditionV2,
+     ``NobleCertificates.HasInput]),
+  (``NobleCertificates.GuardExtracted.templates_of_v2_complete_i64,
+    [``noble_contracts.companion.guard_v2.templates_of,
+     ``NobleCertificates.GuardExtracted.arenaTerm,
+     ``NobleCertificates.GuardExtracted.recognizeTerm,
+     ``NobleCertificates.GuardExtracted.rustGuardV2]),
+  (``NobleCertificates.GuardExtracted.templates_of_v2_complete_list,
+    [``noble_contracts.companion.guard_v2.templates_of,
+     ``noble_contracts.companion.guard_v2.is_type0,
+     ``NobleCertificates.GuardExtracted.arenaTerm,
+     ``NobleCertificates.nonEmptyListTerm,
+     ``NobleCertificates.GuardExtracted.rustGuardV2])]
 
 private def rendererSubjects : List (Name × List Name) := [
   (``NobleCertificates.Correspondence.wrapper_source_layout,
@@ -217,7 +268,7 @@ elab "check_mc2_extraction" : command => do
       let info ← match env.find? declName with
         | some (.thmInfo info) => pure info
         | _ => throwError "MC2-CORRESPONDENCE: missing theorem {declName}"
-      unless owner env declName == `NobleCertificates.Correspondence do
+      unless strictOwners.contains (owner env declName) do
         throwError "MC2-CORRESPONDENCE: substituted theorem owner {declName}"
       for dependency in required do
         unless info.type.getUsedConstants.contains dependency do

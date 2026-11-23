@@ -70,6 +70,15 @@
   distinctions and every negative provenance case. No LSLOT-05/08 case state or evidence was
   promoted.
 - [ ] [serial] Add an actual-target Lean consumer with explicit statement/source/artifact premises; separately test ID-05 capture2→3 and LSLOT-05/08 proof-required versus replay-only adversarial boundaries without inheriting builder proof or real-effect authority. r[P-ID-03] `V-MODEL-01` `VC-LSLOT-01` `EV-LSLOT-01`
+  Progress 2026-11-22 (integrator decision 43): the proof-required half is implemented for live
+  slots. The statement premise is the slot authority's exact MC2 contract, the source premise is
+  the target's closed subject rendered from its verified template and captured values, and the
+  artifact premise is the target's composite code-donor manifest digest; the consumer of `noble
+  build --require-proof` rechecks the proof and the core binds it to that subject. A builder or
+  caller proof does not transfer (old-version and generic-wrapper records are refused), and the
+  capture boundary holds: the valid proof for capture 2 is refused for the capture-1 target by the
+  core's correspondence check. Still open: LSLOT-08's replay-only boundary and an ID-05
+  capture 2→3 receipt of its own.
 - [ ] [serial] After independent source-bound review, decide any canonical sync, generated views/ledger/receipt, evidence/status promotion and archive under the existing gates; leave all nine LSLOT states and historical evidence untouched until then. r[P-ID-03] `EV-LSLOT-01`
 
 LSLOT-02's separate atomic physical epoch-1 A+B and A+B+C genesis is an approved implementation choice, not a P-ID-03 requirement or a completed task here. The integrated selected CLI exercise includes both complete maps, an old-root pin through epoch 2 and worker-side later-member quota refusal without partial installation; see `/tmp/noble-lslot-approved-integrated-final-20261006/receipt.json` (SHA-256 `b217d63192e42293398da7592ddc6024fdd971787d142ab3d5b9aeaf6716ce38`). Canonical LSLOT-02 case execution/evidence and all nine LSLOT implementation/execution/proof/trust states remain absent/not-run/open/unassessed in the existing `explicit-live-references` change under `K-LSLOT-02`, `H-LSLOT-01` and `EV-LSLOT-01`; neither sequential publication nor rewriting the frozen fixture can close them. The unsynced P-ID-03 draft and selected captured-target Wasm/Lean proof/replay remain open.

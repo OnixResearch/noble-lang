@@ -20,6 +20,34 @@
   `Prepared` arena to MC1
   terms. C1 for `NonEmptyList` is now proved at model level in `GuardsV2.nonEmptyList_link` and
   `nonEmptyList_link_of_type` (2026-11-20); its extracted link is the same open obligation.
+  Progress (2026-11-22): the extracted correspondence for v1 `templates_of` is proved in
+  `proofs/mc2/NobleCertificates/GuardExtracted.lean` over the pinned whole-crate translation.
+  `arenaTerm` reads the `Prepared` arena structurally (an `I64` node is `Term.i64` of the same
+  integer, input `i` is `Term.input i`, `not`/`eq`/`lt` are the MC1 constructors), and
+  `expression_eq` shows the extracted arena lookup is exactly that read. Every extracted helper
+  returns `ok` of a pure function of the arena (`recognize_eq` and the lemmas before it), so the
+  recognizer cannot fail or diverge. `templates_of_sound`: at most one template, and `t` only when
+  the whole `requires` reads as one of the five spellings for `t`; `templates_of_link` composes it
+  with `GuardLink` into C1 (`Holds requires [x] [] params ↔ GuardPrecondition t x`);
+  `templates_of_complete`: on an `[I64]` interface every such spelling is recognized (the kernel
+  type equality evaluates `I64 = I64` to `true`, `ty_eq_i64`). `MC2ExtractionGate` audits the five
+  as strict actual-source correspondence theorems (strict axioms). Still open: that the
+  structural reading agrees with the Lean statement the MC1 export renders for the same arena,
+  and the extracted correspondence for `guard_v2::templates_of` (its `[List A]` branch, including
+  the `is_type0` work-list check).
+  Progress (2026-11-22, later): the v2 recognizer too. The arena reading adds `is-nil`.
+  `templates_of_v2_sound`: every template the extracted `guard_v2::templates_of` returns is the
+  Rust form of a template `recognizeTermV2` assigns to the reading of the whole `requires`; on
+  `[I64]` the v1 result is lifted through the copying loop (`templates_of_loop_eq`), otherwise
+  only `(not (is-nil x0))` on a one-element `[List A]` interface yields `NonEmptyList`.
+  `templates_of_v2_link` composes it with `GuardLink` and `GuardsV2.nonEmptyList_link` into C1 for
+  every input the template takes (`HasInput`). `templates_of_v2_complete_i64` and
+  `templates_of_v2_complete_list` are the converses, the latter for an element type the bounded
+  `is_type0` check accepts. `MC2ExtractionGate` audits ten guard theorems in all. Scope, recorded
+  rather than closed: the reading is structural, so its agreement with the Lean statement the MC1
+  export renders for the same arena is not proved, and the bounded `is_type0` check is not shown
+  to accept every `Type0` code. The box is ticked with the MC2/M4 receipt of the batch that
+  carries this module.
 - [x] [serial] Implement the versioned v2 template set (`NonEmptyList` recognizer, wrappers, `List A` slot injection for `op_invoke`, registry/digest version) with v1 bytes and gate unchanged; prove C2–C5 for `NonEmptyList` in a v2 MC2 gate. r[GUARD-LIST-01]
   Progress (2026-11-20): Lean model. `proofs/mc2/NobleCertificates/GuardsV2.lean` adds a separate
   `GuardTemplateV2` set (the three frozen v1 templates plus `nonEmptyList`), the pure
@@ -117,4 +145,9 @@
   receipt. The registration, the GUARD-CASE-11 amendment and the run were accepted by the
   integrator review [`review-integrator-2026-11-22-guard-cases.md`](review-integrator-2026-11-22-guard-cases.md)
   (owner decision 28). C1 for `templates_of`, C6 and PO-21 remain open.
-- [ ] [serial] Coordinate C6 (Wasm lowering/loading of wrappers, PO-17/PO-18) through #10. Static-witness companion rules wait for #7; resource-bearing applicability waits for #3. r[GUARD-FACT-01]
+- [x] [serial] Coordinate C6 (Wasm lowering/loading of wrappers, PO-17/PO-18) through #10. Static-witness companion rules wait for #7; resource-bearing applicability waits for #3. r[GUARD-FACT-01]
+  Coordinated (2026-11-22, owner decision 53): C6 is tracked in artifact-correspondence-extension
+  (#10) as its open obligation "PO-21 C6" (task "Pursue O1–O7 separately", kept open by owner
+  decision 31); it is not discharged here. Static-witness companion rules wait for
+  reusable-contract-calls (#7) and resource-bearing applicability for ownership-lifetime-contract
+  (#3); neither is selected by this change.

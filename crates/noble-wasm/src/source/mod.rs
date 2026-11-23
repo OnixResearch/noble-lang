@@ -2349,6 +2349,24 @@ mod retention_tests {
     use super::{CodeSpan, Compiler, TABLE_LIMIT};
     use crate::Diagnostic;
 
+    // LREF-CASE-02's code-retention counter in Live-Slot-Design (integrator decision 47): the
+    // install generation that tags every installed code span refuses at its maximum instead of
+    // wrapping, and the refused preparation leaves the compiler's state as it was.
+    #[test]
+    fn install_generation_refuses_at_its_maximum_without_wrapping() {
+        let mut compiler = Compiler::new_live_slots();
+        compiler.generation = u32::MAX;
+        let functions = compiler.functions;
+        assert!(matches!(
+            compiler.prospective(functions, false, false, None),
+            Err(Diagnostic::Exhausted)
+        ));
+        assert_eq!(
+            (compiler.generation, compiler.functions),
+            (u32::MAX, functions)
+        );
+    }
+
     #[test]
     fn retired_spans_reuse_physical_table_without_invalidating_other_owners() {
         let mut compiler = Compiler::new_live_slots();
