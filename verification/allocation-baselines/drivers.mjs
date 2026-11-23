@@ -7,7 +7,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { abi, config, decodeMetrics, runtime, sha256, timed } from './core.mjs';
+import { abi, config, decodeMetrics, resolveWasmTools, runtime, sha256, timed } from './core.mjs';
 
 const hostModule = path.join(runtime, 'host.mjs');
 
@@ -18,8 +18,7 @@ async function engineClass() {
 }
 
 const assemble = (watFile, wasmFile) => {
-  const tools = process.env.NOBLE_WASM_TOOLS
-    ?? path.join(path.dirname(fs.realpathSync(process.execPath)), 'wasm-tools');
+  const tools = resolveWasmTools();
   const run = spawnSync(tools, ['parse', watFile, '-o', wasmFile], { encoding: 'utf8' });
   if (run.status !== 0) throw Error(`wasm-tools parse failed: ${run.stderr}`);
   // The bytes are the subject: record their digest, not the tool's timing.
@@ -130,6 +129,7 @@ export class ExperimentDriver {
   root({ build = null, invoke = null, direct = null, reflect = false, limits = null } = {}) {
     const exports = this.instance();
     const observation = { status: null, phase: null, output: [], snapshots: {},
+      engine_error: null,
       timings_ns: { begin: null, construction: null, invocation: null, reflection: null, cleanup: null } };
     const limitKeys = ['allocation_bytes', 'recipe_program_leaves', 'composition_depth',
       'operand_bytes', 'continuation_bytes', 'dispatch_steps'];
@@ -289,13 +289,13 @@ export class ComponentDriver {
     return { latencies, metrics, observations };
   }
 
-  quota(allocation) {
+  quota(allocation, request = allocation + 8) {
     const exports = this.instance();
     exports['noble$set-allocation-limit'](allocation);
     let outcome = 'normal';
     let error = null;
     let pointer = null;
-    try { pointer = exports.cabi_realloc(0, 0, 8, allocation + 8); }
+    try { pointer = exports.cabi_realloc(0, 0, 8, request); }
     catch (caught) { outcome = 'trap'; error = caught.message; }
     return { outcome, error, pointer, metrics: ComponentDriver.metrics(exports) };
   }
@@ -317,11 +317,15 @@ export class ComponentDriver {
 export function lineSession(spawnSpec, lines, { timeoutMs = 900000, allowEarlyExit = false } = {}) {
   const { command, args } = spawnSpec;
   const child = spawn(command, args, { stdio: ['pipe', 'pipe', 'pipe'], env: process.env });
+  child.stdin.on('error', () => {});
   const reports = [];
   const latencies = [];
   const stamps = [];
   let pending = '';
   let stderr = '';
+  let exited = false;
+  let exitInfo = null;
+  let resolveExit = null;
   let resolveReport = null;
   const notify = () => { if (resolveReport) { const resolve = resolveReport; resolveReport = null; resolve(); } };
   child.stdout.on('data', bytes => {
@@ -338,22 +342,38 @@ export function lineSession(spawnSpec, lines, { timeoutMs = 900000, allowEarlyEx
     }
   });
   child.stderr.on('data', bytes => { stderr += bytes.toString(); });
+  child.once('exit', (code, signal) => {
+    exited = true;
+    exitInfo = { code, signal };
+    notify();
+    if (resolveExit) { const resolve = resolveExit; resolveExit = null; resolve(exitInfo); }
+  });
   const deadline = setTimeout(() => child.kill('SIGKILL'), timeoutMs);
   const waitFor = count => new Promise((resolve, reject) => {
-    if (reports.length >= count) return resolve();
-    resolveReport = () => { if (reports.length >= count) resolve(); };
-    child.once('exit', () => (reports.length >= count
-      ? resolve() : allowEarlyExit ? resolve() : reject(Error(`session exited before ${count} reports: ${stderr.slice(-600)}`))));
+    const check = () => {
+      if (reports.length >= count) { resolve(); return true; }
+      if (exited) {
+        if (allowEarlyExit) resolve();
+        else reject(Error(`session exited before ${count} reports: ${stderr.slice(-600)}`));
+        return true;
+      }
+      return false;
+    };
+    if (check()) return;
+    const arm = () => { resolveReport = () => { if (!check()) arm(); }; };
+    arm();
   });
   return (async () => {
     try {
       for (const [index, line] of lines.entries()) {
+        if (exited) break;
         stamps.push(process.hrtime.bigint());
         child.stdin.write(`${line}\n`);
         await waitFor(index + 1);
+        if (exited) break;
       }
-      child.stdin.end();
-      const exit = await new Promise(resolve => child.once('exit', (code, signal) => resolve({ code, signal })));
+      if (!exited) child.stdin.end();
+      const exit = exited ? exitInfo : await new Promise(resolve => { resolveExit = resolve; });
       return { reports, latencies, stderr, exit };
     } finally {
       clearTimeout(deadline);
@@ -366,11 +386,15 @@ export function lineSession(spawnSpec, lines, { timeoutMs = 900000, allowEarlyEx
 export function slotSession(cli, authority, operations, { timeoutMs = 900000 } = {}) {
   const child = spawn('/bin/sh', ['-c', 'cat | exec "$1" live slot --engine v8 --authority "$2"',
     'sh', cli, authority], { stdio: ['pipe', 'pipe', 'pipe'], env: process.env });
+  child.stdin.on('error', () => {});
   const rows = [];
   const latencies = [];
   const stamps = [];
   let pending = '';
   let stderr = '';
+  let exited = false;
+  let exitInfo = null;
+  let resolveExit = null;
   let resolveRow = null;
   const notify = () => { if (resolveRow) { const resolve = resolveRow; resolveRow = null; resolve(); } };
   child.stdout.on('data', bytes => {
@@ -389,12 +413,25 @@ export function slotSession(cli, authority, operations, { timeoutMs = 900000 } =
     }
   });
   child.stderr.on('data', bytes => { stderr += bytes.toString(); });
+  child.once('exit', (code, signal) => {
+    exited = true;
+    exitInfo = { code, signal };
+    notify();
+    if (resolveExit) { const resolve = resolveExit; resolveExit = null; resolve(exitInfo); }
+  });
   const deadline = setTimeout(() => child.kill('SIGKILL'), timeoutMs);
   const waitFor = count => new Promise((resolve, reject) => {
-    if (rows.length >= count) return resolve();
-    resolveRow = () => { if (rows.length >= count) resolve(); };
-    child.once('exit', () => (rows.length >= count
-      ? resolve() : reject(Error(`slot exited before ${count} rows: ${stderr.slice(-600)}`))));
+    const check = () => {
+      if (rows.length >= count) { resolve(); return true; }
+      if (exited) {
+        reject(Error(`slot exited before ${count} rows: ${stderr.slice(-600)}`));
+        return true;
+      }
+      return false;
+    };
+    if (check()) return;
+    const arm = () => { resolveRow = () => { if (!check()) arm(); }; };
+    arm();
   });
   return (async () => {
     try {
@@ -404,8 +441,8 @@ export function slotSession(cli, authority, operations, { timeoutMs = 900000 } =
         child.stdin.write(`${JSON.stringify(operation)}\n`);
         await waitFor(index + 2);
       }
-      child.stdin.end();
-      const exit = await new Promise(resolve => child.once('exit', (code, signal) => resolve({ code, signal })));
+      if (!exited) child.stdin.end();
+      const exit = exited ? exitInfo : await new Promise(resolve => { resolveExit = resolve; });
       return { rows, latencies, stderr, exit };
     } finally {
       clearTimeout(deadline);
@@ -418,10 +455,14 @@ export function slotSession(cli, authority, operations, { timeoutMs = 900000 } =
 export async function slotInteractive(cli, authority, script, { timeoutMs = 900000 } = {}) {
   const child = spawn('/bin/sh', ['-c', 'cat | exec "$1" live slot --engine v8 --authority "$2"',
     'sh', cli, authority], { stdio: ['pipe', 'pipe', 'pipe'], env: process.env });
+  child.stdin.on('error', () => {});
   const rows = [];
   const latencies = [];
   let pending = '';
   let stderr = '';
+  let exited = false;
+  let exitInfo = null;
+  let resolveExit = null;
   let resolveRow = null;
   const notify = () => { if (resolveRow) { const resolve = resolveRow; resolveRow = null; resolve(); } };
   child.stdout.on('data', bytes => {
@@ -437,12 +478,25 @@ export async function slotInteractive(cli, authority, script, { timeoutMs = 9000
     }
   });
   child.stderr.on('data', bytes => { stderr += bytes.toString(); });
+  child.once('exit', (code, signal) => {
+    exited = true;
+    exitInfo = { code, signal };
+    notify();
+    if (resolveExit) { const resolve = resolveExit; resolveExit = null; resolve(exitInfo); }
+  });
   const deadline = setTimeout(() => child.kill('SIGKILL'), timeoutMs);
   const waitFor = count => new Promise((resolve, reject) => {
-    if (rows.length >= count) return resolve();
-    resolveRow = () => { if (rows.length >= count) resolve(); };
-    child.once('exit', () => (rows.length >= count
-      ? resolve() : reject(Error(`slot exited before ${count} rows: ${stderr.slice(-600)}`))));
+    const check = () => {
+      if (rows.length >= count) { resolve(); return true; }
+      if (exited) {
+        reject(Error(`slot exited before ${count} rows: ${stderr.slice(-600)}`));
+        return true;
+      }
+      return false;
+    };
+    if (check()) return;
+    const arm = () => { resolveRow = () => { if (!check()) arm(); }; };
+    arm();
   });
   try {
     await waitFor(1); // configured
@@ -456,8 +510,8 @@ export async function slotInteractive(cli, authority, script, { timeoutMs = 9000
     };
     const view = { issue, rows, latencies, get stderr() { return stderr; } };
     await script(view);
-    child.stdin.end();
-    const exit = await new Promise(resolve => child.once('exit', (code, signal) => resolve({ code, signal })));
+    if (!exited) child.stdin.end();
+    const exit = exited ? exitInfo : await new Promise(resolve => { resolveExit = resolve; });
     return { rows, latencies, stderr, exit };
   } finally {
     clearTimeout(deadline);

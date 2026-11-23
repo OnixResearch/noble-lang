@@ -7,13 +7,13 @@
 // These cases are NOT registered in specs/conformance; this gate writes a
 // source-bound receipt and retains raw observations outside the case records. It
 // refuses a dirty tracked tree unless --allow-dirty is given for development.
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { abi, config, freshDirectory, pressure, root, sha256, sourceBinding, toolBinding,
-  writeJson } from './core.mjs';
+import { abi, config, freshDirectory, pressure, resolveWasmTools, root, sha256, sourceBinding,
+  toolBinding, writeJson } from './core.mjs';
 import {
   ComponentDriver, ExperimentDriver, lineSession, slotInteractive, workerDeathProbe,
 } from './drivers.mjs';
@@ -41,7 +41,7 @@ if (!binding.clean && !options.allowDirty) {
   throw Error(`the receipt binds a clean tracked tree; status:\n${binding.clean_status}`);
 }
 const tools = toolBinding(cli);
-process.env.NOBLE_WASM_TOOLS ??= path.join(path.dirname(fs.realpathSync(process.execPath)), 'wasm-tools');
+const wasmToolsPath = resolveWasmTools();
 
 const failures = [];
 const checks = [];
@@ -59,16 +59,11 @@ function save(name, value) {
 
 function assemble(text, name) {
   const { file, sha256: digest } = writeFragment(scratch, name, text);
-  const toolsPath = process.env.NOBLE_WASM_TOOLS;
-  const run = (awaitImport('node:child_process')).spawnSync(toolsPath, ['parse', file, '-o',
+  const run = spawnSync(wasmToolsPath, ['parse', file, '-o',
     file.replace(/\.wat$/, '.wasm')], { encoding: 'utf8' });
   if (run.status !== 0) throw Error(`fragment assembly failed: ${run.stderr}`);
   return { file, sha256: digest, bytes: fs.readFileSync(file.replace(/\.wat$/, '.wasm')) };
 }
-
-// Small synchronous import helper keeps the top-level flow linear.
-import { spawnSync } from 'node:child_process';
-const awaitImport = () => ({ spawnSync });
 
 function fragmentInstance(text, name) {
   const fragment = assemble(text, name);
@@ -171,9 +166,11 @@ async function main() {
     Array.isArray(f1.report?.request_trace) && f1.report.request_trace.includes('test.emit:prefix'),
     { request_trace: f1.report?.request_trace });
   check('CASE-02/F1/no-partial-cell',
-    f1.report?.metrics?.live_logical_bytes === 0
-      || f1.report?.metrics?.allocated_since_begin_bytes === f1.report?.metrics?.released_total_bytes,
-    { metrics: f1.report?.metrics });
+    f1.report?.stack?.length === 0
+      && f1.report?.session_state === 'terminated-after-runtime-failure'
+      && f1.report?.metrics?.allocated_since_begin_bytes === peak - 48,
+    { stack: f1.report?.stack, session_state: f1.report?.session_state,
+      peak, metrics: f1.report?.metrics });
 
   const f2 = fragmentInstance(liveFragment(), 'case-02-f2-live');
   const f2Fill = fill(f2.exports);
@@ -196,19 +193,38 @@ async function main() {
   save('case-02-f4.json', f4);
   check('CASE-02/F4/process-death', f4.signal !== null || f4.exit !== 0,
     { signal: f4.signal, exit: f4.exit, stderr_tail: f4.stderr.slice(-300) });
+  const observedClasses = {
+    F1: f1.report?.failure_class ?? (f1.report?.quota_reason ? `unsplit:${f1.report.quota_reason}` : null),
+    F2: f2Fill.failure === 0 ? null
+      : f2Fill.quota_reason === 8 ? 'F2-strategy-exhaustion'
+      : `unsplit:quota_reason_${f2Fill.quota_reason}`,
+    F3: f3Fill.failure === 0 ? null
+      : f3Fill.quota_reason === 9 ? 'F3-memory-growth'
+      : `unsplit:quota_reason_${f3Fill.quota_reason}`,
+    F4: (f4.signal !== null || f4.exit !== 0) ? 'F4-engine-oom' : null,
+  };
+  const expectedClasses = [
+    'F1-logical-quota',
+    'F2-strategy-exhaustion',
+    'F3-memory-growth',
+    'F4-engine-oom',
+  ];
+  const actualClasses = [
+    observedClasses.F1,
+    observedClasses.F2,
+    observedClasses.F3,
+    observedClasses.F4,
+  ];
   check('CASE-02/four-distinct-classes',
-    ['F1-logical-quota', 'F2-strategy-exhaustion', 'F3-memory-growth', 'F4-engine-oom']
-      .every(name => name.startsWith('F')) &&
-      new Set([f1.report?.failure_class, 'F2-strategy-exhaustion', 'F3-memory-growth',
-        'F4-engine-oom']).size === 4,
-    { observed: [f1.report?.failure_class, 'F2-strategy-exhaustion', 'F3-memory-growth',
-      'F4-engine-oom'] });
+    expectedClasses.every((expected, index) => actualClasses[index] === expected)
+      && new Set(actualClasses).size === 4,
+    { observed: observedClasses, expected: expectedClasses });
 
   // CASE-09: traps mid-construction and at reservation publish no partial cell.
   for (const representation of ['managed-linear-memory', 'wasm-gc']) {
     const driver = experiment(representation);
     const mid = driver.root({ build: { kind: 'tree', shape: 0, leaves: 256 },
-      limits: { dispatch_steps: 2 } });
+      limits: { allocation_bytes: 512 } });
     save(`case-09-${representation}.json`, mid);
     check(`CASE-09/${representation}/trap-mid-construction`,
       mid.status !== 0 && mid.phase === 'construction',
@@ -220,12 +236,12 @@ async function main() {
     check(`CASE-09/${representation}/cleanup-accounted`,
       mid.cleanup.metrics.allocated_total_bytes === mid.cleanup.metrics.released_total_bytes,
       mid.cleanup.metrics);
-    check(`CASE-09/${representation}/engine-error-none`, mid.engine_error === null,
+    check(`CASE-09/${representation}/engine-error-none`, mid.engine_error == null,
       mid.engine_error);
   }
   const component = new ComponentDriver(path.join(root, 'crates/noble-wasm/src/component/runtime.wat'),
     path.join(scratch, 'case-09-a7.wasm'));
-  const a7Trap = component.quota(64);
+  const a7Trap = component.quota(64, 72);
   save('case-09-a7.json', a7Trap);
   check('CASE-09/A7/reservation-trap',
     a7Trap.outcome === 'trap' && a7Trap.metrics.quota_exceeded === 1
@@ -246,11 +262,15 @@ async function main() {
     { outcome: restartedReport.outcome });
 
   const slotSource = '40 [ 1 + ]';
+  const runnerSource = '20 swap run';
   const directory = fs.mkdtempSync(path.join(scratch, 'case-10-slot-'));
   const authority = path.join(directory, 'authority.json');
   fs.writeFileSync(authority, JSON.stringify({ owner: 'alloc-case-host', quota: 4,
     effects: [], resources: [], slots: [], grants: [],
-    sources: [{ id: 'quoted', sha256: sha256(Buffer.from(slotSource)) }] }));
+    sources: [
+      { id: 'quoted', sha256: sha256(Buffer.from(slotSource)) },
+      { id: 'runner', sha256: sha256(Buffer.from(runnerSource)) },
+    ] }));
   let owner = null;
   const first = await slotInteractive(cli, authority, async live => {
     await live.issue({ operation: 'install', id: 'quoted', source: slotSource, inputs: ['I64'] });
@@ -261,17 +281,20 @@ async function main() {
   check('CASE-10/slot-owner-observed', first.exit.code === 0 && owner !== null,
     { exit: first.exit, owner });
   const second = await slotInteractive(cli, authority, async live => {
-    await live.issue({ operation: 'install', id: 'quoted', source: slotSource, inputs: ['I64'] });
-    const invoke = await live.issue({ operation: 'invoke', id: 'quoted',
+    await live.issue({ operation: 'install', id: 'runner', source: runnerSource,
+      inputs: ['Program<I64,I64,pure>'] });
+    const invoke = await live.issue({ operation: 'invoke', id: 'runner',
       inputs: [{ kind: 'program', owner }], refs: [] });
     save('case-10-stale-owner.json', invoke);
     check('CASE-10/stale-owner-refused',
-      invoke.outcome === 'refused',
+      invoke.outcome === 'refused'
+        && invoke.diagnostic === 'root Program differs from checked ordered type',
       { outcome: invoke.outcome, diagnostic: invoke.diagnostic });
     const release = await live.issue({ operation: 'release-program', owner });
     save('case-10-stale-release.json', release);
-    check('CASE-10/stale-release-refused', release.outcome === 'refused',
-      { outcome: release.outcome });
+    check('CASE-10/stale-release-refused',
+      release.outcome === 'refused' && release.diagnostic === 'unknown saved Program owner',
+      { outcome: release.outcome, diagnostic: release.diagnostic });
   }, { timeoutMs: 120000 });
   fs.rmSync(directory, { recursive: true, force: true });
 

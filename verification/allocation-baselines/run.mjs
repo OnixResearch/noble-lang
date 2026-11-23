@@ -18,7 +18,7 @@ import path from 'node:path';
 
 import {
   abi, config, decisive, DECISION_EFFECT, freshDirectory, git, here, hostFacts, median,
-  pressure, root, sha256, sourceBinding, summarize, toolBinding, writeJson,
+  pressure, resolveWasmTools, root, sha256, sourceBinding, summarize, toolBinding, writeJson,
 } from './core.mjs';
 import {
   ComponentDriver, ExperimentDriver, OrdinaryDriver, calculatorSession, compileSource,
@@ -66,7 +66,7 @@ const tools = toolBinding(cli);
 if (tools.node.version !== config.tools.node.version || tools.node.v8 !== config.tools.node.v8) {
   throw Error(`Node/V8 differs from the pinned runtime: ${tools.node.version}/${tools.node.v8}`);
 }
-process.env.NOBLE_WASM_TOOLS ??= path.join(path.dirname(fs.realpathSync(process.execPath)), 'wasm-tools');
+process.env.NOBLE_WASM_TOOLS ??= resolveWasmTools();
 const host = hostFacts();
 
 const samplesFile = path.join(out, 'samples.jsonl');
@@ -141,8 +141,8 @@ async function runPoint(point) {
     attempts.push(summary);
     const noisy = summary.observed_samples < sampleCount || summary.errors.length
       || (summary.noise !== null && summary.noise > 0.1);
-    if (!noisy || attempt >= 3 || point.no_retry) return attempts;
-    // One re-run after a noisy attempt; retain both, never retune a threshold.
+    if (!noisy || attempt >= 2 || point.no_retry) return attempts;
+    // At most one re-run (2 attempts total) after a noisy attempt; retain both, never retune a threshold.
   }
 }
 
@@ -165,7 +165,7 @@ function makeEngine() {
 // Source tree lines are compiled by the shipped session itself: only the session
 // frontend owns the retained stack and definition namespace.
 const sessionDriver = () => ({ command: cli, args: ['session'] });
-const liveDriver = () => ({ command: cli, args: ['live', 'repl'] });
+const liveDriver = (extraArgs = []) => ({ command: cli, args: ['live', 'repl', ...extraArgs] });
 
 function sourceSessionResult(session, expected) {
   const reports = session.reports.map(JSON.parse);
@@ -199,6 +199,7 @@ function sourceSessionResult(session, expected) {
 }
 
 async function main() {
+  const started = new Date().toISOString();
   writeJson(path.join(out, 'binding.json'), { source: binding, tools, host });
 
   // W1: composition trees. A1/A3 use the shipped session/live frontend, A5/A6 the
@@ -459,7 +460,7 @@ async function main() {
     samples: 10,
     run: async () => {
       const session = await lineSession(sessionDriver(), definitionSessionLines(1000),
-        { timeoutMs: options.timeoutMs });
+        { timeoutMs: options.timeoutMs, allowEarlyExit: true });
       return sourceSessionResult(session, undefined);
     },
   });
@@ -468,7 +469,7 @@ async function main() {
     samples: 5,
     run: async () => {
       const session = await lineSession(liveDriver(), definitionSessionLines(1000),
-        { timeoutMs: options.timeoutMs });
+        { timeoutMs: options.timeoutMs, allowEarlyExit: true });
       return sourceSessionResult(session, undefined);
     },
   });
@@ -479,18 +480,28 @@ async function main() {
       run: async () => {
         const directory = fs.mkdtempSync(path.join(scratch, 'slot-'));
         const authority = path.join(directory, 'authority.json');
+        const cycles = 20;
+        const digest = sha256(Buffer.from(source));
+        const sources = Array.from({ length: cycles }, (_, index) => ({ id: `s${index}`, sha256: digest }));
+        const grants = Array.from({ length: cycles }, (_, index) => ({
+          operation: 'discard', slotId: `s${index}`, allowed: true,
+        }));
         fs.writeFileSync(authority, JSON.stringify({ owner: 'alloc-baseline-host', quota: 4,
-          effects: [], resources: [], slots: [], grants: [],
-          sources: [{ id: 'short', sha256: sha256(Buffer.from(source)) }] }));
+          effects: [], resources: [], slots: [], grants, sources }));
         try {
-          const operations = [{ operation: 'install', id: 'short', source, inputs: [] },
-            ...Array.from({ length: 1000 }, (_, index) => index % 50 === 49
-              ? { operation: 'discard', id: 'short' }
-              : { operation: 'invoke', id: 'short', inputs: [], refs: [] })];
+          const operations = [];
+          for (let cycle = 0; cycle < cycles; cycle += 1) {
+            const id = `s${cycle}`;
+            operations.push({ operation: 'install', id, source, inputs: [] });
+            for (let step = 0; step < 49; step += 1) {
+              operations.push({ operation: 'invoke', id, inputs: [], refs: [] });
+            }
+            operations.push({ operation: 'discard', id });
+          }
           const session = await slotSession(cli, authority, operations, { timeoutMs: options.timeoutMs });
           return { outcome: [...new Set(session.rows.slice(1).map(row => row.outcome))].join(','),
             metrics: null, units: summarize(session.latencies),
-            observation: { operations: session.rows.length - 1, exit: session.exit } };
+            observation: { operations: session.rows.length - 1, cycles, exit: session.exit } };
         } finally {
           fs.rmSync(directory, { recursive: true, force: true });
         }
@@ -501,11 +512,14 @@ async function main() {
     strategy: 'A2', workload: 'W4', size: 40, unit: 'line', includesCompilation: true,
     samples: 1, warmups: 0,
     run: async () => {
-      const session = await calculatorSession(cli, calculatorLines().slice(0, 10));
-      return { outcome: session.exit.code === 0 ? 'normal' : 'refused', metrics: null,
-        units: { median: session.wall_ns, count: session.stdout.length },
-        observation: { stdout: session.stdout, exit: session.exit,
-          stderr_tail: session.stderr.slice(-400) } };
+      const lines = calculatorLines();
+      const session = await calculatorSession(cli, lines);
+      return { outcome: session.exit.code === 0 && session.stdout.length >= lines.length / 2 ? 'normal' : 'refused',
+        metrics: null,
+        units: { median: session.wall_ns / Math.max(1, lines.length), count: lines.length },
+        observation: { lines: lines.length, stdout_lines: session.stdout.length,
+          stdout: session.stdout.slice(-20), exit: session.exit,
+          stderr_tail: session.stderr.slice(-400), wall_ns: session.wall_ns } };
     },
   });
 
@@ -524,6 +538,55 @@ async function main() {
       const session = await lineSession(liveDriver(), mixedLifetimeLines(100),
         { timeoutMs: options.timeoutMs });
       return sourceSessionResult(session, undefined);
+    },
+  });
+  definePoint('W5/A4/100', {
+    strategy: 'A4', workload: 'W5', size: 100, unit: 'invoke',
+    run: async () => {
+      const directory = fs.mkdtempSync(path.join(scratch, 'slot-'));
+      const authority = path.join(directory, 'authority.json');
+      fs.writeFileSync(authority, JSON.stringify({ owner: 'alloc-baseline-host', quota: 8,
+        effects: [], resources: [], slots: [], grants: [],
+        sources: [
+          { id: 'quoted', sha256: sha256(Buffer.from(slotSources.quoted)) },
+          { id: 'short', sha256: sha256(Buffer.from(slotSources.short)) },
+        ] }));
+      try {
+        const retained = [];
+        let scratchCount = 0;
+        let released = 0;
+        const session = await slotInteractive(cli, authority, async live => {
+          await live.issue({ operation: 'install', id: 'quoted', source: slotSources.quoted, inputs: ['I64'] });
+          await live.issue({ operation: 'install', id: 'short', source: slotSources.short, inputs: [] });
+          for (let index = 0; index < 33; index += 1) {
+            const saved = await live.issue({ operation: 'invoke', id: 'quoted',
+              inputs: [{ kind: 'i64', value: String(index) }], refs: [] });
+            const owner = saved.stack?.at(-1)?.owner;
+            if (owner) retained.push(owner);
+            await live.issue({ operation: 'invoke', id: 'short', inputs: [], refs: [] });
+            scratchCount += 1;
+            if (retained.length > 4) {
+              const target = retained.shift();
+              const res = await live.issue({ operation: 'release-program', owner: target });
+              if (res.outcome === 'program-released') released += 1;
+            }
+          }
+          await live.issue({ operation: 'invoke', id: 'short', inputs: [], refs: [] });
+          scratchCount += 1;
+          while (retained.length) {
+            const target = retained.shift();
+            const res = await live.issue({ operation: 'release-program', owner: target });
+            if (res.outcome === 'program-released') released += 1;
+          }
+        }, { timeoutMs: options.timeoutMs });
+        const opRows = session.rows.slice(3);
+        return { outcome: [...new Set(opRows.map(row => row.outcome))].join(','),
+          metrics: null, units: summarize(session.latencies.slice(2)),
+          observation: { operations: opRows.length, scratch: scratchCount, released,
+            exit: session.exit } };
+      } finally {
+        fs.rmSync(directory, { recursive: true, force: true });
+      }
     },
   });
   for (const strategy of ['A5', 'A6']) {
@@ -592,24 +655,28 @@ async function main() {
         const driver = strategy === 'A5' ? drivers.a5 : drivers.a6;
         const calibration = driver.root({ build: { kind: 'tree', shape: 0, leaves: 16 },
           invoke: { kind: 'invoke', value: '20' } });
-        const peak = calibration.snapshots.construction.peak_transient_logical_bytes;
+        const peak = calibration.snapshots.invocation?.allocation_peak_bytes
+          ?? calibration.snapshots.construction?.allocation_peak_bytes;
         const at = driver.root({ build: { kind: 'tree', shape: 0, leaves: 16 },
           invoke: { kind: 'invoke', value: '20' }, limits: { allocation_bytes: peak } });
         const below = driver.root({ build: { kind: 'tree', shape: 0, leaves: 16 },
           invoke: { kind: 'invoke', value: '20' }, limits: { allocation_bytes: peak - 1 } });
+        const atSnapshot = at.phase ? at.snapshots[at.phase] : (at.snapshots.invocation ?? at.snapshots.construction);
+        const belowSnapshot = below.phase ? below.snapshots[below.phase] : (below.snapshots.invocation ?? below.snapshots.construction);
         return { outcome: at.status === 0 && below.status !== 0 ? 'distinct' : 'unexpected',
-          metrics: below.snapshots[below.phase],
+          metrics: belowSnapshot ?? null,
           units: { median: below.timings_ns.construction, count: 1 },
-          observation: { peak, at: { status: at.status, phase: at.phase, reason: at.snapshots[at.phase].quota_reason },
-            below: { status: below.status, phase: below.phase, reason: below.snapshots[below.phase].quota_reason } } };
+          observation: { peak,
+            at: { status: at.status, phase: at.phase, reason: atSnapshot?.quota_reason ?? null },
+            below: { status: below.status, phase: below.phase, reason: belowSnapshot?.quota_reason ?? null } } };
       },
     });
   }
   definePoint('W6/A7/F1', {
     strategy: 'A7', workload: 'W6', size: 'allocation-bytes', unit: 'root',
     run: async () => {
-      const at = drivers.a7.quota(64);
-      const below = drivers.a7.quota(63);
+      const at = drivers.a7.quota(64, 64);
+      const below = drivers.a7.quota(63, 64);
       return { outcome: at.outcome === 'normal' && below.outcome === 'trap' ? 'distinct' : 'unexpected',
         metrics: below.metrics, units: { median: 0, count: 1 },
         observation: { at, below } };
@@ -648,7 +715,11 @@ async function main() {
       strategy: 'A3', workload: 'W7', size: 'test.abort', unit: 'submission',
       includesCompilation: true,
       run: async () => {
-        const session = await lineSession(liveDriver(), [trapSource], { timeoutMs: options.timeoutMs });
+        const session = await lineSession(
+          liveDriver(['--allow-effects', 'test.emit,test.abort']),
+          [trapSource],
+          { timeoutMs: options.timeoutMs, allowEarlyExit: true },
+        );
         return sourceSessionResult(session, undefined);
       },
     });
@@ -659,11 +730,13 @@ async function main() {
       run: async () => {
         const driver = strategy === 'A5' ? drivers.a5 : drivers.a6;
         const result = driver.root({ build: { kind: 'tree', shape: 0, leaves: 256 },
+          invoke: { kind: 'invoke', value: '20' },
           limits: { dispatch_steps: 50 } });
+        const snap = result.phase ? result.snapshots[result.phase] : null;
         return { outcome: result.status === 0 ? 'normal' : 'exhausted', metrics: result.cleanup.metrics,
           units: { median: result.timings_ns.cleanup, count: 1 },
           observation: { status: result.status, phase: result.phase,
-            reason: result.snapshots[result.phase]?.quota_reason,
+            reason: snap?.quota_reason ?? null,
             cleanup: result.cleanup.returned_live_bytes, error: result.engine_error } };
       },
     });
@@ -733,7 +806,8 @@ async function main() {
     schema: 'noble-allocation-baselines/v1',
     change: '.cairn/changes/allocation-strategy-contract',
     requirements: ['ALLOC-EV-01', 'ALLOC-OBS-01'],
-    started_at: finished,
+    started_at: started,
+    finished_at: finished,
     source: binding,
     source_rebound: { ...rebinding, unchanged: binding.commit === rebinding.commit
       && binding.tree === rebinding.tree && binding.clean, cli_unchanged: toolsUnchanged },
@@ -752,7 +826,7 @@ async function main() {
       clock: 'process.hrtime.bigint',
       cpu_affinity_recorded_not_changed: host.affinity_cpus,
       host_load_recorded_with_every_sample: true,
-      retry_policy: 'one re-run when relative MAD > 0.1 or a sample failed; every attempt retained',
+      retry_policy: 'at most one re-run (2 attempts total) when relative MAD > 0.1 or a sample failed; every attempt retained',
       decision_effect_threshold: DECISION_EFFECT,
     },
     tools,
@@ -767,7 +841,7 @@ async function main() {
       'W3': ['A4'],
       'W4': ['A1', 'A2', 'A3', 'A4'],
       'W5': ['A1', 'A3', 'A4', 'A5', 'A6', 'A7'],
-      'W6': ['A1', 'A4', 'A5', 'A6', 'A7', 'A9'],
+      'W6': ['A1', 'A5', 'A6', 'A7', 'A9'],
       'W7': ['A1', 'A3', 'A4', 'A5', 'A6', 'A7'],
       'W8': ['A2'],
       reasons: {
@@ -784,15 +858,16 @@ async function main() {
         'W4/A6': 'the M3 experiment has no source definition or replacement namespace',
         'W4/A7': 'the component ABI has no source session or definitions',
         'W5/A2': 'Calculator-v1 has no saved captures; Text allocations are measured in W8',
-        'W6/A2': 'unexecuted: the calculator session does not complete a definition line in bounds (see W8)',
+        'W6/A2': 'unexecuted: Calculator-v1 exposes no per-session allocation-limit selection',
         'W6/A3': 'the live REPL exposes no per-session allocation-limit selection',
+        'W6/A4': 'F2 live-slot pool exhaustion is exercised by cases.mjs on the live-slot accounting/storage fragments',
       },
     },
     notes: [
       'W1 A1/A3 use the shipped session/live frontend; A5/A6 use the selected M3 build_tree harness; A4 installs one checked source and invokes it.',
       'Timing units are per point: guest root (in-process exports), submission (CLI line), invoke (live-slot command), process (worker death). Points with includes_compilation=true time the shipped frontend too and are not comparable to guest-only roots.',
-      'W2 A1 additionally runs one full 10,000-root shipped session; the sampled distribution uses 1,000 roots because each shipped submission assembles and compiles a new module (12.7 ms measured).',
-      'W6/A4 F2 (pool full) and the lowered-memory F3 harness are executed by cases.mjs after the F1-F4 split; box 1 records the pre-split quota reason.',
+      'W2 A1 and A3 additionally run one full 10,000-root shipped session (stopping at the 513-submission allocation bound); the sampled distribution uses 500 roots to stay below that bound while measuring per-submission latency.',
+      'W6/A4 F2 (pool full) and the lowered-memory F3 harness are executed by cases.mjs; box 1 records the pre-split quota reason.',
       'No physical-return claim: released_total_bytes is logical accounting only.',
     ],
   };

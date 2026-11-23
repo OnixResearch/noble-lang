@@ -35,6 +35,7 @@ export function sourceBinding() {
     'crates/noble-cli/src/core/runtime/abi.json',
     'crates/noble-cli/src/core/runtime/config.json',
     'crates/noble-wasm/runtime/accounting.wat',
+    'crates/noble-wasm/runtime/linear-address.wat',
     'crates/noble-wasm/runtime/linear-storage.wat',
     'crates/noble-wasm/runtime/live-accounting.wat',
     'crates/noble-wasm/runtime/live-linear-storage.wat',
@@ -45,6 +46,7 @@ export function sourceBinding() {
     'crates/noble-wasm/src/component/runtime.wat',
     'verification/allocation-baselines/core.mjs',
     'verification/allocation-baselines/drivers.mjs',
+    'verification/allocation-baselines/fragments.mjs',
     'verification/allocation-baselines/workloads.mjs',
     'verification/allocation-baselines/run.mjs',
     'verification/allocation-baselines/cases.mjs',
@@ -58,11 +60,37 @@ export function sourceBinding() {
   };
 }
 
+export function resolveWasmTools() {
+  const candidates = [];
+  if (process.env.NOBLE_WASM_TOOLS) candidates.push(process.env.NOBLE_WASM_TOOLS);
+  if (process.env.WASM_TOOLS_BIN) {
+    const envBin = process.env.WASM_TOOLS_BIN;
+    try {
+      candidates.push(fs.statSync(envBin).isDirectory() ? path.join(envBin, 'wasm-tools') : envBin);
+    } catch {
+      candidates.push(path.join(envBin, 'wasm-tools'));
+    }
+  }
+  for (const dir of (process.env.PATH ?? '').split(path.delimiter).filter(Boolean)) {
+    candidates.push(path.join(dir, 'wasm-tools'));
+  }
+  candidates.push(path.join(path.dirname(fs.realpathSync(process.execPath)), 'wasm-tools'));
+  for (const candidate of candidates) {
+    try {
+      if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+        fs.accessSync(candidate, fs.constants.X_OK);
+        return fs.realpathSync(candidate);
+      }
+    } catch { /* try next candidate */ }
+  }
+  return candidates[0];
+}
+
 export function toolBinding(cli) {
   const node = fs.realpathSync(process.execPath);
-  const wasmTools = process.env.NOBLE_WASM_TOOLS
-    ?? `${fs.realpathSync(path.dirname(fs.realpathSync(process.execPath)))}/wasm-tools`;
+  const wasmTools = resolveWasmTools();
   const tool = candidate => {
+    if (!candidate) return null;
     const run = spawnSync(candidate, ['--version'], { encoding: 'utf8' });
     return run.status === 0
       ? { path: fs.realpathSync(candidate), sha256: sha256(fs.readFileSync(candidate)),

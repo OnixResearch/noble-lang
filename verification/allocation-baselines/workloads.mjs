@@ -47,33 +47,52 @@ export function treeExpression(shape, count, chunk = 16) {
 // Every line is one checked submission; the session stack carries the partial
 // composition Programs between submissions.
 export function treeBuildLines(shape, count, chunk = 16) {
+  // Right-deep trees retain all pending chunk Programs on the session stack while
+  // compiling later chunks, which increases frontend type-check work per line;
+  // capping the chunk size at 8 for large right-deep trees keeps each submission
+  // inside the compile budget.
+  const effectiveChunk = shape === 'right' && count > 32 ? Math.min(chunk, 8) : chunk;
   const lines = [`${TREE_INITIAL}`];
   const chunks = [];
-  for (let start = 0; start < count; start += chunk) {
-    const size = Math.min(chunk, count - start);
-    chunks.push(Array.from({ length: size }, (_, index) => leaf(start + index)).join(' '));
+  for (let start = 0; start < count; start += effectiveChunk) {
+    const size = Math.min(effectiveChunk, count - start);
+    const leaves = Array.from({ length: size }, (_, index) => leaf(start + index)).join(' ');
+    const line = size > 1
+      ? `${leaves} ${Array.from({ length: size - 1 }, () => 'compose').join(' ')}`
+      : leaves;
+    chunks.push({ line, size });
   }
   if (shape === 'left') {
     // Each chunk composes into the accumulator immediately: one accumulator slot.
-    for (const [index, source] of chunks.entries()) {
-      lines.push(index === 0
-        ? `${source} ${Array.from({ length: chunk - 1 }, () => 'compose').join(' ')}`
-        : `${source} ${Array.from({ length: chunk - 1 }, () => 'compose').join(' ')} compose`);
+    for (const [index, entry] of chunks.entries()) {
+      lines.push(index === 0 ? entry.line : `${entry.line} compose`);
     }
     lines.push('run');
     return lines;
   }
   if (shape === 'right') {
-    // All chunks stay on the stack, then fold from the top.
-    for (const source of chunks) lines.push(`${source} ${Array.from({ length: chunk - 1 }, () => 'compose').join(' ')}`);
-    lines.push(Array.from({ length: chunks.length - 1 }, () => 'compose').join(' '));
+    // All chunks stay on the stack, then fold from the top one compose per line.
+    for (const entry of chunks) lines.push(entry.line);
+    for (let index = 1; index < chunks.length; index += 1) lines.push('compose');
     lines.push('run');
     return lines;
   }
-  // Balanced at chunk granularity: pair chunk Programs after every two pushes.
-  for (const source of chunks) {
-    lines.push(`${source} ${Array.from({ length: chunk - 1 }, () => 'compose').join(' ')}`);
-    if (lines.filter(line => line.includes('[ ')).length % 2 === 0) lines.push('compose');
+  // Balanced at chunk granularity: binary-tree carry folding keeps at most
+  // O(log(chunks)) Programs on the session stack and folds any remaining
+  // subtrees at the end so every count finishes with one Program.
+  const heights = [];
+  for (const entry of chunks) {
+    lines.push(entry.line);
+    heights.push(0);
+    while (heights.length >= 2 && heights[heights.length - 1] === heights[heights.length - 2]) {
+      heights.pop();
+      heights[heights.length - 1] += 1;
+      lines.push('compose');
+    }
+  }
+  while (heights.length > 1) {
+    heights.pop();
+    lines.push('compose');
   }
   lines.push('run');
   return lines;
@@ -83,7 +102,7 @@ export function treeBuildLines(shape, count, chunk = 16) {
 export const treeBuildShape = (shape, count, chunk = 16) => {
   if (shape === 'left') return 'left-deep-at-chunk-boundaries';
   if (shape === 'right') return 'right-deep-at-chunk-boundaries';
-  return count > chunk ? 'paired-at-chunk-boundaries' : 'single-chunk';
+  return count > chunk ? 'balanced-at-chunk-boundaries' : 'single-chunk';
 };
 
 export const shortRoot = '41 1 +';
@@ -101,20 +120,31 @@ export function definitionSessionLines(count) {
   while (lines.length < count) {
     const name = `n${at % definitionNames}`;
     lines.push(`def ${name} [ ${at + 1} + ]`);
-    if (lines.length < count) lines.push(`40 ${name}`);
+    if (lines.length < count) lines.push(`40 ${name} drop`);
     at += 1;
   }
   return lines.slice(0, count);
 }
 
-// W5: interleaved retained Program values and scratch work. Two retained Programs
-// are merged every third line, so the session stack stays inside the operand budget.
+// W5: interleaved retained Program values and scratch work. Keeps one retained
+// Program on the session stack, interleaving scratch allocations (`41 1 + drop`)
+// with compositions and periodic execution/replacement so the recipe-leaf and
+// operand budgets remain bounded for any session length.
 export function mixedLifetimeLines(count) {
-  const lines = [];
-  for (let index = 0; lines.length < count; index += 1) {
-    if (index % 3 === 0) lines.push(`40 ${leaf(index)}`, '41 1 +');
-    else if (index % 3 === 1) lines.push(`40 ${leaf(index)}`);
-    else lines.push('compose');
+  const lines = [leaf(0)];
+  let retainedLeaves = 1;
+  let index = 1;
+  while (lines.length < count) {
+    lines.push('41 1 + drop');
+    if (lines.length >= count) break;
+    if (retainedLeaves < 8) {
+      lines.push(`${leaf(index)} compose`);
+      retainedLeaves += 1;
+    } else {
+      lines.push(`20 swap run drop ${leaf(index)}`);
+      retainedLeaves = 1;
+    }
+    index += 1;
   }
   return lines.slice(0, count);
 }
