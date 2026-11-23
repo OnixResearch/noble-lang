@@ -39,9 +39,10 @@ program does not execute its effects.
 
 The design centers on a few properties:
 
-- **Typed composition.** The frontend infers stack types and effects. An
-  independent kernel checks the candidate, and the backend rechecks it before
-  emitting Wasm.
+- **Typed composition.** The frontend infers stack types and effects. A
+  separate kernel checks the candidate, and the backend re-runs kernel
+  acceptance before emitting Wasm (guarding the frontend-to-backend boundary
+  against tampering rather than adding a third independent checker).
 - **Stable meaning.** Rebinding a name does not change programs that already
   refer to its previous definition.
 - **Explicit effects and ownership.** Effect bounds describe possible host
@@ -1388,10 +1389,13 @@ lists the pinned Lean installation and required Linux isolation tools.
 
 Implementation verification follows **Rust → Charon → Aeneas → Lean 4**.
 That route is mandatory for the semantic kernel and the target for all
-Noble-owned production Rust. Scoped proofs and extraction checks exist, but
-universal frontend, kernel, compiler, backend, and host correctness remain
-open. Runtime tests, application proofs, extraction results, and implementation
-proofs are recorded separately.
+Noble-owned production Rust. Scoped proofs and extraction checks exist — in
+particular, the kernel refinement proofs in `proofs/m2` and `proofs/m3`
+establish agreement between the extracted checker and reference model on finite
+fixture matrices via evaluation (`native_decide`), not universal refinement
+over all inputs. Universal frontend, kernel, compiler, backend, and host
+correctness remain open. Runtime tests, application proofs, extraction results,
+and implementation proofs are recorded separately.
 
 The analyses are also tested for order independence: a deterministic
 order-variation harness reruns frontend, kernel, numeric-graph and
