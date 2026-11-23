@@ -1495,14 +1495,15 @@ These obligations preserve the existing milestone dependencies and the mandatory
 
 ## Optional execution backends (unaccepted profiles)
 
-The distinct [explicit live-reference issue #1 design](../.cairn/changes/explicit-live-references/proposal.md)
-selects an opt-in `Live-Slot-Design` only: a checked generic caller borrows an
-invocation-input `LiveRef` and dispatches from one pinned immutable registry
-epoch per root. It neither redirects ordinary saved `[ n ]` nor amends guarded
-`Live-Wasm-Draft` reload. [LSLOT-01..09](conformance/live-reference-cases.json)
-are design cases, all absent/not-run with proof open and trust unassessed.
-No implementation, milestone completion, acceptance or source-bound release
-is claimed; independent review precedes any promotion.
+The distinct [explicit live-reference issue #1 design](../.cairn/archive/2026-11-23-explicit-live-references/proposal.md)
+(archived 2026-11-23) selects an opt-in `Live-Slot-Design`: a checked generic
+caller borrows an invocation-input `LiveRef` and dispatches from one pinned
+immutable registry epoch per root. It neither redirects ordinary saved `[ n ]`
+nor amends guarded `Live-Wasm-Draft` reload.
+[LSLOT-01..09](conformance/live-reference-cases.json) are implemented/passed
+with proof open and trust explicit from one source-bound gate receipt
+(`verification/lslot-cases/acceptance-2026-11-23-pb.json`). No milestone
+completion, acceptance, proof or source-bound release is claimed.
 
 The [MLIVE milestone](roadmap.json) follows M4 and DXM1 and is specified by
 [the live namespace contract](../.cairn/specs/language/spec.md),

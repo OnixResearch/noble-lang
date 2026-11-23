@@ -2266,6 +2266,46 @@
       "sha256": "e7ad946b671922409e38cdcafe08232e5d4f30e86cd63f83252b3af8cdc2d2d5"
     },
     {
+      "file": ".cairn/archive/2026-11-23-explicit-live-references/design.md",
+      "sha256": "693f98e1df8041106ef5d87000c2533e96e7b8d338916fac9b772944c5c40a7f"
+    },
+    {
+      "file": ".cairn/archive/2026-11-23-explicit-live-references/proposal.md",
+      "sha256": "43dc361f14862e578e5b8f1e7787a52a79c1a2e26b1a98a9cdcff12bc1e468cf"
+    },
+    {
+      "file": ".cairn/archive/2026-11-23-explicit-live-references/review-integrator-2026-11-22-pushb.md",
+      "sha256": "64407a9b3815e90a523922886ef47d57838c542cefbdb780dd29dee9512777ab"
+    },
+    {
+      "file": ".cairn/archive/2026-11-23-explicit-live-references/specs/core-bootstrap/spec.md",
+      "sha256": "27ee332114b3d086f96fb20ffd6685694300b38357536d3a4eba46d97251f2ec"
+    },
+    {
+      "file": ".cairn/archive/2026-11-23-explicit-live-references/specs/developer-experience/spec.md",
+      "sha256": "5f9c55f6db2a09e1d5e4fc6cd924ae74b1025fc2f2ef3fe87ca2f6cb79b3d9f2"
+    },
+    {
+      "file": ".cairn/archive/2026-11-23-explicit-live-references/specs/evidence/spec.md",
+      "sha256": "541aa8493e15fed1281536608827713bb07cc5fca0bf0f600ed23be9b80a8ba9"
+    },
+    {
+      "file": ".cairn/archive/2026-11-23-explicit-live-references/specs/language/spec.md",
+      "sha256": "bb361636010a2a1b9cef91e053a97e50830fa47ce12a0cd0067650036ec6923d"
+    },
+    {
+      "file": ".cairn/archive/2026-11-23-explicit-live-references/specs/program-contracts/spec.md",
+      "sha256": "2868ba0696766762a0f9dd77c24aef7cf1b0da5923a997349ffc0b72f836a429"
+    },
+    {
+      "file": ".cairn/archive/2026-11-23-explicit-live-references/specs/safety/spec.md",
+      "sha256": "8a2d0a8498a4cd64b514706d54e91b2eca87e219414fb8afe54f4b00fa61d4f7"
+    },
+    {
+      "file": ".cairn/archive/2026-11-23-explicit-live-references/tasks.md",
+      "sha256": "3c3cb73898f354b6225110d554f0bb9f14a4747b37c6a3cfc86887b8eb368403"
+    },
+    {
       "file": ".cairn/changes/allocation-strategy-contract/design.md",
       "sha256": "6b34ad39dd8180a08464c66daf450af2f6a687f9dee4bf1c5abd0f3436f06b66"
     },
@@ -2404,46 +2444,6 @@
     {
       "file": ".cairn/changes/cranelift-backend-evaluation/tasks.md",
       "sha256": "52451860331a19cb131450a8b53164ec27379479fb3b5a57fa49d564372bc7e4"
-    },
-    {
-      "file": ".cairn/changes/explicit-live-references/design.md",
-      "sha256": "693f98e1df8041106ef5d87000c2533e96e7b8d338916fac9b772944c5c40a7f"
-    },
-    {
-      "file": ".cairn/changes/explicit-live-references/proposal.md",
-      "sha256": "43dc361f14862e578e5b8f1e7787a52a79c1a2e26b1a98a9cdcff12bc1e468cf"
-    },
-    {
-      "file": ".cairn/changes/explicit-live-references/review-integrator-2026-11-22-pushb.md",
-      "sha256": "64407a9b3815e90a523922886ef47d57838c542cefbdb780dd29dee9512777ab"
-    },
-    {
-      "file": ".cairn/changes/explicit-live-references/specs/core-bootstrap/spec.md",
-      "sha256": "27ee332114b3d086f96fb20ffd6685694300b38357536d3a4eba46d97251f2ec"
-    },
-    {
-      "file": ".cairn/changes/explicit-live-references/specs/developer-experience/spec.md",
-      "sha256": "5f9c55f6db2a09e1d5e4fc6cd924ae74b1025fc2f2ef3fe87ca2f6cb79b3d9f2"
-    },
-    {
-      "file": ".cairn/changes/explicit-live-references/specs/evidence/spec.md",
-      "sha256": "541aa8493e15fed1281536608827713bb07cc5fca0bf0f600ed23be9b80a8ba9"
-    },
-    {
-      "file": ".cairn/changes/explicit-live-references/specs/language/spec.md",
-      "sha256": "bb361636010a2a1b9cef91e053a97e50830fa47ce12a0cd0067650036ec6923d"
-    },
-    {
-      "file": ".cairn/changes/explicit-live-references/specs/program-contracts/spec.md",
-      "sha256": "2868ba0696766762a0f9dd77c24aef7cf1b0da5923a997349ffc0b72f836a429"
-    },
-    {
-      "file": ".cairn/changes/explicit-live-references/specs/safety/spec.md",
-      "sha256": "8a2d0a8498a4cd64b514706d54e91b2eca87e219414fb8afe54f4b00fa61d4f7"
-    },
-    {
-      "file": ".cairn/changes/explicit-live-references/tasks.md",
-      "sha256": "3c3cb73898f354b6225110d554f0bb9f14a4747b37c6a3cfc86887b8eb368403"
     },
     {
       "file": ".cairn/changes/gpu-offload-research/design.md",
@@ -2703,7 +2703,7 @@
     },
     {
       "file": ".cairn/README.md",
-      "sha256": "1e61f37ad353c93a9032751423f831b4a803b9af5044c42b1d722bbded559546"
+      "sha256": "955b22fcc87944f595f9b26daba10a32ee1a3521329da708982eb175efa42fe1"
     },
     {
       "file": ".cairn/specs/backend-experiments/spec.md",
@@ -2983,7 +2983,7 @@
     },
     {
       "file": "specs/ROADMAP.md",
-      "sha256": "849f9f2f47c5ae7163f8ba7eff61fbcf50c62c77f4493279894e108533ebcfcc"
+      "sha256": "0216512c8fd94b0223817f10025ad4f8622abe1ce22aec83b090a6b27ce67730"
     },
     {
       "file": "specs/SAFETY.md",
@@ -3003,7 +3003,7 @@
     },
     {
       "file": "specs/STATUS.json",
-      "sha256": "4c98bcbac4370577d96319fc1695344e8f99506553e5a026a2661b920f47b69f"
+      "sha256": "26547af8d9daf7dcf74715f1d6b87f58a1c992dfbefa210f946f12648b81fb39"
     },
     {
       "file": "specs/TYPED-CHUNK-RANKING.md",
