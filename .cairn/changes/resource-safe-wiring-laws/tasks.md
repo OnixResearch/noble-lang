@@ -54,7 +54,7 @@
 
   Progress (2026-11-23): the T/O/F models are developed in
   `proofs/foundation/NobleFoundation/WiringLaws.lean` at commit
-  `494b0edb7195ab0eb1196c21267e12e3770a108f` over `OwnershipModel` (the
+  `521456ec47b9aaec02beeea6a4ddf070aa506c51` over `OwnershipModel` (the
   wiring words are instruction sequences in that language, so every
   ownership result is an `OwnershipModel.owners_step` instance). T:
   `step_trace_any`, `step_trace`, `effect_sound`, `trace_within_bound`,
@@ -106,13 +106,13 @@
   (2026-11-23)" subsection records the same gap.
 
   Evidence, run on the committed clean tree
-  `494b0edb7195ab0eb1196c21267e12e3770a108f`:
+  `521456ec47b9aaec02beeea6a4ddf070aa506c51`:
   `verification/ci/lean-proofs.sh <output>` printed
   `m3-build=0`, `m3-gate=0`, `foundation-build=0`,
   `foundation-check=0`, `overall=0`. The checker receipt
   `foundation/foundation-check.json` has SHA-256
-  `397d03b5025c1d89ddc097c421cd65503d16bea2b132fbfe6a543e2f40b53b5d`
-  and records `clean_source: true`, 2,801 theorems, 388 private
+  `bd8eedecf7f336b0f446657dee12dbad2b31e7db5f583e0c64d0dede469053c9`
+  and records `clean_source: true`, 2,802 theorems, 388 private
   theorems, the allow-list `propext`, `Classical.choice`, `Quot.sound`,
   and `implementation_theorem: false`. `summary.txt` has SHA-256
   `6d2ba8f00dfc3d34ea5274843c3adc6df384f36481106d34e41d6714d35875e3`.
