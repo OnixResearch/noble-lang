@@ -2,6 +2,29 @@
   "schema_version": 1,
   "revision": "0.1.0-draft.5",
   "origin": "exact-calculator-new-unexecuted-designs",
+  "amendments": [
+    {
+      "date": "2026-11-23",
+      "case": "CALC-07",
+      "changed": "recorded `cyclic-imported-definition-graph` and `resource-capability-capture` as `unsupported-on-cli` while keeping `input.variants` intact; promoted CLI-applicable 5/7 variants as `implementation: partial, execution: passed`",
+      "reason": "The calculator line grammar has no import/module form and names no resources or capabilities.",
+      "decision": "OWNER DECISION 2026-11-20 (decision 17): \"CALC-07's import and resource variants do not apply to the calculator CLI\""
+    },
+    {
+      "date": "2026-11-23",
+      "case": "CALC-09",
+      "changed": "accepted the derived reading for `later_features` (`exact-display-or-explicit-unsupported-feature`): \"refused under any named category, exit 1, no value, never approximated\" (`NonIntegerExponent`, `UnknownName`, `TrailingInput`), with reviewer caveat recorded",
+      "reason": "The six out-of-grammar probes are refused explicitly under generic grammar/name/domain categories rather than approximated or silently accepted; generic categories look like typos and user-defined `fn sin(x)=x` evaluates `sin(1)`.",
+      "decision": "OWNER DECISION 2026-11-20 (decision 26): \"CALC-09 reading accepted\""
+    },
+    {
+      "date": "2026-11-23",
+      "case": "CALC-10, CALC-11",
+      "changed": "out of scope for Calculator-v1; moved to MA3 (`calculator-AI-authoring-evaluation`) and kept absent/not-run",
+      "reason": "Authoring-tool variants and benchmark integrity belong to MA3 rather than Calculator-v1.",
+      "decision": "OWNER DECISION 2026-11-20 (decision 17): \"CALC-10/11 move to MA3 and do not apply to Calculator-v1\""
+    }
+  ],
   "cases": [
     {
       "id": "CALC-01", "profile": "Calculator-Design", "kind": "runtime",
@@ -24,7 +47,31 @@
         {"expression": "0^0", "numerator": "1", "denominator": "1"}
       ]},
       "expected": {"stage": "calculator-runtime", "outcome": "each-exact-vector-matches", "binary_float_parsing": false, "fixed_width_narrowing": false, "all_results_normalized": true},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [
+        {
+          "claim": "All 15 CALC-01 exact-rational expression and precedence vectors passed on the debug `noble calculator` CLI (including `0.1 + 0.2 = 3/10`, `0.00000000000000000001 = 1/100000000000000000000`, and `9223372036854775807 + 1 = 9223372036854775808`) with 15/15 independent BigInt oracle agreement and 2/2 negative controls passing. Finite vector execution does not prove parser completeness or universal arithmetic properties.",
+          "subject": "CALC-01",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:947ba979bac2edc8bdaa3854cf87e8bf7e9a7f0a478e274c56d087cffc387d26",
+          "configuration": {
+            "profile": "Calculator-Design",
+            "case_id": "CALC-01",
+            "receipt": "../../verification/calculator-v1/cases/runs/20261123-89dd2742/acceptance.json",
+            "receipt_sha256": "2bff9100b0f0d369514290d38059375273fefad55fc1ce4ae01cffe898ac7f49",
+            "gate": "../../verification/calculator-v1/cases/gate.mjs",
+            "gate_sha256": "6a0cb481d8a2fa874b6f5b1c2e18c6826e41a378e4ac5de91a39ef4a0557de9a",
+            "tested_commit": "89dd2742e76a41aabfc2b0be4e56a7ff0044178a"
+          },
+          "assumptions": [
+            "Debug build (`cargo build --locked --offline -p noble-cli --bin noble --no-default-features`) executed on clean commit `89dd2742e76a41aabfc2b0be4e56a7ff0044178a`.",
+            "Trusted toolchain/runtime: Rust, Wasmtime, V8/Node worker runtime, and checked guest `.noble` calculator modules.",
+            "Finite test vectors and independent oracle agreement are test evidence only (`proof: open`)."
+          ]
+        }
+      ]
     },
     {
       "id": "CALC-02", "profile": "Calculator-Design", "kind": "runtime",
@@ -37,7 +84,31 @@
         {"expression": "0.1.2", "category": "SyntaxError", "span": [3, 4]}
       ], "span_units": "utf8-bytes-half-open"},
       "expected": {"stage": "calculator-validation", "outcome": "each-diagnostic-matches", "state_unchanged": true, "silent_correction": false, "calculator_core_host_requests": 0},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [
+        {
+          "claim": "All 5 CALC-02 diagnostic vectors matched their exact categories, half-open UTF-8 byte spans, and `provenance=unavailable` with zero silent correction and 5/5 oracle agreement; multi-line `state-host` session (`let x = 7` followed by all 5 failing lines then `x`) preserved `7` (`state_unchanged: true`), and `CoreEngine` (`Calculator-v1`) verified `hostFunctions = []` and `host_requests_total = 0` (`calculator_core_host_requests: 0`). Finite diagnostic vectors are not a universal proof.",
+          "subject": "CALC-02",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:947ba979bac2edc8bdaa3854cf87e8bf7e9a7f0a478e274c56d087cffc387d26",
+          "configuration": {
+            "profile": "Calculator-Design",
+            "case_id": "CALC-02",
+            "receipt": "../../verification/calculator-v1/cases/runs/20261123-89dd2742/acceptance.json",
+            "receipt_sha256": "2bff9100b0f0d369514290d38059375273fefad55fc1ce4ae01cffe898ac7f49",
+            "gate": "../../verification/calculator-v1/cases/gate.mjs",
+            "gate_sha256": "6a0cb481d8a2fa874b6f5b1c2e18c6826e41a378e4ac5de91a39ef4a0557de9a",
+            "tested_commit": "89dd2742e76a41aabfc2b0be4e56a7ff0044178a"
+          },
+          "assumptions": [
+            "Debug build (`--no-default-features`) executed on clean commit `89dd2742e76a41aabfc2b0be4e56a7ff0044178a`.",
+            "Trusted toolchain/runtime and `CoreEngine` `Calculator-v1` host-function exclusion (`engine-calculator.test.mjs` 4/4, 0 skipped).",
+            "Finite vector and session observations are test evidence only (`proof: open`)."
+          ]
+        }
+      ]
     },
     {
       "id": "CALC-03", "profile": "Calculator-Design", "kind": "runtime",
@@ -49,7 +120,31 @@
         {"expression": "4^(1/2)", "category": "NonIntegerExponent"}
       ]},
       "expected": {"stage": "calculator-runtime", "outcome": "each-error-matches", "state_unchanged": true, "successful_numeric_result": false, "calculator_core_host_requests": 0},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [
+        {
+          "claim": "All 4 CALC-03 numeric-error vectors (`1 / 0`, `0 / 0`, `0^-1` -> `DivisionByZero`; `4^(1/2)` -> `NonIntegerExponent`) exited 1 with zero numeric stdout (`successful_numeric_result: false`) and 4/4 oracle agreement; 4 multi-line `state-host` sessions (`let x = 7` -> failing line -> `x`) preserved `7` (`state_unchanged: true`), and `CoreEngine` (`Calculator-v1`) verified `host_requests_total = 0`. Finite error vectors are not a universal proof.",
+          "subject": "CALC-03",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:947ba979bac2edc8bdaa3854cf87e8bf7e9a7f0a478e274c56d087cffc387d26",
+          "configuration": {
+            "profile": "Calculator-Design",
+            "case_id": "CALC-03",
+            "receipt": "../../verification/calculator-v1/cases/runs/20261123-89dd2742/acceptance.json",
+            "receipt_sha256": "2bff9100b0f0d369514290d38059375273fefad55fc1ce4ae01cffe898ac7f49",
+            "gate": "../../verification/calculator-v1/cases/gate.mjs",
+            "gate_sha256": "6a0cb481d8a2fa874b6f5b1c2e18c6826e41a378e4ac5de91a39ef4a0557de9a",
+            "tested_commit": "89dd2742e76a41aabfc2b0be4e56a7ff0044178a"
+          },
+          "assumptions": [
+            "Debug build (`--no-default-features`) executed on clean commit `89dd2742e76a41aabfc2b0be4e56a7ff0044178a`.",
+            "Trusted toolchain/runtime and `CoreEngine` `Calculator-v1` host-function exclusion (`engine-calculator.test.mjs` 4/4, 0 skipped).",
+            "Finite vector and session observations are test evidence only (`proof: open`)."
+          ]
+        }
+      ]
     },
     {
       "id": "CALC-04", "profile": "Calculator-Design", "kind": "runtime",
@@ -93,7 +188,31 @@
         {"operation": "evaluate", "expression": "f(1, 2)", "expected_error": "WrongArity"}
       ]},
       "expected": {"stage": "calculator-session", "outcome": "each-operation-matches", "failed_submission_state_unchanged": true, "earlier_function_rebound": false, "calculator_core_host_requests": 0},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [
+        {
+          "claim": "The 9-operation CALC-06 lexical session (`let x = 10`, `fn f(y)=x + y`, `let x = 20`, `f(1)`->`11`, `fn g(x)=x + 1`, `g(2)`->`3`, `let x = 1 / 0`->`DivisionByZero`, `x`->`20`, `f(1, 2)`->`WrongArity`) passed on the debug CLI with independent oracle agreement (`agree`), `CoreEngine` `host_requests_total = 0`, 873-module trace check, and `calculator::tests::failed_lines_of_every_class_restore_the_committed_session` byte-exact restore check. Finite session testing is not a universal proof.",
+          "subject": "CALC-06",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:947ba979bac2edc8bdaa3854cf87e8bf7e9a7f0a478e274c56d087cffc387d26",
+          "configuration": {
+            "profile": "Calculator-Design",
+            "case_id": "CALC-06",
+            "receipt": "../../verification/calculator-v1/cases/runs/20261123-89dd2742/acceptance.json",
+            "receipt_sha256": "2bff9100b0f0d369514290d38059375273fefad55fc1ce4ae01cffe898ac7f49",
+            "gate": "../../verification/calculator-v1/cases/gate.mjs",
+            "gate_sha256": "6a0cb481d8a2fa874b6f5b1c2e18c6826e41a378e4ac5de91a39ef4a0557de9a",
+            "tested_commit": "89dd2742e76a41aabfc2b0be4e56a7ff0044178a"
+          },
+          "assumptions": [
+            "Debug build (`--no-default-features`) executed on clean commit `89dd2742e76a41aabfc2b0be4e56a7ff0044178a`.",
+            "Trusted toolchain/runtime, `CoreEngine` `Calculator-v1` host-function exclusion, and `cli-unit` committed-session byte-exact restore check.",
+            "Finite session testing does not constitute a universal lexical-scope or restore proof (`proof: open`)."
+          ]
+        }
+      ]
     },
     {
       "id": "CALC-07", "profile": "Calculator-Design", "kind": "runtime",
@@ -108,7 +227,30 @@
         {"case": "call-that-zero-argument-function", "outcome": "DivisionByZero"}
       ]},
       "expected": {"stage": "calculator-definition-validation", "outcome": "each-variant-matches", "rejected_definition_installed": false, "evaluations_during_definition_admission": 0, "calculator_core_host_requests": 0},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "partial", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [
+        {
+          "claim": "All 5 CLI-applicable CALC-07 definition-admission variants (`unused-body-with-unknown-name`, `duplicate-parameter-name`, `self-recursive-definition`, `zero-argument-function-body-1-divided-by-0`, `call-that-zero-argument-function`), including follow-up `UnknownName` probes confirming `rejected_definition_installed: false`, passed on the debug CLI with 5/5 oracle agreement and `CoreEngine` `host_requests_total = 0`. Per owner decision 17, the remaining 2 variants (`cyclic-imported-definition-graph`, `resource-capability-capture`) are `unsupported-on-cli` and stay unexercised, so implementation is recorded as `partial`.",
+          "subject": "CALC-07",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:947ba979bac2edc8bdaa3854cf87e8bf7e9a7f0a478e274c56d087cffc387d26",
+          "configuration": {
+            "profile": "Calculator-Design",
+            "case_id": "CALC-07",
+            "receipt": "../../verification/calculator-v1/cases/runs/20261123-89dd2742/acceptance.json",
+            "receipt_sha256": "2bff9100b0f0d369514290d38059375273fefad55fc1ce4ae01cffe898ac7f49",
+            "gate": "../../verification/calculator-v1/cases/gate.mjs",
+            "gate_sha256": "6a0cb481d8a2fa874b6f5b1c2e18c6826e41a378e4ac5de91a39ef4a0557de9a",
+            "tested_commit": "89dd2742e76a41aabfc2b0be4e56a7ff0044178a"
+          },
+          "assumptions": [
+            "OWNER DECISION 2026-11-20 (decision 17): `cyclic-imported-definition-graph` and `resource-capability-capture` do not apply to the calculator CLI (`unsupported-on-cli` in `cli-mapping.json`) and remain unexercised while `input.variants` is preserved.",
+            "Debug build (`--no-default-features`) executed on clean commit `89dd2742e76a41aabfc2b0be4e56a7ff0044178a`; `proof: open`."
+          ]
+        }
+      ]
     },
     {
       "id": "CALC-08", "profile": "Calculator-Design", "kind": "runtime",
@@ -127,7 +269,31 @@
         {"fraction": "1/3", "mode": "finite-decimal", "display": "1/3"}
       ], "later_features": ["approximation", "symbolic-expressions", "trigonometry", "units", "real-arithmetic", "complex-arithmetic"]},
       "expected": {"stage": "calculator-formatting", "outcome": "exact-display-or-explicit-unsupported-feature", "silent_approximation": false, "truncated_decimal_labeled_exact": false},
-      "state": {"implementation": "absent", "execution": "not-run", "proof": "open", "trust": "unassessed"}, "evidence": []
+      "state": {"implementation": "implemented", "execution": "passed", "proof": "open", "trust": "explicit"},
+      "evidence": [
+        {
+          "claim": "All 4 CALC-09 exact-display vectors (`2/1`->`2`, `3/10`->`3/10`, `3/10 --finite-decimal`->`0.3`, `1/3 --finite-decimal`->`1/3`) and all 6 `later_features` refusal probes (`2^0.5` `NonIntegerExponent`, `x + 1` `UnknownName`, `sin(1)` `UnknownName`, `1 m` `TrailingInput`, `sqrt(2)` `UnknownName`, `1 + 2i` `TrailingInput`) passed on the debug CLI with exit 1 / zero stdout / zero approximation on probes and 10/10 independent oracle agreement, under the owner-accepted reading (decision 26). Finite vectors are not a universal formatting proof.",
+          "subject": "CALC-09",
+          "revision": "0.1.0-draft.5",
+          "kind": "test",
+          "result": "passed",
+          "source_revision": "sha256:947ba979bac2edc8bdaa3854cf87e8bf7e9a7f0a478e274c56d087cffc387d26",
+          "configuration": {
+            "profile": "Calculator-Design",
+            "case_id": "CALC-09",
+            "receipt": "../../verification/calculator-v1/cases/runs/20261123-89dd2742/acceptance.json",
+            "receipt_sha256": "2bff9100b0f0d369514290d38059375273fefad55fc1ce4ae01cffe898ac7f49",
+            "gate": "../../verification/calculator-v1/cases/gate.mjs",
+            "gate_sha256": "6a0cb481d8a2fa874b6f5b1c2e18c6826e41a378e4ac5de91a39ef4a0557de9a",
+            "tested_commit": "89dd2742e76a41aabfc2b0be4e56a7ff0044178a"
+          },
+          "assumptions": [
+            "OWNER DECISION 2026-11-20 (decision 26): `exact-display-or-explicit-unsupported-feature` for the six `later_features` probes is met by \"refused under any named category, exit 1, no value, never approximated\" (`NonIntegerExponent`, `UnknownName`, `TrailingInput`).",
+            "Reviewer caveat (decision 26): these generic categories look like typos (e.g., `sin(1)` reports `UnknownName` like `sni(1)`), and a user-defined `fn sin(x)=x` evaluates `sin(1)` as the user's function.",
+            "Debug build (`--no-default-features`) executed on clean commit `89dd2742e76a41aabfc2b0be4e56a7ff0044178a`; `proof: open`."
+          ]
+        }
+      ]
     },
     {
       "id": "CALC-10", "profile": "AI-Authoring-Design", "kind": "review",
