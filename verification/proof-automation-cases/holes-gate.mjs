@@ -610,14 +610,15 @@ observations['PAUTO-CASE-15'] = await observe(async () => {
   expectIncludes('premise missing message', premMissing.report.diagnostic?.message, ['Resolve: unknown, forward or cyclic proof use']);
 
   // 1c. Undeclared premise `(use h)` where prior `proof h` passes `resolve`, then `(intro (h I64) ...)`
-  // shadows `h` with a value binder so proof checking refuses with `use does not name a proof premise`.
+  // shadows `h` with a value binder so `check_batch` during preparation refuses at `acceptance`
+  // (`Stage::Acceptance`) with `intrinsic-proof-refused` / `category: "rejected-term"`.
   const premShadowed = run('case15-undeclared-premise-shadowed', ['verify-module', 'sources/undeclared-premise-shadowed.noble', '--timeout-ms', TIMEOUT_MS]);
   expectValue('premise shadowed status', premShadowed.status, 2);
   expectValue('premise shadowed outcome', premShadowed.report.outcome, 'error');
   expectValue('premise shadowed category', premShadowed.report.category, 'rejected-term');
-  expectValue('premise shadowed stage', premShadowed.report.stage, 'proof-check');
+  expectValue('premise shadowed stage', premShadowed.report.stage, 'acceptance');
   expectValue('premise shadowed recheck', premShadowed.report.independent_recheck, false);
-  expectValue('premise shadowed code', premShadowed.report.diagnostic?.code, 'intrinsic-source-invalid');
+  expectValue('premise shadowed code', premShadowed.report.diagnostic?.code, 'intrinsic-proof-refused');
   expectIncludes('premise shadowed message', premShadowed.report.diagnostic?.message, ['use does not name a proof premise']);
 
   // 2. Valid editor proof-hole transport (`noble-proof-editor/v1`)
