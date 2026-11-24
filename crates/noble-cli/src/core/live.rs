@@ -194,11 +194,22 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         }
     };
     if engine != "v8" {
+        let (outcome, diagnostic) = if engine == "wasmtime-core" {
+            (
+                "wasmtime-core-unavailable",
+                "wasmtime-core is unsupported for live repl and live watch",
+            )
+        } else {
+            (
+                "interpreter-unavailable",
+                "a pinned compatible no-JIT Wasm interpreter is unavailable",
+            )
+        };
         emit(&serde_json::json!({
             "schema": "noble-live-report/v1",
             "stage": "engine-selection",
-            "outcome": "interpreter-unavailable",
-            "diagnostic": "a pinned compatible no-JIT Wasm interpreter is unavailable",
+            "outcome": outcome,
+            "diagnostic": diagnostic,
             "guest_requests": 0,
             "protected_operations": 0,
         }));
@@ -263,6 +274,7 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             },
             stack: std::vec::Vec::new(),
             worker: None,
+            wasmtime_core: None,
             submissions: 0,
         },
         declared: manifest.map(declared::State::new),
@@ -642,6 +654,7 @@ fn parse(arguments: &[std::ffi::OsString]) -> Result<LiveOptions, std::string::S
                 engine = Some(match value {
                     "v8" => "v8",
                     "interpreter" => "interpreter",
+                    "wasmtime-core" => "wasmtime-core",
                     _ => return Err("unsupported live engine".into()),
                 })
             }

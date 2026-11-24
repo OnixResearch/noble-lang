@@ -217,7 +217,9 @@ These thresholds are proposals fixed now. Changing them requires a recorded revi
 
 ## Tests
 
-This change runs only structural Cairn gates and validation. The benchmark and conformance plan above is unexecuted. Positive controls (NATIVE-PLAN-01…03, 05) and negative controls (NATIVE-PLAN-04, 06–08) are designed, not run.
+> OWNER DECISION 2026-11-20: 2. Research changes (cranelift-backend-evaluation, gpu-offload-research, allocation-strategy-contract): do their Phase 2 work inside these changes despite the proposals' out-of-scope lines (record the scope amendment as an owner decision): opt-in Wasmtime Core engine profile + NB-W1..W5 benchmarks; the GPU CPU-cost study; allocation W1-W8 baselines and F1-F4 quota classification and ALLOC cases.
+
+Following the scope amendment above, the opt-in `--engine wasmtime-core` profile (`Core-Bootstrap`, `CL-11`) is implemented and verified against `NATIVE-PLAN-01`..`06` (`cargo test -p noble-cli --test core wasmtime_engine --locked --offline`: 6 passed, 0 failed) plus full `noble-cli` unit, `--all-features` (547 passed, 0 failed, 10 ignored), and `--no-default-features` (532 passed, 0 failed, 10 ignored) suites. The `NB-W1`…`W5` benchmark suite (`CL-12`) and `NATIVE-PLAN-07`–`08` (`CL-13`–`14`) remain unexecuted.
 
 ## Claim boundaries
 

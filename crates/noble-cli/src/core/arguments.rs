@@ -18,10 +18,18 @@ pub(super) struct Options {
     pub manifest: Option<bindings::Manifest>,
     pub framed: bool,
     pub optimized: bool,
+    pub engine: Engine,
     pub type_directed_experimental: bool,
     pub lowering_selected: bool,
     pub emit: Option<std::path::PathBuf>,
     pub limits: noble_contracts::Limits,
+}
+
+#[octet::sealed_enum]
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(super) enum Engine {
+    V8,
+    WasmtimeCore,
 }
 
 #[octet::sealed_enum]
@@ -76,6 +84,7 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
         manifest: None,
         framed: false,
         optimized: false,
+        engine: Engine::V8,
         type_directed_experimental: false,
         lowering_selected: false,
         emit: None,
@@ -88,7 +97,7 @@ pub(super) fn parse(arguments: &[std::ffi::OsString]) -> Result<Options, super::
             .ok_or_else(usage))));
         at = attempt!(at.checked_add(1).ok_or_else(usage));
     }
-    let mut seen = [""; 18];
+    let mut seen = [""; 19];
     let mut seen_count = 0_usize;
     while at < arguments.len() {
         let name = attempt!(arguments[at].to_str().ok_or_else(usage));
@@ -248,6 +257,11 @@ fn set(
         "--opt" => match value.to_str() {
             Some("off") => options.optimized = false,
             Some("on") => options.optimized = true,
+            Some(_) | None => return Err(usage()),
+        },
+        "--engine" if !options.compile_only => match value.to_str() {
+            Some("v8") => options.engine = Engine::V8,
+            Some("wasmtime-core") => options.engine = Engine::WasmtimeCore,
             Some(_) | None => return Err(usage()),
         },
         "--lowering" if options.compile_only => {
@@ -706,6 +720,48 @@ mod tests {
                 return Err(std::format!(
                     "accepted invalid size-change flags: {arguments:?}"
                 ));
+            }
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn engine_flag_is_opt_in_on_run_and_session_only() -> Result<(), std::string::String> {
+        let default_run = flags(&["run", "expression.noble"])?;
+        assert!(default_run.engine == super::Engine::V8);
+        let default_session = flags(&["session"])?;
+        assert!(default_session.engine == super::Engine::V8);
+        let v8_run = flags(&["run", "expression.noble", "--engine", "v8"])?;
+        assert!(v8_run.engine == super::Engine::V8);
+        let wasmtime_run = flags(&["run", "expression.noble", "--engine", "wasmtime-core"])?;
+        assert!(wasmtime_run.engine == super::Engine::WasmtimeCore);
+        let wasmtime_session = flags(&["session", "--framed", "--engine", "wasmtime-core"])?;
+        assert!(wasmtime_session.engine == super::Engine::WasmtimeCore);
+
+        for invalid in [
+            &["compile", "expression.noble", "--engine", "v8"][..],
+            &["compile", "expression.noble", "--engine", "wasmtime-core"][..],
+            &["run", "expression.noble", "--engine"][..],
+            &["run", "expression.noble", "--engine", "wasmtime"][..],
+            &["run", "expression.noble", "--engine", "interpreter"][..],
+            &[
+                "run",
+                "expression.noble",
+                "--engine",
+                "v8",
+                "--engine",
+                "wasmtime-core",
+            ][..],
+            &[
+                "session",
+                "--engine",
+                "wasmtime-core",
+                "--engine",
+                "wasmtime-core",
+            ][..],
+        ] {
+            if flags(invalid).is_ok() {
+                return Err(std::format!("accepted invalid --engine flags: {invalid:?}"));
             }
         }
         Ok(())

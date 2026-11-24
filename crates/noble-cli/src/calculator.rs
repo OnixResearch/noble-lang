@@ -251,6 +251,17 @@ fn parse_options(arguments: &[std::ffi::OsString]) -> Result<(bool, bool, [i64; 
         match word {
             "--framed" if !framed => framed = true,
             "--finite-decimal" if !finite_decimal => finite_decimal = true,
+            "--engine" => {
+                let value = arguments
+                    .get(at + 1)
+                    .and_then(|word| word.to_str())
+                    .ok_or("missing --engine value")?;
+                return Err(if value == "wasmtime-core" {
+                    "wasmtime-core is unsupported for calculator".into()
+                } else {
+                    format!("calculator does not support --engine {value}")
+                });
+            }
             _ => {
                 let index = BUDGET_NAMES
                     .iter()

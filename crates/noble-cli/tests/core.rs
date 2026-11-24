@@ -6,6 +6,8 @@
 mod eligibility;
 #[path = "core/mutations.rs"]
 mod mutations;
+#[path = "core/wasmtime.rs"]
+mod wasmtime_engine;
 
 const fn source_limits() -> noble_contracts::Limits {
     noble_contracts::Limits {

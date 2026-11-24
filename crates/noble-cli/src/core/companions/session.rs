@@ -38,6 +38,7 @@ impl crate::core::companions::Driver {
             manifest: None,
             framed: false,
             optimized: self.optimized,
+            engine: crate::core::arguments::Engine::V8,
             type_directed_experimental: false,
             lowering_selected: false,
             emit: None,
