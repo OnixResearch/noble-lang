@@ -271,8 +271,9 @@ if (process.argv.includes('--self-test')) {
   process.exit(0);
 }
 
-const out = argument('--out');
-assert.ok(out, 'pass --out NEW_DIRECTORY');
+const outArg = argument('--out');
+assert.ok(outArg, 'pass --out NEW_DIRECTORY');
+const out = path.resolve(outArg);
 assert.equal(fs.existsSync(out), false, '--out must not already exist');
 const explicitNoble = argument('--noble');
 const allowDirty = process.argv.includes('--allow-dirty');
@@ -420,7 +421,8 @@ function run(label, args, { stripSandbox = false, stdin = undefined } = {}) {
     }
   }
   if (report === null) {
-    throw new Error(`${label}: no JSON report (status ${result.status}, signal ${result.signal})`);
+    const errDetail = result.error ? `, error ${result.error.code ?? result.error.message}` : '';
+    throw new Error(`${label}: no JSON report (status ${result.status}, signal ${result.signal}${errDetail})`);
   }
   return { status: result.status, report };
 }
