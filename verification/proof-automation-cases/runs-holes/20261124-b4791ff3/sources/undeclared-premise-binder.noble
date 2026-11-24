@@ -1,0 +1,1 @@
+module premise_binder@1 [ proof 1 bad : [ (Pi (h I64) (Eq I64 h h)) ] [ (intro (h I64) (use h)) ] ]

@@ -1,0 +1,1 @@
+{"schema":"noble-goal-view/v1","command":"goal-view","role":"read-only-projection","acceptance":false,"source_path":"sources/exec-hole.json","outcome":"error","diagnostic":{"code":"proof-hole-transport","message":"proof hole body is not in a proof-term position","details":null}}

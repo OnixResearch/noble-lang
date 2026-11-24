@@ -1,0 +1,36 @@
+{
+  "schema": "noble-intrinsic-evidence/v1",
+  "command": "verify-module",
+  "outcome": "proved",
+  "independent_recheck": true,
+  "source_sha256": "014f813c88f67232bb483d0c1192bd57885c4b49ec01f840cab72ffbfa74c7ed",
+  "module": {
+    "name": "arithmetic",
+    "version": 1
+  },
+  "revisions": {
+    "model": "d22272c1053519f15ed1d3b3573327723466c8cb898a6ffb70993a7b75ae4e6f",
+    "checker": "cf345db706e493316441453c25cdfe7ad4f1a1ab6efebdd81d80125f73ec2e8b",
+    "named_model": null,
+    "named_checker": null
+  },
+  "dependencies": [],
+  "proofs": [
+    {
+      "name": "increment-correct",
+      "kind": "contract",
+      "statement_digest": "60d9a317554a5162ec183bd1d75ca412180aa888fd5d1a6a562f38dd3de34d5e",
+      "statement_basis": "generated-statement",
+      "model_revision": "0000000000000000000000000000000000000000000000000000000000000000",
+      "checker_revision": "cf345db706e493316441453c25cdfe7ad4f1a1ab6efebdd81d80125f73ec2e8b",
+      "subject": {
+        "module": "arithmetic",
+        "version": 1,
+        "definition": "increment",
+        "module_source_sha256": "014f813c88f67232bb483d0c1192bd57885c4b49ec01f840cab72ffbfa74c7ed",
+        "definition_source_sha256": "0cbc32053ab10fd313a54e887b9c69b6cffc6dc314abe7cc6e31e4532a3b3807",
+        "generated_statement_sha256": "60d9a317554a5162ec183bd1d75ca412180aa888fd5d1a6a562f38dd3de34d5e"
+      }
+    }
+  ]
+}
