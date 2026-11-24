@@ -83,6 +83,7 @@ const SOURCES = {
   'raw-hole.noble': V1_SOURCE.replace('(bridge (by-exact-append-assoc))', '(editor-hole bridge)'),
   'undeclared-premise-binder.noble': 'module premise_binder@1 [ proof 1 bad : [ (Pi (h I64) (Eq I64 h h)) ] [ (intro (h I64) (use h)) ] ]\n',
   'undeclared-premise-missing.noble': 'module premise_missing@1 [ proof 1 bad : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (use h)) ] ]\n',
+  'undeclared-premise-shadowed.noble': 'module premise_shadowed@1 [ proof 1 h : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (refl x)) ] proof 1 bad : [ (Pi (h I64) (Eq I64 h h)) ] [ (intro (h I64) (use h)) ] ]\n',
   'empty.bindings': '',
 };
 
@@ -585,25 +586,39 @@ observations['PAUTO-CASE-11'] = await observe(async () => {
 });
 
 observations['PAUTO-CASE-15'] = await observe(async () => {
-  // 1a. Undeclared premise `(use h)` where `h` is a value binder
+  // 1a. Undeclared premise `(use h)` where `h` is a value binder and no prior `proof h` exists.
+  // Module resolution (`resolve_uses`) runs before proof checking and checks `(use NAME)` against
+  // prior/imported proofs, so `verify-module` refuses at `resolve` with `intrinsic-resolve-invalid`
+  // (`category: "rejected-source"`).
   const premBinder = run('case15-undeclared-premise-binder', ['verify-module', 'sources/undeclared-premise-binder.noble', '--timeout-ms', TIMEOUT_MS]);
   expectValue('premise binder status', premBinder.status, 2);
   expectValue('premise binder outcome', premBinder.report.outcome, 'error');
-  expectValue('premise binder category', premBinder.report.category, 'rejected-term');
-  expectValue('premise binder stage', premBinder.report.stage, 'proof-check');
+  expectValue('premise binder category', premBinder.report.category, 'rejected-source');
+  expectValue('premise binder stage', premBinder.report.stage, 'resolve');
   expectValue('premise binder recheck', premBinder.report.independent_recheck, false);
-  expectValue('premise binder code', premBinder.report.diagnostic?.code, 'intrinsic-source-invalid');
-  expectIncludes('premise binder message', premBinder.report.diagnostic?.message, ['use does not name a proof premise']);
+  expectValue('premise binder code', premBinder.report.diagnostic?.code, 'intrinsic-resolve-invalid');
+  expectIncludes('premise binder message', premBinder.report.diagnostic?.message, ['Resolve: unknown, forward or cyclic proof use']);
 
-  // 1b. Undeclared premise `(use h)` where `h` is absent from context and exports
+  // 1b. Undeclared premise `(use h)` where `h` is absent from both context and prior/imported proofs.
   const premMissing = run('case15-undeclared-premise-missing', ['verify-module', 'sources/undeclared-premise-missing.noble', '--timeout-ms', TIMEOUT_MS]);
   expectValue('premise missing status', premMissing.status, 2);
   expectValue('premise missing outcome', premMissing.report.outcome, 'error');
-  expectValue('premise missing category', premMissing.report.category, 'rejected-term');
-  expectValue('premise missing stage', premMissing.report.stage, 'proof-check');
+  expectValue('premise missing category', premMissing.report.category, 'rejected-source');
+  expectValue('premise missing stage', premMissing.report.stage, 'resolve');
   expectValue('premise missing recheck', premMissing.report.independent_recheck, false);
-  expectValue('premise missing code', premMissing.report.diagnostic?.code, 'intrinsic-source-invalid');
-  expectIncludes('premise missing message', premMissing.report.diagnostic?.message, ['unresolved, private, forward or cyclic proof use']);
+  expectValue('premise missing code', premMissing.report.diagnostic?.code, 'intrinsic-resolve-invalid');
+  expectIncludes('premise missing message', premMissing.report.diagnostic?.message, ['Resolve: unknown, forward or cyclic proof use']);
+
+  // 1c. Undeclared premise `(use h)` where prior `proof h` passes `resolve`, then `(intro (h I64) ...)`
+  // shadows `h` with a value binder so proof checking refuses with `use does not name a proof premise`.
+  const premShadowed = run('case15-undeclared-premise-shadowed', ['verify-module', 'sources/undeclared-premise-shadowed.noble', '--timeout-ms', TIMEOUT_MS]);
+  expectValue('premise shadowed status', premShadowed.status, 2);
+  expectValue('premise shadowed outcome', premShadowed.report.outcome, 'error');
+  expectValue('premise shadowed category', premShadowed.report.category, 'rejected-term');
+  expectValue('premise shadowed stage', premShadowed.report.stage, 'proof-check');
+  expectValue('premise shadowed recheck', premShadowed.report.independent_recheck, false);
+  expectValue('premise shadowed code', premShadowed.report.diagnostic?.code, 'intrinsic-source-invalid');
+  expectIncludes('premise shadowed message', premShadowed.report.diagnostic?.message, ['use does not name a proof premise']);
 
   // 2. Valid editor proof-hole transport (`noble-proof-editor/v1`)
   const gvHole = run('case15-goal-view-hole', ['goal-view', '--proof-holes', 'sources/bridge-hole.json'], { stripSandbox: true });
@@ -693,6 +708,7 @@ observations['PAUTO-CASE-15'] = await observe(async () => {
   return {
     binder_code: premBinder.report.diagnostic?.code,
     missing_code: premMissing.report.diagnostic?.code,
+    shadowed_code: premShadowed.report.diagnostic?.code,
     hole_transport_schema: gvHole.report.transport?.schema,
     raw_session_guest_requests: rawSession.report.guest_requests,
   };
