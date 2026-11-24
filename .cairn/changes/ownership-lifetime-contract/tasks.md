@@ -208,4 +208,45 @@
   host ledger. The design records the existing state owners, synchronous worker
   boundary and backend-acknowledgement obligations. An abstract model or a
   differential suite by itself does not complete OWN-PO-6/7.
+  Progress (2026-11-24): `proofs/m3/NobleM3/LedgerRefinement.lean` (imported by
+  `proofs/m3/NobleM3.lean`) proves the scoped `OWN-PO-6` extracted host-ledger
+  refinement directly over Charon/Aeneas-extracted `noble_kernel.ledger`
+  (`proofs/m3/NobleKernel/{Types,Funs}.lean`, from `crates/noble-kernel/src/ledger/`),
+  strictly under `{propext, Classical.choice, Quot.sound}` with zero `sorry` and zero
+  `native_decide` (verified by `lake build NobleM3 NobleM2 NobleM2.Refinement NobleKernel`
+  and `verification/m3-proof-gate.sh`):
+  - Loop & snapshot validation: `validate_frame_stack_eq`, `validate_frame_stack_ok_iff`,
+    `copy_frame_prefix_eq`, `reverse_frames_eq`, `Snapshot.pinned_valid`,
+    `Snapshot.pinned_invalid_zero`, `validate_active_root_total`,
+    `validate_active_root_ok_iff`, `validate_active_root_refuses_poisoned`,
+    `validate_active_root_refuses_zero_root`, `validate_active_root_refuses_zero_claim`,
+    `validate_active_root_refuses_foreign`, `validate_active_root_refuses_inactive`,
+    and `frame_pin_counts_spec`.
+  - LIFO frame stack: `enter_frame_pushes_lifo`,
+    `enter_frame_refuses_invalid_token`, `enter_frame_refuses_duplicate_or_unordered`,
+    `enter_frame_refuses_bound_exceeded`, `enter_frame_refuses_counter_exhausted`,
+    `leave_frame_pops_lifo`, `leave_frame_refuses_pending_dispatch`,
+    `leave_frame_refuses_invalid_token`, `leave_frame_refuses_non_lifo`, and
+    `enter_leave_roundtrip`.
+  - Finish balanced release: `plan_finish_root_iff`, `plan_finish_root_balanced`,
+    `plan_finish_root_refuses_active_frames`, `plan_finish_root_refuses_pending_dispatch`,
+    and `ack_finish_root_spec`.
+  - Abort exact-release vs. fail-closed `Poisoned`: `classify_guest_settled_iff`,
+    `classify_guest_total`, `first_plan_unproven_none_iff`, `first_plan_unproven_total`,
+    `plan_abort_root_spec` (`released_frames.val = s.frames.val.reverse`),
+    `ack_abort_root_spec`, `ack_abort_root_exact_iff`, and
+    `ack_abort_root_unexpected_resumption`.
+  - Non-wrapping counters: `enter_frame_counter_nonwrapping`,
+    `leave_frame_counter_nonwrapping`, `LedgerTrace`, `trace_valid_snapshot`,
+    `trace_counters_monotone_nonwrapping`, and `trace_step_counters_monotone`.
+  - Pin-frame model correspondence: Mathlib-free `PinState` / `PinStep` simulation
+    mirroring `proofs/foundation/NobleFoundation/OwnershipModel.lean` continuation `.pin`
+    frames (`toPinState` with innermost-first `s.frames.val.reverse`),
+    `pinned_refines_pin_model`, `enter_frame_refines_pin_model`,
+    `leave_frame_refines_pin_model`, `finish_root_refines_pin_model`,
+    `abort_root_refines_pin_model`, and `retired_or_poisoned_refuses_all`.
+  - Non-claims / remaining open scope (`r[OWN-EV-01]`, Decision 57): CAS/retained maps,
+    saved-program graphs, code-span retirement, JS worker adapter cutover and adapter
+    correspondence, `OWN-PO-7`, and `OWN-PO-4/5` remain unproved and open; this task
+    remains unchecked (`[ ]`).
 - [x] [serial] Select any scratch-arena promotion form only after measured comparison under the allocation benchmark plan, and verify reset safety with OWN-CASE-08. r[OWN-SCRATCH-01] OWNER DECISION 2026-11-20: no scratch-arena profile is selected, so no promotion form is chosen and OWN-CASE-08 is inapplicable. The task closes on that recorded outcome (owner rule for conditional tasks). Scratch arenas stay a design option. Selecting one later needs the allocation benchmark measurements and an executed OWN-CASE-08 reset-safety receipt in a new change.
