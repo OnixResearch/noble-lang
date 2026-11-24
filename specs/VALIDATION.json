@@ -2395,7 +2395,7 @@
     },
     {
       "file": ".cairn/changes/allocation-strategy-contract/tasks.md",
-      "sha256": "fe040cb945a0179b50c0a333badc7e719d8ee68c2cd969b662454c5b30363b20"
+      "sha256": "202da31240eb7868ac9b4a6c19bbb8219f34732b74a5edae58b7005b10e8be36"
     },
     {
       "file": ".cairn/changes/artifact-correspondence-extension/design.md",
@@ -2435,7 +2435,7 @@
     },
     {
       "file": ".cairn/changes/bounded-wasm-correspondence/tasks.md",
-      "sha256": "8ae205822bc2c1c6cb504299986e5c5668274f8d11f6478bf94288c08864b885"
+      "sha256": "bd8a134c940186583a5c87648ada1fed462f429a5751c62c8017686b4e586334"
     },
     {
       "file": ".cairn/changes/c-backend/design.md",
@@ -2511,7 +2511,7 @@
     },
     {
       "file": ".cairn/changes/gpu-offload-research/design.md",
-      "sha256": "a7aecdebd4eeab3be672166f0dcf03c0b2c1c6c5460b016e1a3f9c874f04ca69"
+      "sha256": "cc771c76f5dd205469b294e17f8b4e36256fac585771fd5743b5c5424bce8321"
     },
     {
       "file": ".cairn/changes/gpu-offload-research/proposal.md",
@@ -2523,7 +2523,7 @@
     },
     {
       "file": ".cairn/changes/gpu-offload-research/tasks.md",
-      "sha256": "a188cd3b7d83485622e4ad7115f6bc07fc35703b7ed3dc8e9493f305509de97d"
+      "sha256": "57e660f6516f776813ae202cf35279dc9b1f72149f7ebdeecb7e993e48532def"
     },
     {
       "file": ".cairn/changes/implicit-proof-arguments/design.md",
@@ -2551,7 +2551,7 @@
     },
     {
       "file": ".cairn/changes/implicit-proof-arguments/tasks.md",
-      "sha256": "0d6bb89fe4120323abce3550e119d76a16ef7cb23c6e7efa78d05e57dc781cd3"
+      "sha256": "cab4991f58cdd4152b9cbf2e8a6e7523b1bbd0c84be30f32aa2d120096faef88"
     },
     {
       "file": ".cairn/changes/intrinsic-noble-proofs/design.md",
@@ -2607,7 +2607,7 @@
     },
     {
       "file": ".cairn/changes/ma-language-prerequisites/tasks.md",
-      "sha256": "810c5c5aac2d9ce7e4e3ec7aa75e29b018fe72267b697896a5a6334f009e35fc"
+      "sha256": "ba38db42329773175bec0f434512b7a36d893f1b9c660a426d0ba4779a7953c5"
     },
     {
       "file": ".cairn/changes/ownership-lifetime-contract/design.md",
@@ -2659,11 +2659,11 @@
     },
     {
       "file": ".cairn/changes/proof-automation-diagnostics/tasks.md",
-      "sha256": "7dae3640ed200fcc67a2a2d3cc87fd52a7763bd4d76fb12a9cd1c28d88d25d68"
+      "sha256": "8dd5cf8d3a42dfcdae0051a5c88adbc1b5ea956e062f617df68ef99ba7bf599e"
     },
     {
       "file": ".cairn/changes/resource-safe-wiring-laws/design.md",
-      "sha256": "0e17188fe8731410067b67d6df87544bb9f741a8cdbf9e333986e5e19f8baebf"
+      "sha256": "07270474193c9fea77a666e7e4befb77ad3b783008579e5107bc0e99b21c6c6c"
     },
     {
       "file": ".cairn/changes/resource-safe-wiring-laws/proposal.md",
@@ -2683,7 +2683,7 @@
     },
     {
       "file": ".cairn/changes/resource-safe-wiring-laws/tasks.md",
-      "sha256": "dfee8483277dab54f3d9c2b4beb31661c6594539fea243083d344a4c5b061bc9"
+      "sha256": "7199fc40be26f77b849134f56f0f824a0644d6c6d52fb7ecd1dbc10a3fff4d9f"
     },
     {
       "file": ".cairn/changes/reusable-contract-calls/design.md",
@@ -2735,7 +2735,7 @@
     },
     {
       "file": ".cairn/specs/core-bootstrap/spec.md",
-      "sha256": "19725e575f4f8ee3b8a9b1da9febc84a01d547f7b2e520dabae9bd570d8a4089"
+      "sha256": "77147d983d7d8cd312e689f0c80f4629838ac513548e2ffb3f115df934c82a59"
     },
     {
       "file": ".cairn/specs/developer-experience/spec.md",
@@ -2775,7 +2775,7 @@
     },
     {
       "file": ".cairn/specs/verification-toolchain/spec.md",
-      "sha256": "89dc9538ef0c0a7a8382b57a7682f8f20b8b87d34af5adcac97e23ce537b1e5c"
+      "sha256": "6c29fa0d0dd673429a14477711f67b0e40dce4f20ece9e6dbde8e094096f59f9"
     },
     {
       "file": ".cairn/specs/verification/spec.md",
@@ -2811,7 +2811,7 @@
     },
     {
       "file": "proofs/foundation/README.md",
-      "sha256": "24aa54575000c1740671c5924db01156476b9ca69b5b57db4450a98e719cfdc2"
+      "sha256": "473269fd392c9bfd11b757b674b75641751b1b8f65a88267ee0976f85dc783e7"
     },
     {
       "file": "proofs/inets/README.md",
@@ -2823,7 +2823,7 @@
     },
     {
       "file": "README.md",
-      "sha256": "e5452b82226b9ca2748464a88fdc42daa271d82b141bacfb8c629a4031bbe506"
+      "sha256": "e39b886ee88e3f9f687cbd7d16e6dcabb0ec014f325efd2e6b5535b2ca6effac"
     },
     {
       "file": "specs/BACKEND-EXPERIMENTS.md",
@@ -2947,7 +2947,7 @@
     },
     {
       "file": "specs/CORE-BOOTSTRAP.md",
-      "sha256": "27d7e5227f55ea56227ca9934a92e63eb25f5a721806d4d50c99082a638eded0"
+      "sha256": "35df605edee6ccbb9d3ed05830980d5c17d00fdb63cca95954adb42830b955c3"
     },
     {
       "file": "specs/DECISIONS.md",
@@ -3027,7 +3027,7 @@
     },
     {
       "file": "specs/VERIFICATION-TOOLCHAIN.md",
-      "sha256": "762f1792359a6c7269dc581ec59f6c2c8e321e632a65bf0e5376fce48238325f"
+      "sha256": "d4434eafd6ea500b1a74f559d2103ee5a34e14e16e5d207ef25bb2e11ab9504b"
     },
     {
       "file": "specs/VERIFICATION.md",
@@ -3210,6 +3210,10 @@
       "sha256": "69fa6cbbea8cd794522f269123be532254743396934069215f5589c2d24cfe16"
     },
     {
+      "file": "verification/exact-current28/README.md",
+      "sha256": "05d7c7c708dbcac0c7f5a1e85b7e075f84b05b80dbfc90ef7a633dc87a2ec703"
+    },
+    {
       "file": "verification/extraction.md",
       "sha256": "24a636803cf030d362be67a911bcd7558019407257e15f4bd2c89a2f47951100"
     },
@@ -3248,6 +3252,10 @@
     {
       "file": "verification/frostbite/README.md",
       "sha256": "89fcf6c5a5b42ed97a6aa9161752643da1ac014f7054acdb900f08e282c110e1"
+    },
+    {
+      "file": "verification/gpu-cost/README.md",
+      "sha256": "6b985d312f152c6bc95903505d392c0ddd3747fa2e6e23cee37ce7bedfd6cbb8"
     },
     {
       "file": "verification/grad-ordered/README.md",
