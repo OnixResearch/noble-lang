@@ -22,6 +22,7 @@ const PROGRAM_MAX: usize = 256;
 const AGGREGATE_MAX: usize = 256;
 const LIST_MAX: usize = 255;
 const SHAPE_MAX: usize = 512;
+const SIGNATURE_MAX: usize = 2048;
 const FRAME_MAX: usize = 512;
 const RECIPE_MAX: usize = 256;
 const PROGRAM_DEPTH_MAX: usize = 256;
@@ -36,13 +37,14 @@ const RUNTIME_HEADER: &str = r#"/* Noble nonselected C11 source; requires separa
 #include <string.h>
 _Static_assert(CHAR_BIT == 8 && sizeof(uint64_t) == 8 && UINT64_MAX == UINT64_C(18446744073709551615), "unsupported I64 target");
 enum { TAG_I64 = 1, TAG_BOOL = 2, TAG_PROGRAM = 3, TAG_UNIT = 4, TAG_TEXT = 5,
-       TAG_PAIR = 6, TAG_SUM_LEFT = 7, TAG_SUM_RIGHT = 8, TAG_LIST = 9 };
-enum { AGG_LIST_NIL = 10, AGG_LIST_CONS = 11 };
+       TAG_PAIR = 6, TAG_SUM_LEFT = 7, TAG_SUM_RIGHT = 8, TAG_LIST = 9, TAG_SYNTAX = 10 };
+enum { AGG_LIST_NIL = 11, AGG_LIST_CONS = 12 };
+typedef struct { const char *stack_in; const char *stack_out; } ProgramSignature;
 typedef struct { unsigned tag; uint64_t bits; unsigned shape; } Value;
-typedef struct { unsigned op; uint64_t bits; unsigned shape, inputs, input_shape[3]; } Instruction;
+typedef struct { unsigned op; uint64_t bits; unsigned shape, inputs, input_shape[3]; size_t witness_in, witness_out; } Instruction;
 typedef struct { const Instruction *code; size_t count; unsigned valid, shape; size_t leaves, depth; } StaticProgram;
 typedef struct { const unsigned char *bytes; size_t length; unsigned valid; } StaticText;
-enum { OP_I64 = 1, OP_BOOL, OP_DUP, OP_DROP, OP_SWAP, OP_ADD, OP_SUB, OP_MUL, OP_EQ, OP_STATIC, OP_QUOTE, OP_COMPOSE, OP_RUN, OP_UNIT, OP_IF, OP_DIP, OP_TEXT,
+enum { OP_I64 = 1, OP_BOOL, OP_DUP, OP_DROP, OP_SWAP, OP_ADD, OP_SUB, OP_MUL, OP_EQ, OP_STATIC, OP_QUOTE, OP_COMPOSE, OP_RUN, OP_REFLECT, OP_UNIT, OP_UNIT_WORD, OP_IF, OP_DIP, OP_TEXT,
        OP_PAIR, OP_UNPAIR, OP_INL, OP_INR, OP_CASE, OP_NIL, OP_CONS, OP_LIST_CASE };
 typedef struct { unsigned kind, shape; uint64_t left, right; Value capture; size_t leaves, depth; } Program;
 typedef struct { unsigned kind, shape; size_t length; Value left, right; } Aggregate;
@@ -99,7 +101,7 @@ static Value pop(void) {
 static Value pop_program(void) {
     Value value = pop();
     if (value.tag != TAG_PROGRAM || value.shape == 0 || value.shape > SHAPES ||
-        value.bits >= STATIC_PROGRAMS + program_count) fail("invalid Program tag");
+        value.bits == 0 || value.bits >= STATIC_PROGRAMS + program_count) fail("invalid Program tag");
     if (value.bits < STATIC_PROGRAMS) {
         if (!static_programs[value.bits].valid || static_programs[value.bits].shape != value.shape)
             fail("invalid static Program shape");
@@ -155,12 +157,22 @@ static void check_value(Value value) {
         if (value.bits >= STATIC_TEXTS || !text_literals[value.bits].valid) fail("invalid Text reference");
         break;
     case TAG_PROGRAM:
-        if (value.bits >= STATIC_PROGRAMS + program_count ||
+        if (value.bits == 0 || value.bits >= STATIC_PROGRAMS + program_count ||
             (value.bits < STATIC_PROGRAMS &&
              (!static_programs[value.bits].valid || static_programs[value.bits].shape != value.shape)) ||
             (value.bits >= STATIC_PROGRAMS &&
              programs[value.bits - STATIC_PROGRAMS].shape != value.shape))
             fail("invalid Program reference");
+        break;
+    case TAG_SYNTAX:
+        if (value.bits == 0 || value.bits >= STATIC_PROGRAMS + program_count ||
+            (value.bits < STATIC_PROGRAMS &&
+             (!static_programs[value.bits].valid || static_programs[value.bits].shape == 0)) ||
+            (value.bits >= STATIC_PROGRAMS &&
+             ((programs[value.bits - STATIC_PROGRAMS].kind != 1 &&
+               programs[value.bits - STATIC_PROGRAMS].kind != 2) ||
+              programs[value.bits - STATIC_PROGRAMS].shape == 0)))
+            fail("invalid Syntax reference");
         break;
     case TAG_PAIR: case TAG_SUM_LEFT: case TAG_SUM_RIGHT:
         (void)aggregate(value, value.tag);
@@ -217,7 +229,7 @@ static Metrics measure_data(Value root) {
         ++leaves;
         size_t level = visit.depth;
         if (level > DEPTH_LIMIT) fail("program depth exhausted");
-        if (value.tag == TAG_PROGRAM) {
+        if (value.tag == TAG_PROGRAM || value.tag == TAG_SYNTAX) {
             Metrics subject = metrics(value.bits);
             if (subject.leaves > RECIPE_LIMIT - leaves) fail("recipe leaves exhausted");
             leaves += subject.leaves;
@@ -283,7 +295,7 @@ static void execute(Instruction instruction) {
     switch (instruction.op) {
     case OP_I64: push(TAG_I64, instruction.bits, instruction.shape); break;
     case OP_BOOL: if (instruction.bits > 1) fail("invalid Bool"); push(TAG_BOOL, instruction.bits, instruction.shape); break;
-    case OP_UNIT: push(TAG_UNIT, 0, instruction.shape); break;
+    case OP_UNIT: case OP_UNIT_WORD: push(TAG_UNIT, 0, instruction.shape); break;
     case OP_TEXT:
         if (instruction.bits >= STATIC_TEXTS || !text_literals[instruction.bits].valid) fail("invalid Text reference");
         push(TAG_TEXT, instruction.bits, instruction.shape);
@@ -382,6 +394,10 @@ static void execute(Instruction instruction) {
     case OP_COMPOSE: {
         Value right = pop_program();
         Value left = pop_program();
+        if (program_signatures[left.shape].stack_out == NULL ||
+            program_signatures[right.shape].stack_in == NULL ||
+            strcmp(program_signatures[left.shape].stack_out, program_signatures[right.shape].stack_in) != 0)
+            fail("invalid compose signature");
         Metrics lhs = metrics(left.bits);
         Metrics rhs = metrics(right.bits);
         if (rhs.leaves > RECIPE_LIMIT || lhs.leaves > RECIPE_LIMIT - rhs.leaves)
@@ -398,6 +414,11 @@ static void execute(Instruction instruction) {
         enter(value.bits);
         break;
     }
+    case OP_REFLECT: {
+        Value value = pop_program();
+        push(TAG_SYNTAX, value.bits, instruction.shape);
+        break;
+    }
     case OP_IF: {
         Value otherwise = pop_program();
         Value then_branch = pop_program();
@@ -409,7 +430,7 @@ static void execute(Instruction instruction) {
         Value program = pop_program();
         Value saved = pop();
         check_value(saved);
-        if (saved.tag == TAG_PROGRAM) (void)metrics(saved.bits);
+        if (saved.tag == TAG_PROGRAM || saved.tag == TAG_SYNTAX) (void)metrics(saved.bits);
         if (frame_count > FRAME_SLOTS - 2) fail("program frames exhausted");
         frames[frame_count++] = (Frame){UINT64_MAX, 0, 0, saved};
         enter(program.bits);
@@ -463,11 +484,39 @@ static void decimal(uint64_t bits) {
     if (n < 0 || (size_t)n >= sizeof digits) fail("decimal encoding");
     append_bytes(digits, (size_t)n);
 }
-static void emit_text(uint64_t id) {
+static void append_cstr(const char *text) { append_bytes(text, strlen(text)); }
+static const char *builtin_name(unsigned op) {
+    switch (op) {
+    case OP_DUP: return "dup";
+    case OP_DROP: return "drop";
+    case OP_SWAP: return "swap";
+    case OP_DIP: return "dip";
+    case OP_ADD: return "i64.add";
+    case OP_SUB: return "i64.sub";
+    case OP_MUL: return "i64.mul";
+    case OP_EQ: return "i64.eq";
+    case OP_QUOTE: return "quote";
+    case OP_COMPOSE: return "compose";
+    case OP_RUN: return "run";
+    case OP_REFLECT: return "reflect";
+    case OP_UNIT_WORD: return "unit";
+    case OP_PAIR: return "pair";
+    case OP_UNPAIR: return "unpair";
+    case OP_INL: return "inl";
+    case OP_INR: return "inr";
+    case OP_CASE: return "case";
+    case OP_IF: return "if";
+    case OP_NIL: return "nil";
+    case OP_CONS: return "cons";
+    case OP_LIST_CASE: return "list.case";
+    default: return NULL;
+    }
+}
+static void emit_text_fields(uint64_t id) {
     static const char hex[] = "0123456789abcdef";
     if (id >= STATIC_TEXTS || !text_literals[id].valid) fail("invalid Text reference");
     const StaticText *text = &text_literals[id];
-    APPEND_LITERAL("{\"type\":\"Text\",\"value\":\"");
+    APPEND_LITERAL("\"type\":\"Text\",\"value\":\"");
     for (size_t i = 0; i < text->length; ++i) {
         unsigned char byte = text->bytes[i];
         if (byte == '"' || byte == '\\') {
@@ -479,39 +528,213 @@ static void emit_text(uint64_t id) {
             append_byte((unsigned char)hex[byte & 15]);
         } else append_byte(byte);
     }
-    APPEND_LITERAL("\"}");
+    APPEND_LITERAL("\"");
 }
-static void emit_value(Value value, size_t depth) {
-    if (depth > AGGREGATE_SLOTS) fail("program depth exhausted");
+static void emit_value(Value value, size_t depth);
+static void emit_value_fields(Value value, size_t depth);
+static void emit_witnesses_array(uint64_t prog_id) {
+    uint64_t pending[RECIPE_LIMIT + 1];
+    size_t pending_count = 1;
+    size_t node_index = 0;
+    int first = 1;
+    pending[0] = prog_id;
+    APPEND_LITERAL("[");
+    while (pending_count) {
+        tick();
+        uint64_t id = pending[--pending_count];
+        if (id == 0 || id >= STATIC_PROGRAMS + program_count) fail("invalid Program reference");
+        if (id >= STATIC_PROGRAMS) {
+            const Program *program = &programs[id - STATIC_PROGRAMS];
+            if (program->kind == 2) {
+                if (pending_count > RECIPE_LIMIT - 1) fail("program depth exhausted");
+                pending[pending_count++] = program->right;
+                pending[pending_count++] = program->left;
+                continue;
+            }
+            if (program->kind != 1) fail("invalid Program kind");
+            ++node_index;
+            continue;
+        }
+        const StaticProgram *body = &static_programs[id];
+        if (!body->valid) fail("invalid static Program");
+        for (size_t i = 0; i < body->count; ++i) {
+            Instruction inst = body->code[i];
+            if (builtin_name(inst.op) != NULL) {
+                if (inst.witness_in >= SIGNATURES || inst.witness_out >= SIGNATURES)
+                    fail("invalid witness signature");
+                if (!first) APPEND_LITERAL(",");
+                first = 0;
+                APPEND_LITERAL("{\"node\":");
+                decimal((uint64_t)node_index);
+                APPEND_LITERAL(",\"stack_in\":\"");
+                append_cstr(signatures[inst.witness_in]);
+                APPEND_LITERAL("\",\"stack_out\":\"");
+                append_cstr(signatures[inst.witness_out]);
+                APPEND_LITERAL("\",\"effects\":[]}");
+            }
+            ++node_index;
+        }
+    }
+    APPEND_LITERAL("]");
+}
+static void emit_recipe_array(uint64_t prog_id, size_t depth) {
+    uint64_t pending[RECIPE_LIMIT + 1];
+    size_t pending_count = 1;
+    int first = 1;
+    if (depth > DEPTH_LIMIT) fail("program depth exhausted");
+    pending[0] = prog_id;
+    APPEND_LITERAL("[");
+    while (pending_count) {
+        tick();
+        uint64_t id = pending[--pending_count];
+        if (id == 0 || id >= STATIC_PROGRAMS + program_count) fail("invalid Program reference");
+        if (id >= STATIC_PROGRAMS) {
+            const Program *program = &programs[id - STATIC_PROGRAMS];
+            if (program->kind == 2) {
+                if (pending_count > RECIPE_LIMIT - 1) fail("program depth exhausted");
+                pending[pending_count++] = program->right;
+                pending[pending_count++] = program->left;
+                continue;
+            }
+            if (program->kind != 1) fail("invalid Program kind");
+            if (!first) APPEND_LITERAL(",");
+            first = 0;
+            Value cap = program->capture;
+            check_value(cap);
+            if (cap.tag == TAG_PROGRAM) {
+                if (depth >= DEPTH_LIMIT) fail("program depth exhausted");
+                if (cap.shape == 0 || cap.shape > SHAPES ||
+                    program_signatures[cap.shape].stack_in == NULL ||
+                    program_signatures[cap.shape].stack_out == NULL)
+                    fail("missing Program signature");
+                APPEND_LITERAL("{\"quotation\":");
+                emit_recipe_array(cap.bits, depth + 1);
+                APPEND_LITERAL(",\"interface\":{\"stack_in\":\"");
+                append_cstr(program_signatures[cap.shape].stack_in);
+                APPEND_LITERAL("\",\"stack_out\":\"");
+                append_cstr(program_signatures[cap.shape].stack_out);
+                APPEND_LITERAL("\",\"effects\":[]},\"witnesses\":");
+                emit_witnesses_array(cap.bits);
+                APPEND_LITERAL("}");
+            } else if (cap.tag == TAG_I64 || cap.tag == TAG_BOOL || cap.tag == TAG_UNIT) {
+                APPEND_LITERAL("{\"literal\":{");
+                emit_value_fields(cap, depth + 1);
+                APPEND_LITERAL("}}");
+            } else {
+                if (cap.shape == 0 || cap.shape > SHAPES || shape_schemas[cap.shape] == NULL)
+                    fail("missing capture schema");
+                APPEND_LITERAL("{\"literal\":{");
+                emit_value_fields(cap, depth + 1);
+                APPEND_LITERAL(",\"schema\":\"");
+                append_cstr(shape_schemas[cap.shape]);
+                APPEND_LITERAL("\"}}");
+            }
+            continue;
+        }
+        const StaticProgram *body = &static_programs[id];
+        if (!body->valid) fail("invalid static Program");
+        for (size_t i = 0; i < body->count; ++i) {
+            Instruction inst = body->code[i];
+            const char *name = builtin_name(inst.op);
+            if (!first) APPEND_LITERAL(",");
+            first = 0;
+            if (name != NULL) {
+                APPEND_LITERAL("{\"invoke\":\"builtin:");
+                append_cstr(name);
+                APPEND_LITERAL("\"}");
+            } else if (inst.op == OP_I64) {
+                APPEND_LITERAL("{\"literal\":{\"type\":\"I64\",\"value\":\"");
+                decimal(inst.bits);
+                APPEND_LITERAL("\"}}");
+            } else if (inst.op == OP_BOOL) {
+                if (inst.bits == 0) APPEND_LITERAL("{\"literal\":{\"type\":\"Bool\",\"value\":false}}");
+                else if (inst.bits == 1) APPEND_LITERAL("{\"literal\":{\"type\":\"Bool\",\"value\":true}}");
+                else fail("invalid Bool literal");
+            } else if (inst.op == OP_UNIT) {
+                APPEND_LITERAL("{\"literal\":{\"type\":\"Unit\",\"value\":null}}");
+            } else if (inst.op == OP_TEXT) {
+                APPEND_LITERAL("{\"literal\":{");
+                emit_text_fields(inst.bits);
+                APPEND_LITERAL(",\"schema\":\"[Text]\"}}");
+            } else if (inst.op == OP_STATIC) {
+                if (depth >= DEPTH_LIMIT) fail("program depth exhausted");
+                if (inst.bits == 0 || inst.bits >= STATIC_PROGRAMS || !static_programs[inst.bits].valid)
+                    fail("invalid static Program");
+                unsigned qshape = static_programs[inst.bits].shape;
+                if (qshape == 0 || qshape > SHAPES ||
+                    program_signatures[qshape].stack_in == NULL ||
+                    program_signatures[qshape].stack_out == NULL)
+                    fail("missing Program signature");
+                APPEND_LITERAL("{\"quotation\":");
+                emit_recipe_array(inst.bits, depth + 1);
+                APPEND_LITERAL(",\"interface\":{\"stack_in\":\"");
+                append_cstr(program_signatures[qshape].stack_in);
+                APPEND_LITERAL("\",\"stack_out\":\"");
+                append_cstr(program_signatures[qshape].stack_out);
+                APPEND_LITERAL("\",\"effects\":[]},\"witnesses\":");
+                emit_witnesses_array(inst.bits);
+                APPEND_LITERAL("}");
+            } else {
+                fail("invalid recipe instruction");
+            }
+        }
+    }
+    APPEND_LITERAL("]");
+}
+static void emit_program_fields(uint64_t prog_id, unsigned shape, int is_program, size_t depth) {
+    if (depth > DEPTH_LIMIT) fail("program depth exhausted");
+    if (is_program) {
+        if (shape == 0 || shape > SHAPES ||
+            program_signatures[shape].stack_in == NULL ||
+            program_signatures[shape].stack_out == NULL)
+            fail("missing Program signature");
+        APPEND_LITERAL("\"type\":\"Program\",\"interface\":{\"stack_in\":\"");
+        append_cstr(program_signatures[shape].stack_in);
+        APPEND_LITERAL("\",\"stack_out\":\"");
+        append_cstr(program_signatures[shape].stack_out);
+        APPEND_LITERAL("\",\"effects\":[]},");
+    } else {
+        APPEND_LITERAL("\"type\":\"Syntax\",");
+    }
+    APPEND_LITERAL("\"recipe\":");
+    emit_recipe_array(prog_id, depth);
+    APPEND_LITERAL(",\"witnesses\":");
+    emit_witnesses_array(prog_id);
+}
+static void emit_value_fields(Value value, size_t depth) {
+    if (depth > DEPTH_LIMIT) fail("program depth exhausted");
     check_value(value);
     if (value.tag == TAG_I64) {
-        APPEND_LITERAL("{\"type\":\"I64\",\"value\":\"");
+        APPEND_LITERAL("\"type\":\"I64\",\"value\":\"");
         decimal(value.bits);
-        APPEND_LITERAL("\"}");
+        APPEND_LITERAL("\"");
     } else if (value.tag == TAG_BOOL) {
-        if (value.bits == 0) APPEND_LITERAL("{\"type\":\"Bool\",\"value\":false}");
-        else if (value.bits == 1) APPEND_LITERAL("{\"type\":\"Bool\",\"value\":true}");
+        if (value.bits == 0) APPEND_LITERAL("\"type\":\"Bool\",\"value\":false");
+        else if (value.bits == 1) APPEND_LITERAL("\"type\":\"Bool\",\"value\":true");
         else fail("invalid Bool output");
     } else if (value.tag == TAG_UNIT) {
-        APPEND_LITERAL("{\"type\":\"Unit\",\"value\":null}");
+        APPEND_LITERAL("\"type\":\"Unit\",\"value\":null");
     } else if (value.tag == TAG_TEXT) {
-        emit_text(value.bits);
+        emit_text_fields(value.bits);
+    } else if (value.tag == TAG_PROGRAM) {
+        emit_program_fields(value.bits, value.shape, 1, depth);
+    } else if (value.tag == TAG_SYNTAX) {
+        emit_program_fields(value.bits, value.shape, 0, depth);
     } else if (value.tag == TAG_PAIR) {
         const Aggregate *item = aggregate(value, TAG_PAIR);
-        APPEND_LITERAL("{\"type\":\"Pair\",\"value\":[");
+        APPEND_LITERAL("\"type\":\"Pair\",\"value\":[");
         emit_value(item->left, depth + 1);
         APPEND_LITERAL(",");
         emit_value(item->right, depth + 1);
-        APPEND_LITERAL("]}");
+        APPEND_LITERAL("]");
     } else if (value.tag == TAG_SUM_LEFT || value.tag == TAG_SUM_RIGHT) {
         const Aggregate *item = aggregate(value, value.tag);
-        APPEND_LITERAL("{\"type\":\"Sum\",\"variant\":");
+        APPEND_LITERAL("\"type\":\"Sum\",\"variant\":");
         if (value.tag == TAG_SUM_LEFT) APPEND_LITERAL("\"left\",\"value\":");
         else APPEND_LITERAL("\"right\",\"value\":");
         emit_value(item->left, depth + 1);
-        APPEND_LITERAL("}");
     } else if (value.tag == TAG_LIST) {
-        APPEND_LITERAL("{\"type\":\"List\",\"value\":[");
+        APPEND_LITERAL("\"type\":\"List\",\"value\":[");
         Value tail = value;
         int first = 1;
         for (;;) {
@@ -522,8 +745,13 @@ static void emit_value(Value value, size_t depth) {
             emit_value(item->left, depth + 1);
             tail = item->right;
         }
-        APPEND_LITERAL("]}");
+        APPEND_LITERAL("]");
     } else fail("invalid output tag");
+}
+static void emit_value(Value value, size_t depth) {
+    APPEND_LITERAL("{");
+    emit_value_fields(value, depth);
+    APPEND_LITERAL("}");
 }
 static void emit_stack(void) {
     APPEND_LITERAL("{\"stage\":\"native-runtime\",\"outcome\":\"normal\",\"stack\":[");
@@ -680,15 +908,34 @@ fn unique_json(bytes: &[u8]) -> Result<Value, String> {
     Ok(value)
 }
 
-/// The exact interface spelling for one supported C result type. It refuses
-/// every checked form the source-only emitter cannot encode: an inert
-/// `Syntax` value and any `Program` value, including nested occurrences.
+fn stack_text(stack: &[Ty]) -> Option<String> {
+    if stack.is_empty() {
+        return Some("empty".to_owned());
+    }
+    stack
+        .iter()
+        .map(result_text)
+        .collect::<Option<Vec<_>>>()
+        .map(|items| items.join("+"))
+}
+
+/// The exact interface spelling for one supported C result type. It admits
+/// pure Core-Bootstrap scalar, aggregate, `Syntax`, and pure `Program` values,
+/// including nested occurrences.
 fn result_text(ty: &Ty) -> Option<String> {
     Some(match ty {
         Ty::I64 => "I64".to_owned(),
         Ty::Bool => "Bool".to_owned(),
         Ty::Unit => "Unit".to_owned(),
         Ty::Text => "Text".to_owned(),
+        Ty::Syntax => "Syntax".to_owned(),
+        Ty::Program(input, output, effects) if effects.is_empty() => {
+            format!(
+                "Program<{},{},pure>",
+                stack_text(input)?,
+                stack_text(output)?
+            )
+        }
         Ty::List(item) => format!("List<{}>", result_text(item)?),
         Ty::Pair(left, right) => format!("Pair<{},{}>", result_text(left)?, result_text(right)?),
         Ty::Sum(left, right) => format!("Sum<{},{}>", result_text(left)?, result_text(right)?),
@@ -721,7 +968,7 @@ fn controls(
         return Err("C slice requires no runtime input and one output".into());
     }
     if result_text(&expected.stack_out[0]).is_none() {
-        return Err("checked Syntax or Program C output is unsupported".into());
+        return Err("unsupported checked C output type".into());
     }
     let fields = policy.as_object().ok_or("policy must be an object")?;
     if fields.len() != 4
@@ -774,6 +1021,62 @@ fn controls(
     ))
 }
 
+fn ty_signature(ty: &Ty) -> Result<String, String> {
+    match ty {
+        Ty::Unit => Ok("Unit".to_owned()),
+        Ty::Bool => Ok("Bool".to_owned()),
+        Ty::I64 => Ok("I64".to_owned()),
+        Ty::Text => Ok("Text".to_owned()),
+        Ty::Syntax => Ok("Syntax".to_owned()),
+        Ty::List(item) => Ok(format!("List({})", ty_signature(item)?)),
+        Ty::Pair(left, right) => Ok(format!(
+            "Pair({},{})",
+            ty_signature(left)?,
+            ty_signature(right)?
+        )),
+        Ty::Sum(left, right) => Ok(format!(
+            "Sum({},{})",
+            ty_signature(left)?,
+            ty_signature(right)?
+        )),
+        Ty::Program(input, output, effects) if effects.is_empty() => Ok(format!(
+            "Program({}->{})",
+            stack_signature(input)?,
+            stack_signature(output)?
+        )),
+        _ => Err("unsupported checked C signature type".into()),
+    }
+}
+
+fn stack_signature(stack: &[Ty]) -> Result<String, String> {
+    let mut rendered = String::from("[");
+    for (index, ty) in stack.iter().enumerate() {
+        if index > 0 {
+            rendered.push(' ');
+        }
+        rendered.push_str(&ty_signature(ty)?);
+    }
+    rendered.push(']');
+    Ok(rendered)
+}
+
+fn c_string_literal(text: &str) -> String {
+    let mut out = String::with_capacity(text.len() + 2);
+    out.push('"');
+    for byte in text.bytes() {
+        match byte {
+            b'"' => out.push_str("\\\""),
+            b'\\' => out.push_str("\\\\"),
+            0x20..=0x7e => out.push(byte as char),
+            _ => {
+                let _ = write!(out, "\\x{byte:02x}");
+            }
+        }
+    }
+    out.push('"');
+    out
+}
+
 struct LoweredProgram {
     code: String,
     recipe: Value,
@@ -782,19 +1085,39 @@ struct LoweredProgram {
     depth: usize,
 }
 
-#[expect(
-    tigerstyle::borrowed_argument_types,
-    reason = "Owner: noble-maintainers; the C shape arena interns each new shape with Vec::push, so it needs the owned growable vector rather than a slice."
-)]
-fn shape_id<'a>(shapes: &mut Vec<&'a Ty>, ty: &'a Ty) -> Result<usize, String> {
-    if let Some(index) = shapes.iter().position(|known| *known == ty) {
-        return Ok(index + 1);
+struct LowerCtx<'a> {
+    candidate: &'a Candidate,
+    kinds: &'a [Behavior],
+    texts: &'a [Option<&'a str>],
+    interfaces: &'a [Option<&'a noble_kernel::untrusted::Interface>],
+    shapes: Vec<&'a Ty>,
+    signatures: Vec<String>,
+    visited: Vec<bool>,
+    programs: Vec<Option<LoweredProgram>>,
+}
+
+impl<'a> LowerCtx<'a> {
+    fn shape_id(&mut self, ty: &'a Ty) -> Result<usize, String> {
+        if let Some(index) = self.shapes.iter().position(|known| *known == ty) {
+            return Ok(index + 1);
+        }
+        if self.shapes.len() == SHAPE_MAX {
+            return Err("checked C type shapes exhausted".into());
+        }
+        self.shapes.push(ty);
+        Ok(self.shapes.len())
     }
-    if shapes.len() == SHAPE_MAX {
-        return Err("checked C type shapes exhausted".into());
+
+    fn sig_id(&mut self, sig: &str) -> Result<usize, String> {
+        if let Some(index) = self.signatures.iter().position(|known| known == sig) {
+            return Ok(index);
+        }
+        if self.signatures.len() == SIGNATURE_MAX {
+            return Err("checked C signatures exhausted".into());
+        }
+        self.signatures.push(sig.to_owned());
+        Ok(self.signatures.len() - 1)
     }
-    shapes.push(ty);
-    Ok(shapes.len())
 }
 
 fn bind_texts(body: &noble_kernel::execution::Body) -> Result<Vec<Option<&str>>, String> {
@@ -826,23 +1149,9 @@ fn bind_texts(body: &noble_kernel::execution::Body) -> Result<Vec<Option<&str>>,
     Ok(texts)
 }
 
-#[expect(
-    clippy::too_many_arguments,
-    reason = "Owner: noble-maintainers; the C lowering walk threads the checked candidate, body, behaviors, literal texts, interfaces, shape arena, visit marks, lowered programs and slot explicitly through each recursive step."
-)]
-#[expect(
-    tigerstyle::borrowed_argument_types,
-    reason = "Owner: noble-maintainers; the lowering walk passes the growable C shape arena to shape_id, which interns new shapes with Vec::push."
-)]
-fn lower_body<'a>(
-    candidate: &Candidate,
+fn lower_body(
+    ctx: &mut LowerCtx<'_>,
     body: &[NodeId],
-    kinds: &[Behavior],
-    texts: &[Option<&str>],
-    interfaces: &[Option<&'a noble_kernel::untrusted::Interface>],
-    shapes: &mut Vec<&'a Ty>,
-    visited: &mut [bool],
-    programs: &mut [Option<LoweredProgram>],
     slot: usize,
 ) -> Result<(usize, usize), String> {
     let mut code = String::new();
@@ -851,50 +1160,52 @@ fn lower_body<'a>(
     let mut depth = 1usize;
     for id in body {
         let index = id.0 as usize;
-        let seen = visited
+        let seen = ctx
+            .visited
             .get_mut(index)
             .ok_or("invalid checked node reference")?;
         if *seen {
             return Err("repeated or cyclic C node reference".into());
         }
         *seen = true;
-        let interface = interfaces
+        let interface = ctx
+            .interfaces
             .get(index)
             .and_then(|item| *item)
             .ok_or("missing checked C node derivation")?;
         if !interface.effects.is_empty() {
             return Err("effectful C node is unsupported".into());
         }
-        let node = candidate.nodes.get(index).ok_or("missing checked node")?;
-        let (op, bits, atom) = match node {
+        let node = ctx
+            .candidate
+            .nodes
+            .get(index)
+            .ok_or("missing checked node")?;
+        let (op, bits, atom, is_invocation) = match node {
             Node::Literal {
                 lit: Lit::I64(value),
                 ..
-            } => ("OP_I64", *value as u64, json!(["i64", value.to_string()])),
+            } => (
+                "OP_I64",
+                *value as u64,
+                json!(["i64", value.to_string()]),
+                false,
+            ),
             Node::Literal {
                 lit: Lit::Bool(value),
                 ..
-            } => ("OP_BOOL", u64::from(*value), json!(["bool", value])),
-            Node::Literal { lit: Lit::Unit, .. } => ("OP_UNIT", 0, json!(["unit"])),
+            } => ("OP_BOOL", u64::from(*value), json!(["bool", value]), false),
+            Node::Literal { lit: Lit::Unit, .. } => ("OP_UNIT", 0, json!(["unit"]), false),
             Node::Literal { lit: Lit::Text, .. } => {
-                let text = texts
+                let text = ctx
+                    .texts
                     .get(index)
                     .and_then(|value| *value)
                     .ok_or("missing checked Text payload")?;
-                ("OP_TEXT", index as u64, json!(["text", text]))
+                ("OP_TEXT", index as u64, json!(["text", text]), false)
             }
             Node::Quotation { body, .. } => {
-                let (child_leaves, child_depth) = lower_body(
-                    candidate,
-                    body,
-                    kinds,
-                    texts,
-                    interfaces,
-                    shapes,
-                    visited,
-                    programs,
-                    index + 1,
-                )?;
+                let (child_leaves, child_depth) = lower_body(ctx, body, index + 1)?;
                 leaves = leaves
                     .checked_add(child_leaves)
                     .ok_or("recipe leaves exhausted")?;
@@ -907,13 +1218,15 @@ fn lower_body<'a>(
                     "OP_STATIC",
                     (index + 1) as u64,
                     json!(["quotation", index + 1]),
+                    false,
                 )
             }
             Node::Invocation {
                 def: Definition(word),
                 ..
             } => {
-                let kind = kinds
+                let kind = ctx
+                    .kinds
                     .get(*word as usize)
                     .ok_or("missing checked operation contract")?;
                 let op = match (*word, kind) {
@@ -928,7 +1241,8 @@ fn lower_body<'a>(
                     (8, Behavior::Quote) => "OP_QUOTE",
                     (9, Behavior::Compose) => "OP_COMPOSE",
                     (10, Behavior::Run) => "OP_RUN",
-                    (12, Behavior::Unit) => "OP_UNIT",
+                    (11, Behavior::Reflect) => "OP_REFLECT",
+                    (12, Behavior::Unit) => "OP_UNIT_WORD",
                     (13, Behavior::Pair) => "OP_PAIR",
                     (14, Behavior::Unpair) => "OP_UNPAIR",
                     (15, Behavior::Inl) => "OP_INL",
@@ -940,14 +1254,22 @@ fn lower_body<'a>(
                     (21, Behavior::ListCase) => "OP_LIST_CASE",
                     _ => return Err(format!("unsupported checked C operation {word}")),
                 };
-                (op, 0, json!(["word", word]))
+                (op, 0, json!(["word", word]), true)
             }
             Node::SlotInvoke { .. } | Node::SignedSelf { .. } => {
                 return Err("unsupported checked C value, effect or live operation".into())
             }
         };
+        let (witness_in, witness_out) = if is_invocation {
+            let in_sig = stack_signature(&interface.stack_in)?;
+            let out_sig = stack_signature(&interface.stack_out)?;
+            (ctx.sig_id(&in_sig)?, ctx.sig_id(&out_sig)?)
+        } else {
+            (0, 0)
+        };
         let inputs = match op {
-            "OP_DUP" | "OP_DROP" | "OP_QUOTE" | "OP_RUN" | "OP_UNPAIR" | "OP_INL" | "OP_INR" => 1,
+            "OP_DUP" | "OP_DROP" | "OP_QUOTE" | "OP_RUN" | "OP_REFLECT" | "OP_UNPAIR"
+            | "OP_INL" | "OP_INR" => 1,
             "OP_SWAP" | "OP_ADD" | "OP_SUB" | "OP_MUL" | "OP_EQ" | "OP_COMPOSE" | "OP_DIP"
             | "OP_PAIR" | "OP_CONS" => 2,
             "OP_IF" | "OP_CASE" | "OP_LIST_CASE" => 3,
@@ -963,13 +1285,14 @@ fn lower_body<'a>(
             .iter_mut()
             .zip(interface.stack_in[first..].iter())
         {
-            *entry = shape_id(shapes, ty)?;
+            *entry = ctx.shape_id(ty)?;
         }
         let produced = matches!(
             op,
             "OP_I64"
                 | "OP_BOOL"
                 | "OP_UNIT"
+                | "OP_UNIT_WORD"
                 | "OP_TEXT"
                 | "OP_STATIC"
                 | "OP_ADD"
@@ -978,6 +1301,7 @@ fn lower_body<'a>(
                 | "OP_EQ"
                 | "OP_QUOTE"
                 | "OP_COMPOSE"
+                | "OP_REFLECT"
                 | "OP_PAIR"
                 | "OP_INL"
                 | "OP_INR"
@@ -992,9 +1316,10 @@ fn lower_body<'a>(
             let right_kind = match op {
                 "OP_I64" | "OP_ADD" | "OP_SUB" | "OP_MUL" => matches!(ty, Ty::I64),
                 "OP_BOOL" | "OP_EQ" => matches!(ty, Ty::Bool),
-                "OP_UNIT" => matches!(ty, Ty::Unit),
+                "OP_UNIT" | "OP_UNIT_WORD" => matches!(ty, Ty::Unit),
                 "OP_TEXT" => matches!(ty, Ty::Text),
                 "OP_STATIC" | "OP_QUOTE" | "OP_COMPOSE" => matches!(ty, Ty::Program(..)),
+                "OP_REFLECT" => matches!(ty, Ty::Syntax),
                 "OP_PAIR" => matches!(ty, Ty::Pair(..)),
                 "OP_INL" | "OP_INR" => matches!(ty, Ty::Sum(..)),
                 "OP_NIL" | "OP_CONS" => matches!(ty, Ty::List(..)),
@@ -1003,12 +1328,12 @@ fn lower_body<'a>(
             if !right_kind {
                 return Err("unsupported checked C result shape".into());
             }
-            shape_id(shapes, ty)?
+            ctx.shape_id(ty)?
         } else {
             0
         };
         if matches!(node, Node::Quotation { .. }) {
-            programs[index + 1]
+            ctx.programs[index + 1]
                 .as_mut()
                 .ok_or("missing C quotation program")?
                 .shape = result_shape;
@@ -1023,7 +1348,8 @@ fn lower_body<'a>(
             input_shapes[0], input_shapes[1], input_shapes[2]
         )
         .map_err(|_| "C instruction output failure")?;
-        code.push_str("}},\n");
+        writeln!(code, "}}, {witness_in}, {witness_out}}},")
+            .map_err(|_| "C instruction output failure")?;
         recipe.push(atom);
         leaves = leaves.checked_add(1).ok_or("recipe leaves exhausted")?;
         if leaves > RECIPE_MAX || depth > PROGRAM_DEPTH_MAX {
@@ -1033,7 +1359,7 @@ fn lower_body<'a>(
             return Err("C instruction output exhausted".into());
         }
     }
-    programs[slot] = Some(LoweredProgram {
+    ctx.programs[slot] = Some(LoweredProgram {
         code,
         recipe: json!(recipe),
         shape: 0,
@@ -1096,7 +1422,6 @@ fn emit(
         return Err("checked C body differs from its expected interface or order".into());
     }
     let texts = bind_texts(&submission.body)?;
-    let mut visited = vec![false; candidate.nodes.len()];
     let mut interfaces = vec![None; candidate.nodes.len()];
     for row in &checked.derivations {
         let entry = interfaces
@@ -1106,35 +1431,51 @@ fn emit(
             return Err("duplicate checked C node derivation".into());
         }
     }
-    let mut shapes = Vec::new();
     let mut programs = Vec::with_capacity(candidate.nodes.len() + 1);
     programs.resize_with(candidate.nodes.len() + 1, || None);
-    lower_body(
+    let mut ctx = LowerCtx {
         candidate,
-        &candidate.body,
-        &submission.environment.kinds,
-        &texts,
-        &interfaces,
-        &mut shapes,
-        &mut visited,
-        &mut programs,
-        0,
-    )?;
-    if visited.iter().any(|seen| !seen)
-        || checked.derivations.len() != visited.len()
-        || checked
-            .derivations
-            .iter()
-            .any(|row| !visited.get(row.node.0 as usize).copied().unwrap_or(false))
+        kinds: &submission.environment.kinds,
+        texts: &texts,
+        interfaces: &interfaces,
+        shapes: Vec::new(),
+        signatures: Vec::new(),
+        visited: vec![false; candidate.nodes.len()],
+        programs,
+    };
+    lower_body(&mut ctx, &candidate.body, 0)?;
+    if ctx.visited.iter().any(|seen| !seen)
+        || checked.derivations.len() != ctx.visited.len()
+        || checked.derivations.iter().any(|row| {
+            !ctx.visited
+                .get(row.node.0 as usize)
+                .copied()
+                .unwrap_or(false)
+        })
     {
         return Err("checked C body omits or duplicates an accepted node".into());
     }
+    let LowerCtx {
+        shapes,
+        signatures,
+        programs,
+        ..
+    } = ctx;
     let mut c = format!(
-        "#define STACK_SLOTS {}\n#define STEP_LIMIT UINT64_C({})\n#define OUTPUT_BYTES {}\n#define PROGRAM_SLOTS {}\n#define AGGREGATE_SLOTS {}\n#define LIST_LIMIT {}\n#define SHAPES {}\n#define FRAME_SLOTS {}\n#define RECIPE_LIMIT {}\n#define DEPTH_LIMIT {}\n#define STATIC_PROGRAMS {}\n#define STATIC_TEXTS {}\n",
-        limits.slots, limits.steps, limits.output,
-        PROGRAM_MAX, AGGREGATE_MAX, limits.list_length, shapes.len(), FRAME_MAX,
-        RECIPE_MAX, PROGRAM_DEPTH_MAX,
-        programs.len(), texts.len().max(1)
+        "#define STACK_SLOTS {}\n#define STEP_LIMIT UINT64_C({})\n#define OUTPUT_BYTES {}\n#define PROGRAM_SLOTS {}\n#define AGGREGATE_SLOTS {}\n#define LIST_LIMIT {}\n#define SHAPES {}\n#define SIGNATURES {}\n#define FRAME_SLOTS {}\n#define RECIPE_LIMIT {}\n#define DEPTH_LIMIT {}\n#define STATIC_PROGRAMS {}\n#define STATIC_TEXTS {}\n",
+        limits.slots,
+        limits.steps,
+        limits.output,
+        PROGRAM_MAX,
+        AGGREGATE_MAX,
+        limits.list_length,
+        shapes.len(),
+        signatures.len().max(1),
+        FRAME_MAX,
+        RECIPE_MAX,
+        PROGRAM_DEPTH_MAX,
+        programs.len(),
+        texts.len().max(1)
     );
     c.push_str(RUNTIME_HEADER);
     c.push_str("static const unsigned char shape_tags[SHAPES + 1] = {0,\n");
@@ -1144,6 +1485,7 @@ fn emit(
             Ty::Bool => "TAG_BOOL",
             Ty::Unit => "TAG_UNIT",
             Ty::Text => "TAG_TEXT",
+            Ty::Syntax => "TAG_SYNTAX",
             Ty::Program(_, _, effects) if effects.is_empty() => "TAG_PROGRAM",
             Ty::Pair(..) => "TAG_PAIR",
             Ty::Sum(..) => "TAG_SUM_LEFT",
@@ -1151,6 +1493,41 @@ fn emit(
             _ => return Err("unsupported checked C value shape".into()),
         };
         writeln!(c, "    {tag},").map_err(|_| "C shape output failure")?;
+    }
+    c.push_str("};\n");
+    c.push_str("static const char *signatures[SIGNATURES] = {\n");
+    if signatures.is_empty() {
+        c.push_str("    NULL,\n");
+    } else {
+        for sig in &signatures {
+            writeln!(c, "    {},", c_string_literal(sig)).map_err(|_| "C output failure")?;
+        }
+    }
+    c.push_str("};\n");
+    c.push_str(
+        "static const ProgramSignature program_signatures[SHAPES + 1] = {\n    {NULL, NULL},\n",
+    );
+    for ty in &shapes {
+        match ty {
+            Ty::Program(input, output, effects) if effects.is_empty() => {
+                let in_sig = stack_signature(input)?;
+                let out_sig = stack_signature(output)?;
+                writeln!(
+                    c,
+                    "    {{{}, {}}},",
+                    c_string_literal(&in_sig),
+                    c_string_literal(&out_sig)
+                )
+                .map_err(|_| "C output failure")?;
+            }
+            _ => c.push_str("    {NULL, NULL},\n"),
+        }
+    }
+    c.push_str("};\n");
+    c.push_str("static const char *shape_schemas[SHAPES + 1] = {\n    NULL,\n");
+    for ty in &shapes {
+        let schema = stack_signature(std::slice::from_ref(ty))?;
+        writeln!(c, "    {},", c_string_literal(&schema)).map_err(|_| "C output failure")?;
     }
     c.push_str("};\n");
     for (index, text) in texts.iter().enumerate() {

@@ -154,6 +154,72 @@ fn checked_c_source_is_c11_syntax_valid_without_native_execution(
         ("result-list-text", "\"a\" nil cons", "-- List<Text>"),
         ("result-sum-left", "1 inl", "-- Sum<I64,Unit>"),
         ("result-sum-right", "true inr", "-- Sum<Unit,Bool>"),
+        ("reflect-drop", "[ 1 ] reflect drop 1", "-- I64"),
+        ("syntax-empty", "[ ] reflect", "-- Syntax"),
+        ("syntax-i64", "[ 1 ] reflect", "-- Syntax"),
+        ("syntax-nested-quotation", "[[ 1 ]] reflect", "-- Syntax"),
+        ("syntax-quote", "[ 1 ] quote reflect", "-- Syntax"),
+        (
+            "syntax-compose",
+            "2 quote [ + ] compose reflect",
+            "-- Syntax",
+        ),
+        ("syntax-text-quote", "\"a\" quote reflect", "-- Syntax"),
+        ("syntax-pair-quote", "1 true pair quote reflect", "-- Syntax"),
+        (
+            "syntax-quote-run",
+            "[ 1 ] reflect quote run",
+            "-- Syntax",
+        ),
+        ("syntax-unit-drop", "unit [ 1 ] reflect drop", "-- Unit"),
+        (
+            "program-empty",
+            "[ ]",
+            "-- Program<empty,empty,pure>",
+        ),
+        (
+            "program-inc",
+            "[ 1 + ]",
+            "-- Program<I64,I64,pure>",
+        ),
+        (
+            "program-quote",
+            "2 quote",
+            "-- Program<empty,I64,pure>",
+        ),
+        (
+            "program-quote-compose",
+            "2 quote [ + ] compose",
+            "-- Program<I64,I64,pure>",
+        ),
+        (
+            "program-compose",
+            "[ 1 ] [ 2 + ] compose",
+            "-- Program<empty,I64,pure>",
+        ),
+        ("result-pair-syntax", "42 [ 1 + ] reflect pair", "-- Pair<I64,Syntax>"),
+        ("result-list-syntax", "[ 1 ] reflect nil cons", "-- List<Syntax>"),
+        ("result-sum-syntax", "[ 1 ] reflect inl", "-- Sum<Syntax,Unit>"),
+        (
+            "result-pair-program",
+            "42 2 quote [ + ] compose pair",
+            "-- Pair<I64,Program<I64,I64,pure>>",
+        ),
+        (
+            "result-list-program",
+            "[ 1 + ] nil cons",
+            "-- List<Program<I64,I64,pure>>",
+        ),
+        (
+            "result-sum-program",
+            "[ 1 + ] inr",
+            "-- Sum<Unit,Program<I64,I64,pure>>",
+        ),
+        (
+            "all-22-pure-words",
+            "[ 1 2 + 3 - 4 * 5 = drop true [ 1 ] [ 2 ] if drop 1 2 swap drop dup drop drop 1 10 [ 1 + ] dip drop drop unit drop 1 quote [ 2 + ] compose run drop 1 2 pair unpair drop drop 1 inl [ 1 + ] [ drop 0 ] case drop 1 inr [ drop 0 ] [ 1 + ] case drop 1 nil cons [ 0 ] [ drop ] list.case drop [ 1 ] reflect drop ] reflect",
+            "-- Syntax",
+        ),
     ] {
         let source = scratch.file(&format!("{name}.noble"), source.as_bytes())?;
         let contract = scratch.file(
@@ -437,17 +503,30 @@ fn checked_nested_contracts_do_not_enable_unsupported_c_values(
         (
             "1 2 pair",
             "-- Pair<Program<empty,I64,pure>,I64>",
-            "Syntax or Program",
+            "unsupported C interface or resolved definitions",
         ),
-        ("1 nil cons", "-- List<Syntax>", "Syntax or Program"),
-        ("[ 1 ] reflect", "-- Syntax", "unsupported"),
-        ("[ 1 ]", "-- Program<empty,I64,pure>", "unsupported"),
+        (
+            "1 nil cons",
+            "-- List<Syntax>",
+            "unsupported C interface or resolved definitions",
+        ),
+        (
+            "[ 1 ] reflect",
+            "-- I64",
+            "unsupported C interface or resolved definitions",
+        ),
+        (
+            "[ 1 ]",
+            "-- Program<I64,I64,pure>",
+            "unsupported C interface or resolved definitions",
+        ),
         ("1 true pair", "-- Pair<I64>", "invalid Core interface"),
         (
             "[ 1 ]",
             "-- Program<empty,I64,test.emit>",
             "invalid Core interface",
         ),
+        ("1", "-- Resource<test.counter>", "invalid Core interface"),
         ("1", "I64 -- Bool", "runtime input"),
         ("1", "-- I64 -- Bool", "invalid Core interface"),
     ]
@@ -491,7 +570,6 @@ fn unsupported_target_effect_and_out_of_range_source_refuse_before_emission(
         "named.noble",
         b"def twice [ dup compose ]\n20 [ 1 + ] twice run",
     )?;
-    let reflect = scratch.file("reflect.noble", b"[ 1 ] reflect drop 1")?;
     for (index, (source, policy)) in [
         (&source, &wrong_target),
         (&source, &effects),
@@ -501,7 +579,6 @@ fn unsupported_target_effect_and_out_of_range_source_refuse_before_emission(
         (&bad_type, &pure),
         (&host_effect, &pure),
         (&named, &pure),
-        (&reflect, &pure),
     ]
     .into_iter()
     .enumerate()
@@ -690,10 +767,10 @@ fn aggregate_results_bind_to_their_exact_checked_interface(
             "{name}: the checked result shape guard is missing"
         );
         for literal in [
-            "{\\\"type\\\":\\\"Unit\\\",\\\"value\\\":null}",
-            "{\\\"type\\\":\\\"Pair\\\",\\\"value\\\":[",
-            "{\\\"type\\\":\\\"Sum\\\",\\\"variant\\\":",
-            "{\\\"type\\\":\\\"List\\\",\\\"value\\\":[",
+            "\\\"type\\\":\\\"Unit\\\",\\\"value\\\":null",
+            "\\\"type\\\":\\\"Pair\\\",\\\"value\\\":[",
+            "\\\"type\\\":\\\"Sum\\\",\\\"variant\\\":",
+            "\\\"type\\\":\\\"List\\\",\\\"value\\\":[",
         ] {
             assert!(c.contains(literal), "{name}: missing encoding {literal}");
         }
@@ -710,6 +787,109 @@ fn aggregate_results_bind_to_their_exact_checked_interface(
     assert_eq!(refused.status.code(), Some(2));
     assert!(refused.stdout.is_empty());
     assert!(!out.exists());
+    Ok(())
+}
+
+#[test]
+fn syntax_program_and_reflect_emit_expected_c_structures() -> Result<(), Box<dyn std::error::Error>>
+{
+    let scratch = Scratch::new()?;
+    let policy = scratch.file(
+        "policy.json",
+        br#"{"profile":"Core-Bootstrap","target":"x86_64-unknown-linux-gnu","allowed_effects":[],"limits":{"stack_slots":8,"steps":200,"output_bytes":4096}}"#,
+    )?;
+    for (name, source_text, interface, expected_snippets) in [
+        (
+            "program-inc",
+            "[ 1 + ]",
+            "-- Program<I64,I64,pure>",
+            vec![
+                "\"[I64]\"",
+                "\"[I64 I64]\"",
+                "\"i64.add\"",
+                "\\\"type\\\":\\\"Program\\\",\\\"interface\\\":{\\\"stack_in\\\":\\\"",
+            ],
+        ),
+        (
+            "syntax-unit-reflect",
+            "[ 1 \"x\" unit drop ] reflect",
+            "-- Syntax",
+            vec![
+                "TAG_SYNTAX",
+                "OP_REFLECT",
+                "OP_UNIT_WORD",
+                "\"[Text]\"",
+                "\"[Syntax]\"",
+                "\"unit\"",
+                "\"reflect\"",
+                "\\\"type\\\":\\\"Syntax\\\",",
+                "\\\"quotation\\\":",
+                "\\\"witnesses\\\":",
+            ],
+        ),
+    ] {
+        let source = scratch.file(&format!("{name}.noble"), source_text.as_bytes())?;
+        let contract = scratch.file(
+            &format!("{name}-contract.json"),
+            format!(r#"{{"expected_interface":"{interface}","resolved_host_contracts":{{}}}}"#)
+                .as_bytes(),
+        )?;
+        let out = scratch.0.join(format!("{name}-out"));
+        let built = build(&source, &contract, &policy, &out)?;
+        assert!(
+            built.status.success(),
+            "{name}: {}",
+            String::from_utf8_lossy(&built.stderr)
+        );
+        let manifest: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(out.join("manifest.json"))?)?;
+        assert_eq!(manifest["status"], "nonselected-source-only", "{name}");
+        assert_eq!(manifest["source_to_elf_admitted"], false, "{name}");
+        assert!(manifest["native_artifact"].is_null(), "{name}");
+
+        let artifact = out.join("artifact.c");
+        let c = std::fs::read_to_string(&artifact)?;
+        assert!(c.contains("program_signatures["), "{name}");
+        assert!(c.contains("shape_schemas["), "{name}");
+        assert!(c.contains("static const char *signatures["), "{name}");
+        for snippet in expected_snippets {
+            assert!(c.contains(snippet), "{name}: missing snippet {snippet}");
+        }
+        let diagnostic = Command::new(syntax_compiler())
+            .args(["-std=c11", "-pedantic-errors", "-fsyntax-only"])
+            .arg(&artifact)
+            .output()?;
+        assert!(
+            diagnostic.status.success(),
+            "{name}: C11 syntax check failed: {}",
+            String::from_utf8_lossy(&diagnostic.stderr)
+        );
+    }
+
+    let source = scratch.file("refuse-native.noble", b"[ 1 ] reflect")?;
+    let contract = scratch.file(
+        "refuse-native-contract.json",
+        br#"{"expected_interface":"-- Syntax","resolved_host_contracts":{}}"#,
+    )?;
+    let native_out = scratch.0.join("refuse-native-out");
+    let native = Command::new(env!("CARGO_BIN_EXE_noble"))
+        .arg("build")
+        .arg(&source)
+        .args(["--target", "c"])
+        .arg("--out")
+        .arg(&native_out)
+        .arg("--contract")
+        .arg(&contract)
+        .arg("--policy")
+        .arg(&policy)
+        .arg("--native")
+        .output()?;
+    assert_eq!(native.status.code(), Some(2));
+    assert!(!native_out.exists());
+    let execute = Command::new(env!("CARGO_BIN_EXE_noble"))
+        .args(["execute", "--target", "c", "--artifact", "untrusted"])
+        .output()?;
+    assert_eq!(execute.status.code(), Some(2));
     Ok(())
 }
 
