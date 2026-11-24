@@ -16,12 +16,58 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-// This source syntax diagnostic is not a selected C backend compiler, linker,
-// or native build pin. Resolve the compiler from PATH so the check's declared
-// stdenv.cc is used; a fixed store path from another nixpkgs pin is not a
-// declared input and the Nix sandbox hides it. NOBLE_C11_CC overrides it.
-fn syntax_compiler() -> String {
+// This object-only C11 compiler diagnostic is not a selected C backend
+// compiler, linker, or native build pin; it never links or executes a C
+// binary. Resolve the compiler from PATH so the check's declared stdenv.cc is
+// used; a fixed store path from another nixpkgs pin is not a declared input
+// and the Nix sandbox hides it. NOBLE_C11_CC overrides it.
+fn c11_compiler() -> String {
     std::env::var("NOBLE_C11_CC").unwrap_or_else(|_| "gcc".to_owned())
+}
+
+fn check_c11_compile(
+    name: &str,
+    artifact: &Path,
+    obj: &Path,
+) -> Result<(), Box<dyn std::error::Error>> {
+    assert!(
+        artifact.is_file(),
+        "{name}: missing C artifact {}",
+        artifact.display()
+    );
+    let diagnostic = Command::new(c11_compiler())
+        .args([
+            "-std=c11",
+            "-O2",
+            "-Wall",
+            "-Wextra",
+            "-Werror",
+            "-pedantic-errors",
+            "-c",
+            "-x",
+            "c",
+        ])
+        .arg(artifact)
+        .arg("-o")
+        .arg(obj)
+        .output()
+        .map_err(|error| {
+            format!(
+                "C11 object-compile diagnostic requires the pinned GCC15 supporting -c: {error}"
+            )
+        })?;
+    assert!(
+        diagnostic.status.success(),
+        "{name}: C11 object-compile diagnostic for {}: {}",
+        artifact.display(),
+        String::from_utf8_lossy(&diagnostic.stderr)
+    );
+    assert!(
+        obj.is_file(),
+        "{name}: missing C11 object output {}",
+        obj.display()
+    );
+    Ok(())
 }
 struct Scratch(PathBuf);
 impl Scratch {
@@ -178,6 +224,41 @@ fn checked_c_source_is_c11_syntax_valid_without_native_execution(
             "-- Program<empty,empty,pure>",
         ),
         (
+            "program-i64",
+            "[ 1 ]",
+            "-- Program<empty,I64,pure>",
+        ),
+        (
+            "program-i64-pair",
+            "[ 1 2 ]",
+            "-- Program<empty,I64+I64,pure>",
+        ),
+        (
+            "program-bool",
+            "[ true ]",
+            "-- Program<empty,Bool,pure>",
+        ),
+        (
+            "program-text",
+            "[ \"a\" ]",
+            "-- Program<empty,Text,pure>",
+        ),
+        (
+            "program-nested",
+            "[ [ 1 ] ]",
+            "-- Program<empty,Program<empty,I64,pure>,pure>",
+        ),
+        (
+            "program-unit-word",
+            "[ unit ]",
+            "-- Program<empty,Unit,pure>",
+        ),
+        (
+            "program-nil-cons",
+            "[ 1 nil cons ]",
+            "-- Program<empty,List<I64>,pure>",
+        ),
+        (
             "program-inc",
             "[ 1 + ]",
             "-- Program<I64,I64,pure>",
@@ -186,6 +267,46 @@ fn checked_c_source_is_c11_syntax_valid_without_native_execution(
             "program-quote",
             "2 quote",
             "-- Program<empty,I64,pure>",
+        ),
+        (
+            "program-quote-unit",
+            "unit quote",
+            "-- Program<empty,Unit,pure>",
+        ),
+        (
+            "program-quote-text",
+            "\"a\" quote",
+            "-- Program<empty,Text,pure>",
+        ),
+        (
+            "program-quote-pair",
+            "1 true pair quote",
+            "-- Program<empty,Pair<I64,Bool>,pure>",
+        ),
+        (
+            "program-quote-sum-inl",
+            "1 inl quote",
+            "-- Program<empty,Sum<I64,Unit>,pure>",
+        ),
+        (
+            "program-quote-sum-inr",
+            "true inr quote",
+            "-- Program<empty,Sum<Unit,Bool>,pure>",
+        ),
+        (
+            "program-quote-list",
+            "1 nil cons quote",
+            "-- Program<empty,List<I64>,pure>",
+        ),
+        (
+            "program-quote-syntax",
+            "[ 1 ] reflect quote",
+            "-- Program<empty,Syntax,pure>",
+        ),
+        (
+            "program-quote-program",
+            "[ 1 ] quote",
+            "-- Program<empty,Program<empty,I64,pure>,pure>",
         ),
         (
             "program-quote-compose",
@@ -235,20 +356,16 @@ fn checked_c_source_is_c11_syntax_valid_without_native_execution(
             String::from_utf8_lossy(&built.stderr)
         );
         let artifact = out.join("artifact.c");
-        let diagnostic = Command::new(syntax_compiler())
-            .args(["-std=c11", "-pedantic-errors", "-fsyntax-only"])
-            .arg(&artifact)
-            .output()
-            .map_err(|error| {
-                format!(
-                "C11 syntax diagnostic requires the pinned GCC15 supporting -fsyntax-only: {error}"
-            )
-            })?;
         assert!(
-            diagnostic.status.success(),
-            "{name}: C11 syntax diagnostic for {}: {}",
-            artifact.display(),
-            String::from_utf8_lossy(&diagnostic.stderr)
+            artifact.is_file(),
+            "{name}: expected artifact.c in {}",
+            out.display()
+        );
+        let obj = scratch.0.join(format!("{name}.o"));
+        check_c11_compile(name, &artifact, &obj)?;
+        assert!(
+            !out.join(format!("{name}.o")).exists(),
+            "{name}: object file must stay outside output directory"
         );
     }
     Ok(())
@@ -855,15 +972,8 @@ fn syntax_program_and_reflect_emit_expected_c_structures() -> Result<(), Box<dyn
         for snippet in expected_snippets {
             assert!(c.contains(snippet), "{name}: missing snippet {snippet}");
         }
-        let diagnostic = Command::new(syntax_compiler())
-            .args(["-std=c11", "-pedantic-errors", "-fsyntax-only"])
-            .arg(&artifact)
-            .output()?;
-        assert!(
-            diagnostic.status.success(),
-            "{name}: C11 syntax check failed: {}",
-            String::from_utf8_lossy(&diagnostic.stderr)
-        );
+        let obj = scratch.0.join(format!("{name}.o"));
+        check_c11_compile(name, &artifact, &obj)?;
     }
 
     let source = scratch.file("refuse-native.noble", b"[ 1 ] reflect")?;

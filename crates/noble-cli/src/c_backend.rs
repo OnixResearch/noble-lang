@@ -560,7 +560,8 @@ static void emit_witnesses_array(uint64_t prog_id) {
         for (size_t i = 0; i < body->count; ++i) {
             Instruction inst = body->code[i];
             if (builtin_name(inst.op) != NULL) {
-                if (inst.witness_in >= SIGNATURES || inst.witness_out >= SIGNATURES)
+                if (inst.witness_in >= SIGNATURES || inst.witness_out >= SIGNATURES ||
+                    signatures[inst.witness_in] == NULL || signatures[inst.witness_out] == NULL)
                     fail("invalid witness signature");
                 if (!first) APPEND_LITERAL(",");
                 first = 0;
@@ -1497,7 +1498,7 @@ fn emit(
     c.push_str("};\n");
     c.push_str("static const char *signatures[SIGNATURES] = {\n");
     if signatures.is_empty() {
-        c.push_str("    NULL,\n");
+        c.push_str("    \"\",\n");
     } else {
         for sig in &signatures {
             writeln!(c, "    {},", c_string_literal(sig)).map_err(|_| "C output failure")?;

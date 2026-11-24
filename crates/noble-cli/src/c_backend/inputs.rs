@@ -184,7 +184,11 @@ fn read_bounded(fd: &OwnedFd, max: usize, path: &Path) -> Result<Vec<u8>, String
         if count == 0 {
             return Ok(bytes);
         }
-        if bytes.len() + count > max {
+        if bytes
+            .len()
+            .checked_add(count)
+            .is_none_or(|total| total > max)
+        {
             return Err(format!("{} exceeds {max} bytes", path.display()));
         }
         bytes.extend_from_slice(&chunk[..count]);
@@ -560,6 +564,31 @@ mod tests {
         });
         if sym_result.is_ok() {
             return Err("expected symlink substituted output dir to refuse".to_owned());
+        }
+
+        Ok(())
+    }
+
+    #[test]
+    fn read_bounded_handles_max_bounds_without_overflow() -> Result<(), String> {
+        let fd = fs::memfd_create("noble-read-bounded-test", MemfdFlags::CLOEXEC)
+            .map_err(|e| e.to_string())?;
+        write_all(&fd, b"x")?;
+        let path = Path::new("/memfd-test");
+
+        fs::seek(&fd, SeekFrom::Start(0)).map_err(|e| e.to_string())?;
+        let ok = read_bounded(&fd, usize::MAX, path)?;
+        if ok != b"x" {
+            return Err(format!("unexpected bytes read with max=usize::MAX: {ok:?}"));
+        }
+
+        fs::seek(&fd, SeekFrom::Start(0)).map_err(|e| e.to_string())?;
+        let err = match read_bounded(&fd, 0, path) {
+            Ok(_) => return Err("expected max=0 read_bounded to refuse".to_owned()),
+            Err(err) => err,
+        };
+        if !err.contains("exceeds 0 bytes") {
+            return Err(format!("unexpected max=0 diagnostic: {err}"));
         }
 
         Ok(())

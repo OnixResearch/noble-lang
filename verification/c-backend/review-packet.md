@@ -30,18 +30,21 @@ Observed divergences from non-pin host/policy paths:
 
 ## 2. Candidate Derivation & Store Path Inventory
 
-Derivations with `realized: false` have verified `.drv` files in `/nix/store` from offline `octet/nixpkgs` evaluation, but have **not** been built/cached on disk yet; their `sha256` fields remain `null` until realized and measured.
+Derivations with `realized: false` have verified `.drv` files in `/nix/store` from offline `octet/nixpkgs` evaluation, but have **not** been built/cached on disk yet; all entries (including `realized: true`) retain `sha256: null` until realized and formally measured.
 
 | Role | `octet/nixpkgs` Attr | Package / Version | `.drv` Path | Output Path | Realized |
 |---|---|---|---|---|---|
 | Primary C11 Compiler (musl static) | `pkgs.pkgsStatic.stdenv.cc` | `x86_64-unknown-linux-musl-gcc-wrapper-15.2.0` | `/nix/store/l5pd5fv6yc38acziszv6za5rdinx9xwn-x86_64-unknown-linux-musl-gcc-wrapper-15.2.0.drv` | `/nix/store/nz3n5wy8zadq73kkql2xn485l7xdmv46-x86_64-unknown-linux-musl-gcc-wrapper-15.2.0` | `false` |
 | Unwrapped GCC (musl static) | `pkgs.pkgsStatic.stdenv.cc.cc` | `x86_64-unknown-linux-musl-gcc-15.2.0` | `/nix/store/kd7882f717fza93pia2h3f4aj1hyqg3s-x86_64-unknown-linux-musl-gcc-15.2.0.drv` | `/nix/store/l04z26p43pa121dbfp2x3zqzkvha33m2-x86_64-unknown-linux-musl-gcc-15.2.0` | `false` |
 | Static Linker Wrapper (musl) | `pkgs.pkgsStatic.stdenv.cc.bintools` | `x86_64-unknown-linux-musl-binutils-wrapper-2.44` | `/nix/store/s502ihsw0yvy2h9k579andx3i710cjib-x86_64-unknown-linux-musl-binutils-wrapper-2.44.drv` | `/nix/store/h0pbmj3hw62blpqfwzi7lvq2jkridpxv-x86_64-unknown-linux-musl-binutils-wrapper-2.44` | `false` |
+| Unwrapped Static Linker (musl) | `pkgs.pkgsStatic.stdenv.cc.bintools.bintools_bin` | `x86_64-unknown-linux-musl-binutils-2.44` | `/nix/store/7f8kpxqy56laahcs3vimmcxw47by97sz-x86_64-unknown-linux-musl-binutils-2.44.drv` | `/nix/store/6iy5zryd4b8hmwpj9mky2by0ajardffk-x86_64-unknown-linux-musl-binutils-2.44` | `false` |
 | Static musl Runtime / Dev | `pkgs.pkgsStatic.musl` | `musl-static-x86_64-unknown-linux-musl-1.2.5` | `/nix/store/xs7qzjhlqqkxkzlb83nh9bw5vgl2nrbg-musl-static-x86_64-unknown-linux-musl-1.2.5.drv` | `/nix/store/05c4skaigahk0yj3z1graj7837c7qm10-musl-static-x86_64-unknown-linux-musl-1.2.5` (`dev`: `/nix/store/rbzk87ywizm0zl9i9hnza1wibjpkhiv5-musl-static-x86_64-unknown-linux-musl-1.2.5-dev`) | `false` |
 | Linux Kernel Headers | `pkgs.linuxHeaders` | `linux-headers-6.18.7` | `/nix/store/6ghrbyhhcdadw3l329i1kx1yncwgw094-linux-headers-6.18.7.drv` | `/nix/store/rvpvd6srf1rzkmza1vxbyjcv5c5nawhc-linux-headers-6.18.7` | `true` |
 | Host Reference Compiler (glibc) | `pkgs.stdenv.cc` | `gcc-wrapper-15.2.0` | `/nix/store/l8kjykqqnkh48cxjhz1p9wh53mb65dpf-gcc-wrapper-15.2.0.drv` | `/nix/store/kbw2j1vag664b3sj3rjwz9v53cqx87sb-gcc-wrapper-15.2.0` | `true` |
+| Host Reference Unwrapped GCC (glibc) | `pkgs.stdenv.cc.cc` | `gcc-15.2.0` | `/nix/store/s17kqafdpsrgbfygig72hgv04vr905yw-gcc-15.2.0.drv` | `/nix/store/sca0pf46jmxva40qahkcwys5c1lvk6n2-gcc-15.2.0` | `true` |
 | Host Reference Linker (glibc) | `pkgs.stdenv.cc.bintools` | `binutils-wrapper-2.44` | `/nix/store/94q8md08ip92h7575ln820fzlz0mkp4n-binutils-wrapper-2.44.drv` | `/nix/store/4yi6jj75bb5hhdzpzlxfyf69d35wsf2x-binutils-wrapper-2.44` | `true` |
-| Host Reference glibc Static | `pkgs.glibc` | `glibc-2.42-51` | `/nix/store/zf7wrvp7ab5nq6x505nphqjyzv9l28dp-glibc-2.42-51.drv` | `/nix/store/l0l2ll1lmylczj1ihqn351af2kyp5x19-glibc-2.42-51` (`static`: `/nix/store/dra84lgfpv7lkbq1lz8ngc2sczqnd0js-glibc-2.42-51-static`) | `true` |
+| Host Reference Unwrapped Linker (glibc) | `pkgs.stdenv.cc.bintools.bintools_bin` | `binutils-2.44` | `/nix/store/ibgm6y86w54yc8hhljfxqwc24ncghqa0-binutils-2.44.drv` | `/nix/store/9nmzd62x45ayp4vmswvn6z45h6bzrsla-binutils-2.44` | `true` |
+| Host Reference glibc Static | `pkgs.glibc` | `glibc-2.42-51` | `/nix/store/zf7wrvp7ab5nq6x505nphqjyzv9l28dp-glibc-2.42-51.drv` | `/nix/store/l0l2ll1lmylczj1ihqn351af2kyp5x19-glibc-2.42-51` (`dev`: `/nix/store/j8irrc0mpx029dw0rmadsjylg7h31ync-glibc-2.42-51-dev`, `static`: `/nix/store/dra84lgfpv7lkbq1lz8ngc2sczqnd0js-glibc-2.42-51-static`) | `true` |
 | QEMU (full TCG + system) | `pkgs.qemu` | `qemu-10.2.1` | `/nix/store/gw0qjz3ard5zv3csmvhfr8vw6zn0cgw7-qemu-10.2.1.drv` | `/nix/store/0ksasy9cgh24srwfp5lqhgvxm1wal71q-qemu-10.2.1` | `false` |
 | QEMU (host CPU only reference) | `pkgs.qemu_kvm` | `qemu-host-cpu-only-10.2.1` | `/nix/store/1nbzjzb4byap2vfz4q6bxh7vjn94744f-qemu-host-cpu-only-10.2.1.drv` | `/nix/store/9h1x6kz210ky9m2ggqfmp0qjx26q6b6s-qemu-host-cpu-only-10.2.1` | `false` |
 | SeaBIOS Firmware | `pkgs.seabios` | `seabios-1.17.0` | `/nix/store/m84g9iv2lvyjz0irlp5r7539g3m136nk-seabios-1.17.0.drv` | `/nix/store/xj7g1d1j96cnx6bfvb8bz25v1hxp13sc-seabios-1.17.0` | `false` |
@@ -52,8 +55,8 @@ Derivations with `realized: false` have verified `.drv` files in `/nix/store` fr
 | initrd `cpio` | `pkgs.cpio` | `cpio-2.15` | `/nix/store/hf8avhllvhf7m3j0vpyi2i6waxdshmc0-cpio-2.15.drv` | `/nix/store/c4xn0489g92bkqmdir5pndrfxl922f2k-cpio-2.15` | `true` |
 | initrd `gzip` | `pkgs.gzip` | `gzip-1.14` | `/nix/store/lia9cp27x0s3f9axsjndxi0hxzzjabdn-gzip-1.14.drv` | `/nix/store/w1n7yp2vnldr395hbwbcaw9sflh413bm-gzip-1.14` | `true` |
 | initrd `zstd` | `pkgs.zstd` | `zstd-1.5.7` | `/nix/store/blcaz0716y1nk9syz2fb9acwq6s1bd2h-zstd-1.5.7.drv` | `/nix/store/xks3v41w0rqp27a17kwkybcvr39rxpl8-zstd-1.5.7-bin` | `true` |
-| Host Outer Confinement | `pkgs.bubblewrap` | `bubblewrap-0.11.0` | `/nix/store/3ml43jyisk1cf03qi1nbhvfhzs39vlky-bubblewrap-0.11.0.drv` | `/nix/store/qn1pfnn2xgfwdr6avw1fnvwsabi83973-bubblewrap-0.11.0` | `false` |
-| Host Seccomp Filter Library | `pkgs.libseccomp` | `libseccomp-2.6.0` | `/nix/store/gbnkb0cajg2xcw6za5hl64d08d920n-libseccomp-2.6.0.drv` | `/nix/store/2k7zcnnsix84r1vgaf621h3l0hdq4b14-libseccomp-2.6.0` | `true` |
+| Host Outer Confinement | `pkgs.bubblewrap` | `bubblewrap-0.11.0` | `/nix/store/3ml43jyisk1cf03qi1nbhvfhzs39vlky-bubblewrap-0.11.0.drv` | `/nix/store/qn1pfnn2xgfwdr6avw1fnvwsabi83973-bubblewrap-0.11.0` | `true` |
+| Host Seccomp Filter Library | `pkgs.libseccomp` | `libseccomp-2.6.0` | `/nix/store/gbnkb0cajg2xcw6za5hl64m4d08d920n-libseccomp-2.6.0.drv` | `/nix/store/2k7zcnnsix84r1vgaf621h3l0hdq4b14-libseccomp-2.6.0` | `true` |
 
 `pkgs.pkgsStatic.stdenv.cc` (`musl-1.2.5`) is the recommended guest ELF compiler because it produces static ELFs with zero `PT_INTERP`, zero dynamic loader, and zero glibc NSS `dlopen` surface; `pkgs.stdenv.cc` + `pkgs.glibc.static` (`glibc-2.42-51`) is recorded as the realized `octet/nixpkgs` reference toolchain.
 
@@ -127,7 +130,7 @@ Every control below is **not executed** in Iteration 1 and MUST be verified befo
 
 `CB-88` remains **UNCHECKED (`[ ]`)** until every item below is independently verified and recorded:
 
-- [ ] **Pin Realization & Digest Recording:** Build unrealized `octet/nixpkgs` derivations (`pkgsStatic` musl toolchain, `qemu-10.2.1`, `seabios-1.17.0`, `linux-6.18.18`, `pkgsStatic.busybox`, `bubblewrap-0.11.0`) and record exact store output SHA-256 digests in [pins.json](pins.json).
+- [ ] **Pin Realization & Digest Recording:** Build unrealized `octet/nixpkgs` derivations (`pkgsStatic` musl toolchain, `qemu-10.2.1`, `seabios-1.17.0`, `linux-6.18.18`, `pkgsStatic.busybox`) and record exact store output SHA-256 digests (for both newly realized and already-realized pins) in [pins.json](pins.json).
 - [ ] **Kernel & TCG Clock Audit:** Verify guest kernel config (`vsyscall=none`, `CONFIG_SECCOMP`, `vvar`/TSC behavior) and run sealed hostile probes (`__vdso_clock_gettime`, `__vdso_time`, `__vdso_gettimeofday`, `CLOCK_MONOTONIC_COARSE`, direct `vvar`, `rdtsc`, `rdtscp`) inside the pinned `qemu-10.2.1` `-icount shift=5,sleep=off,align=off` `-rtc base=2026-01-01T00:00:00,clock=vm` guest (`CB-CASE-08`).
 - [ ] **Host Seccomp & Namespace Measurement:** Measure and verify fail-closed namespace presence and post-load seccomp allowlist on the confined QEMU host process (`CB-NC-01`, `CB-NC-04`, `CB-NC-05`, `CB-NC-07`, `CB-NC-08`).
 - [ ] **Reproducible Static-ELF & Differential Evidence:** Demonstrate deterministic `-O0` and `-O2` full-ELF byte equality (`CB-NC-03`) and C/Wasm differential parity (`CB-CASE-01..10`) under independent review.

@@ -46,6 +46,7 @@
       "unwrapped_linker": {
         "attr": "pkgs.pkgsStatic.stdenv.cc.bintools.bintools_bin",
         "name": "x86_64-unknown-linux-musl-binutils-2.44",
+        "drv": "/nix/store/7f8kpxqy56laahcs3vimmcxw47by97sz-x86_64-unknown-linux-musl-binutils-2.44.drv",
         "out": "/nix/store/6iy5zryd4b8hmwpj9mky2by0ajardffk-x86_64-unknown-linux-musl-binutils-2.44",
         "realized": false,
         "sha256": null
@@ -282,13 +283,13 @@
         "name": "bubblewrap-0.11.0",
         "drv": "/nix/store/3ml43jyisk1cf03qi1nbhvfhzs39vlky-bubblewrap-0.11.0.drv",
         "out": "/nix/store/qn1pfnn2xgfwdr6avw1fnvwsabi83973-bubblewrap-0.11.0",
-        "realized": false,
+        "realized": true,
         "sha256": null
       },
       "libseccomp": {
         "attr": "pkgs.libseccomp",
         "name": "libseccomp-2.6.0",
-        "drv": "/nix/store/gbnkb0cajg2xcw6za5hl64d08d920n-libseccomp-2.6.0.drv",
+        "drv": "/nix/store/gbnkb0cajg2xcw6za5hl64m4d08d920n-libseccomp-2.6.0.drv",
         "out": "/nix/store/2k7zcnnsix84r1vgaf621h3l0hdq4b14-libseccomp-2.6.0",
         "realized": true,
         "sha256": null
