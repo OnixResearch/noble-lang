@@ -132,16 +132,29 @@ syntax-only check authorizes MCB acceptance. r[CB-ADMIT-01] r[CB-GATE-01]
 This is a review plan, **not** a selected runner, compiler, VM, executable
 recipe or authorization to launch a guest. The checked source-only emitter
 does not spawn `cc`, produce ELF or satisfy CB-ADMIT-01. Its source-only path
-binding walks each input from the filesystem root without following a
-symlink, refuses relative and `.`/`..` components and multiply-linked or
-non-regular files, snapshots the bytes into a sealed memfd and writes outputs
-through the output directory descriptor it re-opens once after `mkdirat` (a
-writer of the parent can substitute the directory before that re-open);
-trusted-anchor selection, detection of an in-place rewrite that leaves the
-inode, link count, size and timestamps unchanged, and every native admission
-step remain open. `--native` and `execute --target c` continue to refuse.
-Canonical C text and all case evidence remain HOLD until a separate owner
-decision.
+binding walks each input and output parent from `/` using `openat2`
+(`RESOLVE_NO_SYMLINKS | RESOLVE_NO_MAGICLINKS`, plus `RESOLVE_BENEATH` on
+components below `/`). Trusted-anchor selection splits descriptor roles by
+authority: `/` and intermediate directory anchors use
+`O_PATH | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW` (so search-only `0111`
+ancestors succeed while directory listing and metadata mutation remain
+withheld), leaf inputs use `O_RDONLY | O_NONBLOCK | O_CLOEXEC | O_NOFOLLOW`,
+and the created `OutputDir` uses `O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW`
+because `RawDir` (`getdents64`) requires read access. Every walked ancestor must
+be owned by `euid` or `root` (`0`) and non-group/world-writable unless protected
+by the sticky bit (`0o1000`). Input bytes are copied into a sealed `memfd`
+retained in `SealedInput` across the build, and the open leaf FD is rewound and
+re-hashed with BLAKE3 after sealing (before timestamp checks) to detect
+in-place rewrites even when `dev`, `ino`, `nlink`, `size`, `mtime`, and `ctime`
+are unchanged. `create_output` closes cross-principal F-7 substitution between
+`mkdirat` and reopen by enforcing trusted ancestors before `mkdirat` and
+verifying reopened `fstat`/`statat` identity, `st_uid == euid`, `st_mode & 0o022 == 0`,
+and `RawDir` emptiness before `write_new`; honestly, Linux provides no atomic
+`mkdirat`-returning-fd syscall against a concurrent same-UID racer. Native
+admission steps (independent C re-emission, reproducible static-ELF comparison,
+and launching a child from a sealed ELF FD) remain open. `--native` and
+`execute --target c` continue to refuse. Canonical C text and all case
+evidence remain HOLD until a separate owner decision.
 
 1. **Pin an inert build service first.** Derive the proposed C11 compiler,
    linker, headers/sysroot, libc/startup and static runtime from the already
@@ -161,11 +174,13 @@ decision.
    descriptors, rejecting ancestor symlinks, magic links, mutable hard
    links and replacement. Snapshot checked bytes in sealed read-only
    descriptors; reject duplicate JSON members before interpreting limits.
-   The source-only build already walks its three inputs that way and writes
-   through the output directory descriptor it re-opens once after creation,
-   but it releases each sealed snapshot after reading it, rechecks only the
-   leaf's identity, link count, size and timestamps, selects no trusted
-   anchor and performs no native byte comparison below.
+   The source-only build already walks its inputs and output parents with
+   those `openat2` and ancestor-ownership/sticky-bit invariants, retains each
+   sealed snapshot in `SealedInput` across the build, re-hashes the rewound
+   leaf FD after sealing to catch metadata-preserving in-place rewrites, and
+   checks reopened `OutputDir` ownership, mode, and `RawDir` emptiness (with
+   the same-UID `mkdirat`-to-reopen kernel boundary noted above), but it
+   performs no native C/ELF emission or comparison below.
    Independently check the exact source/resolved contracts, re-emit C under
    the pinned emitter/runtime and compare *all* C bytes. Compile that
    trusted C in a hermetic fixed environment and compare *all* ELF bytes,

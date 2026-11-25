@@ -1,0 +1,386 @@
+{
+  "schema": "noble-c-backend-pins/v1",
+  "status": "proposed-unreviewed-packet-not-selected",
+  "owner_decision": "OWNER DECISION 2026-11-20 (Decision 5): source-only packet and unreviewed pin inventory; does not select QEMU/kernel/image/clock pins, admit a runner, or grant native GO",
+  "target": "x86_64-unknown-linux-gnu",
+  "nixpkgs": {
+    "flake_input": "octet/nixpkgs",
+    "owner": "NixOS",
+    "repo": "nixpkgs",
+    "ref": "nixpkgs-unstable",
+    "rev": "9cf7092bdd603554bd8b63c216e8943cf9b12512",
+    "nar_hash": "sha256-9tpvMGFteZnd3gRQZFlRCohVpqooygFuy9yjuyRL2C0="
+  },
+  "divergence_notes": [
+    "policy/tool-selection.json component_sync.linker_bin (/nix/store/788mx070y81zjlg5ipcl0cra3afviw9k-gcc-wrapper-15.2.0/bin, glibc-2.42-61) originates from a different nixpkgs snapshot than octet/nixpkgs (glibc-2.42-51) and is not reused as a C backend pin.",
+    "The design draft's historical host path /nix/store/7yilgp2sawl51a36g2si9nnwfrliplxz-qemu-11.1.1/bin/qemu-system-x86_64 is absent on the build host, and host system qemu-11.1.2 is outside flake.lock and is not a pin."
+  ],
+  "c11_toolchain": {
+    "recommended_guest_profile": "pkgsStatic-musl-static-elf",
+    "pkgs_static_musl": {
+      "notes": "Zero PT_INTERP, zero dynamic loader, zero NSS dlopen; pending nix build realization.",
+      "compiler": {
+        "attr": "pkgs.pkgsStatic.stdenv.cc",
+        "name": "x86_64-unknown-linux-musl-gcc-wrapper-15.2.0",
+        "drv": "/nix/store/l5pd5fv6yc38acziszv6za5rdinx9xwn-x86_64-unknown-linux-musl-gcc-wrapper-15.2.0.drv",
+        "out": "/nix/store/nz3n5wy8zadq73kkql2xn485l7xdmv46-x86_64-unknown-linux-musl-gcc-wrapper-15.2.0",
+        "realized": false,
+        "sha256": null
+      },
+      "unwrapped_compiler": {
+        "attr": "pkgs.pkgsStatic.stdenv.cc.cc",
+        "name": "x86_64-unknown-linux-musl-gcc-15.2.0",
+        "drv": "/nix/store/kd7882f717fza93pia2h3f4aj1hyqg3s-x86_64-unknown-linux-musl-gcc-15.2.0.drv",
+        "out": "/nix/store/l04z26p43pa121dbfp2x3zqzkvha33m2-x86_64-unknown-linux-musl-gcc-15.2.0",
+        "realized": false,
+        "sha256": null
+      },
+      "linker": {
+        "attr": "pkgs.pkgsStatic.stdenv.cc.bintools",
+        "name": "x86_64-unknown-linux-musl-binutils-wrapper-2.44",
+        "drv": "/nix/store/s502ihsw0yvy2h9k579andx3i710cjib-x86_64-unknown-linux-musl-binutils-wrapper-2.44.drv",
+        "out": "/nix/store/h0pbmj3hw62blpqfwzi7lvq2jkridpxv-x86_64-unknown-linux-musl-binutils-wrapper-2.44",
+        "realized": false,
+        "sha256": null
+      },
+      "unwrapped_linker": {
+        "attr": "pkgs.pkgsStatic.stdenv.cc.bintools.bintools_bin",
+        "name": "x86_64-unknown-linux-musl-binutils-2.44",
+        "drv": "/nix/store/7f8kpxqy56laahcs3vimmcxw47by97sz-x86_64-unknown-linux-musl-binutils-2.44.drv",
+        "out": "/nix/store/6iy5zryd4b8hmwpj9mky2by0ajardffk-x86_64-unknown-linux-musl-binutils-2.44",
+        "realized": false,
+        "sha256": null
+      },
+      "sysroot_and_runtime": {
+        "attr": "pkgs.pkgsStatic.musl",
+        "name": "musl-static-x86_64-unknown-linux-musl-1.2.5",
+        "drv": "/nix/store/xs7qzjhlqqkxkzlb83nh9bw5vgl2nrbg-musl-static-x86_64-unknown-linux-musl-1.2.5.drv",
+        "out": "/nix/store/05c4skaigahk0yj3z1graj7837c7qm10-musl-static-x86_64-unknown-linux-musl-1.2.5",
+        "dev_out": "/nix/store/rbzk87ywizm0zl9i9hnza1wibjpkhiv5-musl-static-x86_64-unknown-linux-musl-1.2.5-dev",
+        "realized": false,
+        "sha256": null
+      },
+      "kernel_headers": {
+        "attr": "pkgs.linuxHeaders",
+        "name": "linux-headers-6.18.7",
+        "drv": "/nix/store/6ghrbyhhcdadw3l329i1kx1yncwgw094-linux-headers-6.18.7.drv",
+        "out": "/nix/store/rvpvd6srf1rzkmza1vxbyjcv5c5nawhc-linux-headers-6.18.7",
+        "realized": true,
+        "sha256": null
+      }
+    },
+    "realized_glibc_static_reference": {
+      "notes": "Realized from the same octet/nixpkgs revision on the build host; larger static startup surface than musl.",
+      "compiler": {
+        "attr": "pkgs.stdenv.cc",
+        "name": "gcc-wrapper-15.2.0",
+        "drv": "/nix/store/l8kjykqqnkh48cxjhz1p9wh53mb65dpf-gcc-wrapper-15.2.0.drv",
+        "out": "/nix/store/kbw2j1vag664b3sj3rjwz9v53cqx87sb-gcc-wrapper-15.2.0",
+        "realized": true,
+        "sha256": null
+      },
+      "unwrapped_compiler": {
+        "attr": "pkgs.stdenv.cc.cc",
+        "name": "gcc-15.2.0",
+        "drv": "/nix/store/s17kqafdpsrgbfygig72hgv04vr905yw-gcc-15.2.0.drv",
+        "out": "/nix/store/sca0pf46jmxva40qahkcwys5c1lvk6n2-gcc-15.2.0",
+        "realized": true,
+        "sha256": null
+      },
+      "linker": {
+        "attr": "pkgs.stdenv.cc.bintools",
+        "name": "binutils-wrapper-2.44",
+        "drv": "/nix/store/94q8md08ip92h7575ln820fzlz0mkp4n-binutils-wrapper-2.44.drv",
+        "out": "/nix/store/4yi6jj75bb5hhdzpzlxfyf69d35wsf2x-binutils-wrapper-2.44",
+        "realized": true,
+        "sha256": null
+      },
+      "unwrapped_linker": {
+        "attr": "pkgs.stdenv.cc.bintools.bintools_bin",
+        "name": "binutils-2.44",
+        "drv": "/nix/store/ibgm6y86w54yc8hhljfxqwc24ncghqa0-binutils-2.44.drv",
+        "out": "/nix/store/9nmzd62x45ayp4vmswvn6z45h6bzrsla-binutils-2.44",
+        "realized": true,
+        "sha256": null
+      },
+      "libc_runtime": {
+        "attr": "pkgs.glibc",
+        "name": "glibc-2.42-51",
+        "drv": "/nix/store/zf7wrvp7ab5nq6x505nphqjyzv9l28dp-glibc-2.42-51.drv",
+        "out": "/nix/store/l0l2ll1lmylczj1ihqn351af2kyp5x19-glibc-2.42-51",
+        "dev_out": "/nix/store/j8irrc0mpx029dw0rmadsjylg7h31ync-glibc-2.42-51-dev",
+        "static_out": "/nix/store/dra84lgfpv7lkbq1lz8ngc2sczqnd0js-glibc-2.42-51-static",
+        "realized": true,
+        "sha256": null
+      }
+    }
+  },
+  "reproducible_static_elf_build": {
+    "env": {
+      "LC_ALL": "C",
+      "LANG": "C",
+      "TZ": "UTC",
+      "SOURCE_DATE_EPOCH": "0",
+      "ZERO_AR_DATE": "1"
+    },
+    "base_flags": [
+      "-std=c11",
+      "-static",
+      "-fno-asynchronous-unwind-tables",
+      "-fno-ident",
+      "-frandom-seed=noble-c11-v1",
+      "-ffile-prefix-map=<WORK_DIR>=/noble-src",
+      "-fdebug-prefix-map=<WORK_DIR>=/noble-src",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-Wl,--build-id=none",
+      "-Wl,-z,noexecstack",
+      "-Wl,-z,relro",
+      "-Wl,-z,now"
+    ],
+    "optimization_modes": {
+      "off": ["-O0"],
+      "on": ["-O2"]
+    },
+    "determinism_gate": "Compile twice in distinct work directories and verify full-ELF SHA-256 byte equality (including inert sections) for both -O0 and -O2.",
+    "elf_admission_invariants": [
+      "ELF64 x86_64 (EM_X86_64)",
+      "Zero PT_INTERP program headers",
+      "Zero PT_DYNAMIC / DT_NEEDED entries",
+      "Zero writable+executable (PF_W | PF_X) PT_LOAD segments",
+      "Non-executable PT_GNU_STACK (RW only)"
+    ]
+  },
+  "qemu_tcg_vm": {
+    "qemu": {
+      "primary": {
+        "attr": "pkgs.qemu",
+        "name": "qemu-10.2.1",
+        "drv": "/nix/store/gw0qjz3ard5zv3csmvhfr8vw6zn0cgw7-qemu-10.2.1.drv",
+        "out": "/nix/store/0ksasy9cgh24srwfp5lqhgvxm1wal71q-qemu-10.2.1",
+        "binary": "bin/qemu-system-x86_64",
+        "realized": false,
+        "sha256": null
+      },
+      "host_cpu_only_reference": {
+        "attr": "pkgs.qemu_kvm",
+        "name": "qemu-host-cpu-only-10.2.1",
+        "drv": "/nix/store/1nbzjzb4byap2vfz4q6bxh7vjn94744f-qemu-host-cpu-only-10.2.1.drv",
+        "out": "/nix/store/9h1x6kz210ky9m2ggqfmp0qjx26q6b6s-qemu-host-cpu-only-10.2.1",
+        "realized": false,
+        "sha256": null
+      }
+    },
+    "firmware": {
+      "primary": {
+        "attr": "pkgs.seabios",
+        "name": "seabios-1.17.0",
+        "drv": "/nix/store/m84g9iv2lvyjz0irlp5r7539g3m136nk-seabios-1.17.0.drv",
+        "out": "/nix/store/xj7g1d1j96cnx6bfvb8bz25v1hxp13sc-seabios-1.17.0",
+        "realized": false,
+        "sha256": null
+      },
+      "optional_fast_boot": {
+        "attr": "pkgs.qboot",
+        "name": "qboot-unstable-2020-04-23",
+        "drv": "/nix/store/rrb30a4xgsmnc0iywdsjb16830kz80iy-qboot-unstable-2020-04-23.drv",
+        "out": "/nix/store/5fillk2kix84lbbj70gl6yqzfsabd6z6-qboot-unstable-2020-04-23",
+        "realized": false,
+        "sha256": null
+      }
+    },
+    "guest_kernel": {
+      "primary": {
+        "attr": "pkgs.linux",
+        "name": "linux-6.18.18",
+        "drv": "/nix/store/nvzfbg5wi8c0fg230rr9l5bhqzxpif2r-linux-6.18.18.drv",
+        "out": "/nix/store/hwyx2l9wi4wxsxgkd6yrvs566xpkqdkr-linux-6.18.18",
+        "image": "bzImage",
+        "realized": false,
+        "sha256": null
+      },
+      "lts_reference": {
+        "attr": "pkgs.linuxPackages_6_12.kernel",
+        "name": "linux-6.12.77",
+        "drv": "/nix/store/xc494j1cg9ydjf02am8lr5qjf83zqvrb-linux-6.12.77.drv",
+        "out": "/nix/store/ilf76d574r5lya0gbrh0jq0kbwp42kap-linux-6.12.77",
+        "image": "bzImage",
+        "realized": false,
+        "sha256": null
+      },
+      "cmdline": "console=ttyS0 panic=1 oops=panic quiet nokaslr vsyscall=none init=/init"
+    },
+    "initrd_rootfs": {
+      "busybox_static": {
+        "attr": "pkgs.pkgsStatic.busybox",
+        "name": "busybox-static-x86_64-unknown-linux-musl-1.37.0",
+        "drv": "/nix/store/qvzbb5f9jkgiaa88k9wzs044rq8k1gci-busybox-static-x86_64-unknown-linux-musl-1.37.0.drv",
+        "out": "/nix/store/pic5whsc7f5f7ji3c019pfhhacfr8niq-busybox-static-x86_64-unknown-linux-musl-1.37.0",
+        "realized": false,
+        "sha256": null
+      },
+      "cpio": {
+        "attr": "pkgs.cpio",
+        "name": "cpio-2.15",
+        "drv": "/nix/store/hf8avhllvhf7m3j0vpyi2i6waxdshmc0-cpio-2.15.drv",
+        "out": "/nix/store/c4xn0489g92bkqmdir5pndrfxl922f2k-cpio-2.15",
+        "realized": true,
+        "sha256": null
+      },
+      "gzip": {
+        "attr": "pkgs.gzip",
+        "name": "gzip-1.14",
+        "drv": "/nix/store/lia9cp27x0s3f9axsjndxi0hxzzjabdn-gzip-1.14.drv",
+        "out": "/nix/store/w1n7yp2vnldr395hbwbcaw9sflh413bm-gzip-1.14",
+        "realized": true,
+        "sha256": null
+      },
+      "zstd": {
+        "attr": "pkgs.zstd",
+        "name": "zstd-1.5.7",
+        "drv": "/nix/store/blcaz0716y1nk9syz2fb9acwq6s1bd2h-zstd-1.5.7.drv",
+        "out": "/nix/store/xks3v41w0rqp27a17kwkybcvr39rxpl8-zstd-1.5.7-bin",
+        "realized": true,
+        "sha256": null
+      },
+      "layout": "Deterministic SOURCE_DATE_EPOCH=0 newc initramfs containing minimal static /init, read-only candidate ELF mount/node, zero ambient secrets, and no writable-executable filesystem."
+    },
+    "tcg_and_clock_flags": {
+      "machine": ["-machine", "q35,accel=tcg,usb=off,vmport=off,smm=off"],
+      "cpu": ["-cpu", "qemu64"],
+      "smp": ["-smp", "1,sockets=1,cores=1,threads=1"],
+      "icount": ["-icount", "shift=5,sleep=off,align=off"],
+      "rtc": ["-rtc", "base=2026-01-01T00:00:00,clock=vm"],
+      "memory_and_defaults": ["-m", "128M", "-no-user-config", "-nodefaults", "-nographic", "-no-reboot"],
+      "allowed_devices": [
+        "isa-serial (ttyS0 console)",
+        "virtio-serial-pci / virtserialport (bounded private request/response IPC FD only, when mediator enabled)"
+      ],
+      "forbidden_devices_and_flags": [
+        "-enable-kvm",
+        "/dev/kvm",
+        "shift=auto",
+        "sleep=on",
+        "align=on",
+        "clock=host",
+        "-net",
+        "-netdev",
+        "virtio-net",
+        "-fsdev",
+        "virtio-9p",
+        "virtiofs",
+        "writable -drive",
+        "spice",
+        "vnc",
+        "audio",
+        "usb"
+      ]
+    },
+    "host_confinement_prerequisites": {
+      "bubblewrap": {
+        "attr": "pkgs.bubblewrap",
+        "name": "bubblewrap-0.11.0",
+        "drv": "/nix/store/3ml43jyisk1cf03qi1nbhvfhzs39vlky-bubblewrap-0.11.0.drv",
+        "out": "/nix/store/qn1pfnn2xgfwdr6avw1fnvwsabi83973-bubblewrap-0.11.0",
+        "realized": true,
+        "sha256": null
+      },
+      "libseccomp": {
+        "attr": "pkgs.libseccomp",
+        "name": "libseccomp-2.6.0",
+        "drv": "/nix/store/gbnkb0cajg2xcw6za5hl64m4d08d920n-libseccomp-2.6.0.drv",
+        "out": "/nix/store/2k7zcnnsix84r1vgaf621h3l0hdq4b14-libseccomp-2.6.0",
+        "realized": true,
+        "sha256": null
+      },
+      "requirements": [
+        "Verified mount, user, and network namespaces (fail closed; no --unshare-*-try reliance and no --share-net or --not-a-security-boundary)",
+        "Closed unrelated FDs (explicit private protocol and output FD table only)",
+        "Measured fail-closed post-load seccomp allowlist on the QEMU host process",
+        "Parent-owned cgroup memory/CPU/task/output limits and monotonic wall-clock kill+reap"
+      ]
+    }
+  },
+  "negative_controls": [
+    {
+      "id": "CB-NC-01",
+      "control": "Cached bubblewrap/libseccomp or the Lean proof sandbox",
+      "insufficient_shortcut": "Package availability is not native runner selection",
+      "required_gate": "Reviewed separate default-disabled C policy, exact pins and owner approval",
+      "requirements": ["CB-SANDBOX-01"],
+      "cases": ["CB-CASE-08", "CB-CASE-10"],
+      "status": "not-executed"
+    },
+    {
+      "id": "CB-NC-02",
+      "control": "../, ancestor symlink, hardlink or swapped parent",
+      "insufficient_shortcut": "canonicalize, final-component O_NOFOLLOW and pathname digest race",
+      "required_gate": "Descriptor-anchored no-symlink walk and sealed byte snapshot",
+      "requirements": ["CB-ADMIT-01"],
+      "cases": ["CB-CASE-05"],
+      "status": "not-executed"
+    },
+    {
+      "id": "CB-NC-03",
+      "control": "Forged C comment or ELF inert-section change",
+      "insufficient_shortcut": "Syntax, manifest flag or .text hash cannot establish native correspondence",
+      "required_gate": "Trusted C re-emission and reproducible full-ELF byte equality",
+      "requirements": ["CB-ADMIT-01"],
+      "cases": ["CB-CASE-05"],
+      "status": "not-executed"
+    },
+    {
+      "id": "CB-NC-04",
+      "control": "PT_INTERP, LD_PRELOAD, writable loader or executable mapping",
+      "insufficient_shortcut": "Outside code runs despite admitted ELF bytes",
+      "required_gate": "Reviewed static startup or exact immutable loader/ABI closure and post-load filter",
+      "requirements": ["CB-SANDBOX-01", "CB-ADMIT-01"],
+      "cases": ["CB-CASE-08"],
+      "status": "not-executed"
+    },
+    {
+      "id": "CB-NC-05",
+      "control": "Deny all execve before initial load, or allow it afterward",
+      "insufficient_shortcut": "First prevents launch; second permits substitution",
+      "required_gate": "Trusted initial-load versus final no-exec stage before guest instructions",
+      "requirements": ["CB-SANDBOX-01"],
+      "cases": ["CB-CASE-08"],
+      "status": "not-executed"
+    },
+    {
+      "id": "CB-NC-06",
+      "control": "vDSO clock_gettime/time/gettimeofday, coarse clocks, direct vvar reads, x86 rdtsc/rdtscp",
+      "insufficient_shortcut": "All bypass syscall seccomp/bubblewrap namespace flags; TSC-only trap/offset leaves host time or elapsed time",
+      "required_gate": "Reviewed complete clock/vvar/TSC barrier or equivalent; otherwise no native launch",
+      "requirements": ["CB-SANDBOX-01"],
+      "cases": ["CB-CASE-08"],
+      "status": "not-executed"
+    },
+    {
+      "id": "CB-NC-07",
+      "control": "Inherited secret FD, /proc/self/fd or revoked test.emit grant",
+      "insufficient_shortcut": "Direct disclosure or forged/stale protected request",
+      "required_gate": "Fixed private FD allowlist, bounded IPC, independent mediator checking current authority on every request",
+      "requirements": ["CB-HOST-01", "CB-SANDBOX-01"],
+      "cases": ["CB-CASE-07", "CB-CASE-08"],
+      "status": "not-executed"
+    },
+    {
+      "id": "CB-NC-08",
+      "control": "Crash, timeout, leaked descendant or partial JSON",
+      "insufficient_shortcut": "Partial output is not Noble completion",
+      "required_gate": "Parent-owned cgroup limits, kill/reap entire worker set and typed failure without post-failure effects",
+      "requirements": ["CB-LIMIT-01", "CB-SANDBOX-01"],
+      "cases": ["CB-CASE-06"],
+      "status": "not-executed"
+    }
+  ],
+  "non_claims": [
+    "Unreviewed candidate pin inventory; not wired into policy/tool-selection.json or policy/tool-selection.ncl",
+    "Derivations marked realized: false have not been built or measured on disk (sha256: null pending realization)",
+    "No QEMU TCG VM boot, guest kernel config audit, seccomp allowlist measurement, or hostile vDSO/vvar/rdtsc/rdtscp execution has occurred",
+    "No source-to-ELF admission, C/Wasm differential run, or CB-CASE-01..10 evidence exists",
+    "noble build --target c --native and noble execute --target c continue to refuse"
+  ]
+}
