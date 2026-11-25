@@ -1,9 +1,11 @@
 import NobleContracts.Rules
+import NobleContracts.WasmLinearMemory
 
 /-!
 # Bounded Wasm Small-Step Semantics and MC1 `Exec` Simulation (`r[WREF-STEP-01]`)
 
-First mechanization unit for `.cairn/changes/bounded-wasm-correspondence` Phase 2
+First mechanization unit (extended with concrete `[0, 8192)` linear-memory helper
+refinement) for `.cairn/changes/bounded-wasm-correspondence` Phase 2
 (Owner Decision 56, 2026-11-23).
 
 ## Scope and independence
@@ -21,6 +23,12 @@ wrapping `+`, `-`, `*`):
   `$push_i64` (`crates/noble-wasm/runtime/stack.wat:26`) and `$op_add`, `$op_sub`,
   `$op_mul` (`crates/noble-wasm/runtime/operations.wat:14-25`), including right-then-left
   popping into locals `$right` and `$left`, followed by `i64.{add,sub,mul} $left $right`.
+- **Concrete `[0, 8192)` linear-memory helper refinement**: `NobleContracts.WasmLinearMemory`
+  and Section 13 discharge `LinearMemorySlotPremise` by proving that byte-level
+  `loadI32`/`loadI64`/`storeI32`/`storeI64` over `[0, 4096)` (operand slots) and
+  `[4096, 8192)` (continuation slots) refine `storePushTag`, `storePopKind`,
+  `storeEnqueue`, `$dispatch` dequeue, and `storeRuntimeTick` with region
+  non-interference, realizability, and end-to-end lifting (`linearRunLowered_sound_exec`).
 - **Continuation dispatch** (`DispatchStep`, `DispatchRun`): exact opt-off entry
   chaining matching `crates/noble-wasm/src/source/emit/functions.rs` (`calculator = false`)
   and the `$dispatch` loop in `crates/noble-wasm/runtime/stack.wat:78-88`.
@@ -34,24 +42,19 @@ or `NobleContracts.Step`, and is then related to `NobleContracts.Exec` by soundn
 completeness, frame/tail-preservation, quota/fault-separation, non-vacuity, and
 rejection-sensitivity theorems.
 
-## Explicit unproved premises and excluded boundaries (`r[WREF-CHAIN-01]`)
+## Remaining excluded boundaries (`r[WREF-CHAIN-01]`)
 
-1. **Abstract stack-access contract (linear-memory boundary):** The four primitive
-   runtime helpers `.pushTag`, `.popKind`, `.enqueue`, and `.runtimeTick` model the
-   tagged operand-stack slots, continuation stack, and quota/step globals abstractly
-   (matching `stack.wat` and `accounting.wat` under `ProfileLimitsValid`). Proving that
-   raw linear-memory `i32.load`/`i64.load`/`i32.store`/`i64.store` instructions over
-   `[0, 8192)` refine this tagged-slot contract remains a separate open obligation.
-2. **Excluded emitter/encoding/loading edges:** Extracted Rust emitter refinement
-   (`r[WREF-EMIT-01]`), WAT/binary encoding, `table.init` / module loading, opt-on
-   emission, calculator `$inline_step` fusion, WasmGC, named calls, nested `Program`
-   quotations, branching, heap allocation, resources, live slots, and host effects are
-   excluded from this theorem and remain open (`PO-17`, `PO-18`, `O1`, `O3`, `O7`).
+- **Excluded emitter/encoding/loading edges:** Extracted Rust emitter refinement
+  (`r[WREF-EMIT-01]`), WAT/binary encoding, `table.init` / module loading, opt-on
+  emission, calculator `$inline_step` fusion, WasmGC, named calls, nested `Program`
+  quotations, branching, heap allocation, resources, live slots, and host effects are
+  excluded from this theorem and remain open (`PO-17`, `PO-18`, `O1`, `O3`, `O7`).
 -/
 
 namespace NobleContracts.WasmStep
 
 open NobleContracts
+open NobleContracts.WasmLinearMemory
 
 /-! ## 1. Runtime Tags, Quotas, and Failure Classification -/
 
@@ -244,10 +247,133 @@ def storeRuntimeTick (st : RuntimeStore) : BitVec 32 × RuntimeStore :=
         (1, { st with steps := st.steps + 1 })
   | _ => (0, st)
 
-/-- Explicit statement of the abstract stack-access premise separating this unit
-    from byte-level linear-memory load/store refinement (`r[WREF-CHAIN-01]`). -/
+/-- Read one 16-byte tagged operand slot from `[0, 4096)` linear memory.
+    Constrains ONLY bytes `+0..+4` (`tag`) and `+8..+16` (`payload`), leaving
+    bytes `+4..+8` (padding, untouched by `$push_tag`) unconstrained. -/
+def readSlot (mem : LinearMem) (idx : Nat) : TaggedSlot :=
+  ⟨loadI32 mem (idx * 16), loadI64 mem (idx * 16 + 8)⟩
+
+/-- Read one 8-byte continuation entry from `[4096, 8192)` linear memory. -/
+def readCont (mem : LinearMem) (idx : Nat) : ContEntry :=
+  ⟨loadI32 mem (4096 + idx * 8), loadI32 mem (4096 + idx * 8 + 4)⟩
+
+/-- Top-first list of the `n` live operand slots stored in `[0, n * 16)`. -/
+def readSlotsTopFirst (mem : LinearMem) : Nat → List TaggedSlot
+  | 0 => []
+  | n + 1 => readSlot mem n :: readSlotsTopFirst mem n
+
+/-- Top-first list of the `n` live continuation entries stored in `[4096, 4096 + n * 8)`. -/
+def readContsTopFirst (mem : LinearMem) : Nat → List ContEntry
+  | 0 => []
+  | n + 1 => readCont mem n :: readContsTopFirst mem n
+
+/-- Exact status refinement relating concrete `($failure, $quota_reason)` globals
+    to `FailureStatus`, enforcing non-zero failure codes and `$failure = 0 → $quota_reason = 0`. -/
+def StatusRefines (failure quotaReason : BitVec 32) : FailureStatus → Prop
+  | .ok => failure = 0 ∧ quotaReason = 0
+  | .quota qPhase reason =>
+      failure = 1 + qPhase ∧ 1 + qPhase ≠ 0 ∧
+      quotaReason = reason.code ∧ reason ≠ .none
+  | .fault code => failure = code ∧ code ≠ 0 ∧ quotaReason = 0
+
+/-- Validity of `FailureStatus` globals ensuring failed states never collide with `failure = 0`. -/
+def StatusGlobalValid : FailureStatus → Prop
+  | .ok => True
+  | .quota qPhase reason => 1 + qPhase ≠ 0 ∧ reason ≠ .none
+  | .fault code => code ≠ 0
+
+/-- Full refinement relation between concrete `[0, 8192)` `LinearRuntimeState`
+    and abstract `RuntimeStore`. Equates `cst.operandPeak.toNat = st.operandPeak`
+    directly without assuming `st.operandPeak ≥ st.slots.length * 16`. -/
+structure StoreRefines (cst : LinearRuntimeState) (st : RuntimeStore) : Prop where
+  limitsValid : ProfileLimitsValid st.limits
+  limitsEq :
+    cst.operandLimit.toNat = st.limits.operandLimit ∧
+    cst.continuationLimit.toNat = st.limits.continuationLimit ∧
+    cst.stepLimit.toNat = st.limits.stepLimit
+  spBound : cst.sp.toNat ≤ 256
+  cpBound : cst.cp.toNat ≤ 512
+  stepsBound : cst.steps.toNat ≤ 100000
+  phaseValid : 1 + cst.phase ≠ 0
+  failureZeroQuotaZero : cst.failure = 0 → cst.quotaReason = 0
+  slotsEq : readSlotsTopFirst cst.mem cst.sp.toNat = st.slots
+  contsEq : readContsTopFirst cst.mem cst.cp.toNat = st.conts
+  phaseEq : cst.phase = st.phase
+  statusRef : StatusRefines cst.failure cst.quotaReason st.status
+  stepsEq : cst.steps.toNat = st.steps
+  operandPeakEq : cst.operandPeak.toNat = st.operandPeak
+  continuationPeakEq : cst.continuationPeak.toNat = st.continuationPeak
+
+/-- Computable decoder from `$quota_reason` global to `QuotaReason`. -/
+def QuotaReason.ofCodeD (c : BitVec 32) : QuotaReason :=
+  if c = 1 then .allocation
+  else if c = 2 then .recipe
+  else if c = 3 then .depth
+  else if c = 4 then .operand
+  else if c = 5 then .continuation
+  else if c = 6 then .steps
+  else .none
+
+/-- Computable abstraction map from concrete `LinearRuntimeState` to `RuntimeStore`. -/
+def absStore (cst : LinearRuntimeState) : RuntimeStore :=
+  let status : FailureStatus :=
+    if cst.failure = 0 then .ok
+    else if cst.quotaReason ≠ 0 then .quota (cst.failure - 1) (QuotaReason.ofCodeD cst.quotaReason)
+    else .fault cst.failure
+  { slots := readSlotsTopFirst cst.mem cst.sp.toNat
+    conts := readContsTopFirst cst.mem cst.cp.toNat
+    limits :=
+      { operandLimit := cst.operandLimit.toNat
+        continuationLimit := cst.continuationLimit.toNat
+        stepLimit := cst.stepLimit.toNat }
+    phase := cst.phase
+    status := status
+    steps := cst.steps.toNat
+    operandPeak := cst.operandPeak.toNat
+    continuationPeak := cst.continuationPeak.toNat }
+
+/-- Genuine concrete `[0, 8192)` linear-memory refinement, region non-interference,
+    and realizability contract replacing the earlier abstract-slot assumption (`r[WREF-STEP-01]`). -/
 structure LinearMemorySlotPremise : Prop where
-  abstractSlotsAssumed : True
+  pushTagRefines :
+    ∀ cst st kind value, StoreRefines cst st →
+      StoreRefines (concretePushTag cst kind value) (storePushTag st kind value)
+  popKindRefines :
+    ∀ cst st expected, StoreRefines cst st →
+      (concretePopKind cst expected).1 = (storePopKind st expected).1 ∧
+      StoreRefines (concretePopKind cst expected).2 (storePopKind st expected).2
+  enqueueRefines :
+    ∀ cst st fnIdx env, StoreRefines cst st →
+      StoreRefines (concreteEnqueue cst fnIdx env) (storeEnqueue st fnIdx env)
+  dequeueRefines :
+    ∀ cst st c rest, StoreRefines cst st → st.status = .ok → st.conts = c :: rest →
+      (concreteDequeue cst).1 = (c.fnIdx, c.env) ∧
+      StoreRefines (concreteDequeue cst).2 { st with conts := rest }
+  runtimeTickRefines :
+    ∀ cst st, StoreRefines cst st →
+      (concreteRuntimeTick cst).1 = (storeRuntimeTick st).1 ∧
+      StoreRefines (concreteRuntimeTick cst).2 (storeRuntimeTick st).2
+  opWritesPreserveContRegion :
+    ∀ cst, cst.sp.toNat ≤ 256 → cst.operandLimit.toNat ≤ 2048 →
+      (∀ k v, MemEqOn 4096 8192 cst.mem (concretePushTag cst k v).mem ∧
+              (concretePushTag cst k v).cp = cst.cp) ∧
+      (∀ exp, MemEqOn 4096 8192 cst.mem (concretePopKind cst exp).2.mem ∧
+              (concretePopKind cst exp).2.cp = cst.cp)
+  contWritesPreserveOpRegion :
+    ∀ cst, cst.cp.toNat ≤ 512 →
+      (∀ fnIdx env, MemEqOn 0 4096 cst.mem (concreteEnqueue cst fnIdx env).mem ∧
+                    (concreteEnqueue cst fnIdx env).sp = cst.sp) ∧
+      (MemEqOn 0 4096 cst.mem (concreteDequeue cst).2.mem ∧
+       (concreteDequeue cst).2.sp = cst.sp)
+  tickPreservesBothRegions :
+    ∀ cst, MemEqOn 0 8192 cst.mem (concreteRuntimeTick cst).2.mem ∧
+           (concreteRuntimeTick cst).2.sp = cst.sp ∧
+           (concreteRuntimeTick cst).2.cp = cst.cp
+  realizable :
+    ∀ st : RuntimeStore, ProfileLimitsValid st.limits →
+      st.slots.length ≤ 256 → st.conts.length ≤ 512 → st.steps ≤ 100000 →
+      1 + st.phase ≠ 0 → st.operandPeak < 2 ^ 32 → st.continuationPeak < 2 ^ 32 →
+      StatusGlobalValid st.status → ∃ cst, StoreRefines cst st
 
 theorem storePushTag_ok (st : RuntimeStore) (k : BitVec 32) (v : BitVec 64)
     (hok : st.status = .ok) (hlim : (st.slots.length + 1) * 16 ≤ st.limits.operandLimit) :
@@ -2947,5 +3073,1594 @@ theorem same_value_distinct_recipe_sensitivity :
   · intro hcorr
     have h := congrFun hcorr.tableExact 0
     simp [lowerProgram, progOnePlusOne, progTwo, lowerOp] at h
+
+/-! ## 13. Discharging `LinearMemorySlotPremise` and End-to-End `[0, 8192)` Lifting -/
+
+theorem readSlotsTopFirst_length (mem : LinearMem) (n : Nat) :
+    (readSlotsTopFirst mem n).length = n := by
+  induction n with
+  | zero => rfl
+  | succ k ih => simp [readSlotsTopFirst, ih]
+
+theorem readContsTopFirst_length (mem : LinearMem) (n : Nat) :
+    (readContsTopFirst mem n).length = n := by
+  induction n with
+  | zero => rfl
+  | succ k ih => simp [readContsTopFirst, ih]
+
+theorem readSlotsTopFirst_memEqOn {m1 m2 : LinearMem} {lo hi n : Nat}
+    (h : MemEqOn lo hi m1 m2) (hlo : lo = 0) (hhi : n * 16 ≤ hi) :
+    readSlotsTopFirst m1 n = readSlotsTopFirst m2 n := by
+  subst hlo
+  induction n with
+  | zero => rfl
+  | succ k ih =>
+      simp only [readSlotsTopFirst, List.cons.injEq]
+      refine ⟨?_, ih (by omega)⟩
+      unfold readSlot
+      have h1 : loadI32 m1 (k * 16) = loadI32 m2 (k * 16) :=
+        loadI32_memEqOn h (by omega) (by omega)
+      have h2 : loadI64 m1 (k * 16 + 8) = loadI64 m2 (k * 16 + 8) :=
+        loadI64_memEqOn h (by omega) (by omega)
+      rw [h1, h2]
+
+theorem readContsTopFirst_memEqOn {m1 m2 : LinearMem} {lo hi n : Nat}
+    (h : MemEqOn lo hi m1 m2) (hlo : lo ≤ 4096) (hhi : 4096 + n * 8 ≤ hi) :
+    readContsTopFirst m1 n = readContsTopFirst m2 n := by
+  induction n with
+  | zero => rfl
+  | succ k ih =>
+      simp only [readContsTopFirst, List.cons.injEq]
+      refine ⟨?_, ih (by omega)⟩
+      unfold readCont
+      have h1 : loadI32 m1 (4096 + k * 8) = loadI32 m2 (4096 + k * 8) :=
+        loadI32_memEqOn h (by omega) (by omega)
+      have h2 : loadI32 m1 (4096 + k * 8 + 4) = loadI32 m2 (4096 + k * 8 + 4) :=
+        loadI32_memEqOn h (by omega) (by omega)
+      rw [h1, h2]
+
+private theorem quotaReason_ofCodeD_code (r : QuotaReason) :
+    QuotaReason.ofCodeD r.code = r := by
+  cases r <;> decide
+
+private theorem quotaReason_code_ne_zero {r : QuotaReason} (hr : r ≠ .none) :
+    r.code ≠ 0 := by
+  cases r with
+  | none => exact absurd rfl hr
+  | allocation => decide
+  | recipe => decide
+  | depth => decide
+  | operand => decide
+  | continuation => decide
+  | steps => decide
+
+theorem absStore_of_storeRefines {cst : LinearRuntimeState} {st : RuntimeStore}
+    (h : StoreRefines cst st) : absStore cst = st := by
+  rcases st with ⟨slots, conts, ⟨ol, cl, sl⟩, phase, status, steps, opPeak, contPeak⟩
+  have hlim := h.limitsEq
+  dsimp only at hlim
+  rcases hlim with ⟨hol, hcl, hsl⟩
+  have hst : (if cst.failure = 0 then FailureStatus.ok
+      else if cst.quotaReason ≠ 0 then FailureStatus.quota (cst.failure - 1) (QuotaReason.ofCodeD cst.quotaReason)
+      else FailureStatus.fault cst.failure) = status := by
+    have hsr := h.statusRef
+    cases status with
+    | ok =>
+        rcases hsr with ⟨hf, _⟩
+        simp [hf]
+    | quota qph r =>
+        rcases hsr with ⟨hf, hnz, hqr, hr⟩
+        have hfnz : cst.failure ≠ 0 := by rw [hf]; exact hnz
+        have hqrnz : cst.quotaReason ≠ 0 := by
+          rw [hqr]; exact quotaReason_code_ne_zero hr
+        have hsub : cst.failure - 1 = qph := by
+          apply BitVec.eq_of_toNat_eq
+          rw [hf]
+          have h1 : (1 : BitVec 32).toNat = 1 := rfl
+          have hq : qph.toNat < 2 ^ 32 := qph.isLt
+          have hnz' : (1 + qph).toNat ≠ 0 := fun hz =>
+            hnz (BitVec.eq_of_toNat_eq (by simpa using hz))
+          rw [BitVec.toNat_add, h1] at hnz'
+          have hlt : 1 + qph.toNat < 2 ^ 32 := by omega
+          have hle : (1 : BitVec 32) ≤ 1 + qph := by
+            rw [BitVec.le_def, h1, BitVec.toNat_add, h1]
+            omega
+          rw [BitVec.toNat_sub_of_le hle, BitVec.toNat_add, h1]
+          omega
+        have hrc : r.code ≠ 0 := quotaReason_code_ne_zero hr
+        simp only [hfnz, ↓reduceIte, hqr, hsub, quotaReason_ofCodeD_code]
+        split
+        · rfl
+        · contradiction
+    | fault c =>
+        rcases hsr with ⟨hf, hcnz, hqr⟩
+        simp only [hf, hcnz, ↓reduceIte, hqr, ne_eq, not_true_eq_false]
+  unfold absStore
+  dsimp only
+  rw [h.slotsEq, h.contsEq, hol, hcl, hsl, h.phaseEq, hst, h.stepsEq, h.operandPeakEq,
+    h.continuationPeakEq]
+
+private theorem storeRefines_failure_eq_zero_iff {cst : LinearRuntimeState} {st : RuntimeStore}
+    (h : StoreRefines cst st) : cst.failure = 0 ↔ st.status = .ok := by
+  have hsr := h.statusRef
+  cases hs : st.status with
+  | ok =>
+      rw [hs] at hsr
+      exact ⟨fun _ => rfl, fun _ => hsr.1⟩
+  | quota qph r =>
+      rw [hs] at hsr
+      constructor
+      · intro hf; exact absurd (hf ▸ hsr.1.symm) hsr.2.1
+      · intro hok; cases hok
+  | fault c =>
+      rw [hs] at hsr
+      constructor
+      · intro hf; exact absurd (hf ▸ hsr.1.symm) hsr.2.1
+      · intro hok; cases hok
+
+theorem linear_fail_refines {cst : LinearRuntimeState} {st : RuntimeStore} (code : BitVec 32)
+    (h : StoreRefines cst st) (hcode : code ≠ 0) :
+    StoreRefines (concreteFail cst code) (st.setFault code) := by
+  by_cases hf : cst.failure = 0
+  · have hok : st.status = .ok := (storeRefines_failure_eq_zero_iff h).mp hf
+    have hqz : cst.quotaReason = 0 := h.failureZeroQuotaZero hf
+    rw [concreteFail_ok cst code hf]
+    have hsf : st.setFault code = { st with status := .fault code } := by
+      simp [RuntimeStore.setFault, hok]
+    rw [hsf]
+    refine
+      { limitsValid := h.limitsValid
+        limitsEq := h.limitsEq
+        spBound := h.spBound
+        cpBound := h.cpBound
+        stepsBound := h.stepsBound
+        phaseValid := h.phaseValid
+        failureZeroQuotaZero := fun hz => absurd hz hcode
+        slotsEq := h.slotsEq
+        contsEq := h.contsEq
+        phaseEq := h.phaseEq
+        statusRef := ⟨rfl, hcode, hqz⟩
+        stepsEq := h.stepsEq
+        operandPeakEq := h.operandPeakEq
+        continuationPeakEq := h.continuationPeakEq }
+  · have hne : st.status ≠ .ok := fun hok =>
+      hf ((storeRefines_failure_eq_zero_iff h).mpr hok)
+    rw [concreteFail_failed cst code hf]
+    have hsf : st.setFault code = st := by
+      cases hs : st.status with
+      | ok => exact absurd hs hne
+      | quota _ _ => simp [RuntimeStore.setFault, hs]
+      | fault _ => simp [RuntimeStore.setFault, hs]
+    rw [hsf]
+    exact h
+
+theorem linear_quota_refines {cst : LinearRuntimeState} {st : RuntimeStore} (reason : QuotaReason)
+    (h : StoreRefines cst st) (hr : reason ≠ .none) :
+    StoreRefines (concreteQuota cst reason.code) (st.setQuota reason) := by
+  by_cases hf : cst.failure = 0
+  · have hok : st.status = .ok := (storeRefines_failure_eq_zero_iff h).mp hf
+    rw [concreteQuota_ok cst reason.code hf]
+    have hsq : st.setQuota reason = { st with status := .quota st.phase reason } := by
+      simp [RuntimeStore.setQuota, hok]
+    rw [hsq]
+    refine
+      { limitsValid := h.limitsValid
+        limitsEq := h.limitsEq
+        spBound := h.spBound
+        cpBound := h.cpBound
+        stepsBound := h.stepsBound
+        phaseValid := h.phaseValid
+        failureZeroQuotaZero := fun hz => absurd hz h.phaseValid
+        slotsEq := h.slotsEq
+        contsEq := h.contsEq
+        phaseEq := h.phaseEq
+        statusRef := ⟨by rw [h.phaseEq], by rw [← h.phaseEq]; exact h.phaseValid, rfl, hr⟩
+        stepsEq := h.stepsEq
+        operandPeakEq := h.operandPeakEq
+        continuationPeakEq := h.continuationPeakEq }
+  · have hne : st.status ≠ .ok := fun hok =>
+      hf ((storeRefines_failure_eq_zero_iff h).mpr hok)
+    rw [concreteQuota_failed cst reason.code hf]
+    have hsq : st.setQuota reason = st := by
+      cases hs : st.status with
+      | ok => exact absurd hs hne
+      | quota _ _ => simp [RuntimeStore.setQuota, hs]
+      | fault _ => simp [RuntimeStore.setQuota, hs]
+    rw [hsq]
+    exact h
+
+private theorem bv32_one_toNat_ws : (1 : BitVec 32).toNat = 1 := rfl
+
+theorem linear_push_tag_refines (cst : LinearRuntimeState) (st : RuntimeStore)
+    (kind : BitVec 32) (value : BitVec 64) (h : StoreRefines cst st) :
+    StoreRefines (concretePushTag cst kind value) (storePushTag st kind value) := by
+  by_cases hf : cst.failure = 0
+  · have hok : st.status = .ok := (storeRefines_failure_eq_zero_iff h).mp hf
+    have hlen : cst.sp.toNat = st.slots.length := by
+      rw [← h.slotsEq, readSlotsTopFirst_length]
+    have hbytes : ((cst.sp + 1) * 16).toNat = (st.slots.length + 1) * 16 := by
+      rw [bv32_sp_bytes_toNat cst.sp h.spBound, hlen]
+    have hol : cst.operandLimit.toNat = st.limits.operandLimit := h.limitsEq.1
+    by_cases hgt : cst.operandLimit < (cst.sp + 1) * 16
+    · have hgtNat : (st.slots.length + 1) * 16 > st.limits.operandLimit := by
+        rw [BitVec.lt_def, hbytes, hol] at hgt; exact hgt
+      rw [concretePushTag_quota cst kind value hf hgt]
+      rw [storePushTag_quota st kind value hok hgtNat]
+      have hq := linear_quota_refines .operand h (by decide)
+      rw [concreteQuota_ok cst _ hf] at hq
+      simpa [QuotaReason.code, RuntimeStore.setQuota, hok] using hq
+    · have hle : (cst.sp + 1) * 16 ≤ cst.operandLimit := by
+        rw [BitVec.le_def]; rw [BitVec.lt_def] at hgt; omega
+      have hleNat : (st.slots.length + 1) * 16 ≤ st.limits.operandLimit := by
+        rw [BitVec.le_def, hbytes, hol] at hle; exact hle
+      have hlimOp : st.limits.operandLimit ≤ 2048 := h.limitsValid.1
+      have hsp' : (cst.sp + 1).toNat = cst.sp.toNat + 1 := by
+        rw [BitVec.toNat_add, bv32_one_toNat_ws]
+        have := h.spBound; omega
+      have hspLe : (cst.sp + 1).toNat ≤ 256 := by omega
+      have haddr : (cst.sp * 16).toNat = cst.sp.toNat * 16 :=
+        bv32_sp_addr_toNat cst.sp h.spBound
+      let bytes := (cst.sp + 1) * 16
+      let mem1 := storeI32 cst.mem (cst.sp * 16).toNat kind
+      let mem2 := storeI64 mem1 ((cst.sp * 16).toNat + 8) value
+      have hslots2 : readSlotsTopFirst mem2 (cst.sp + 1).toNat = ⟨kind, value⟩ :: st.slots := by
+        rw [hsp']
+        simp only [readSlotsTopFirst, List.cons.injEq]
+        refine ⟨?_, ?_⟩
+        · unfold readSlot
+          have hk : loadI32 mem2 (cst.sp.toNat * 16) = kind := by
+            have heq : loadI32 mem2 (cst.sp.toNat * 16) = loadI32 mem1 (cst.sp.toNat * 16) := by
+              have hpres0 : MemEqOn (cst.sp.toNat * 16) (cst.sp.toNat * 16 + 4) mem1 mem2 := by
+                refine storeI64_preserves_outside value (Or.inr ?_)
+                rw [haddr]; omega
+              exact loadI32_memEqOn hpres0.symm (Nat.le_refl _) (Nat.le_refl _)
+            rw [heq]
+            dsimp only [mem1]
+            rw [haddr]
+            exact loadI32_storeI32 cst.mem (cst.sp.toNat * 16) kind
+          have hv : loadI64 mem2 (cst.sp.toNat * 16 + 8) = value := by
+            dsimp only [mem2]
+            rw [haddr]
+            exact loadI64_storeI64 mem1 (cst.sp.toNat * 16 + 8) value
+          rw [hk, hv]
+        · have hpres : MemEqOn 0 (cst.sp.toNat * 16) cst.mem mem2 := by
+            have hm1 : MemEqOn 0 (cst.sp.toNat * 16) cst.mem mem1 := by
+              refine storeI32_preserves_outside kind (Or.inr ?_)
+              rw [haddr]; omega
+            have hm2 : MemEqOn 0 (cst.sp.toNat * 16) mem1 mem2 := by
+              refine storeI64_preserves_outside value (Or.inr ?_)
+              rw [haddr]; omega
+            exact hm1.trans hm2
+          rw [readSlotsTopFirst_memEqOn hpres.symm rfl (Nat.le_refl _)]
+          exact h.slotsEq
+      have hconts2 : readContsTopFirst mem2 cst.cp.toNat = st.conts := by
+        have hc := concretePushTag_preserves_contRegion cst kind value h.spBound (by omega)
+        rw [concretePushTag_ok cst kind value hf hle] at hc
+        have hmem := hc.1
+        have hcp := h.cpBound
+        rw [readContsTopFirst_memEqOn hmem.symm (Nat.le_refl 4096) (by omega)]
+        exact h.contsEq
+      have hpeak : (if cst.operandPeak < bytes then bytes else cst.operandPeak).toNat =
+          Nat.max st.operandPeak ((st.slots.length + 1) * 16) := by
+        by_cases hp : cst.operandPeak < bytes
+        · simp only [hp, ↓reduceIte]
+          rw [BitVec.lt_def] at hp
+          have h1 : st.operandPeak < (st.slots.length + 1) * 16 := by
+            rw [← h.operandPeakEq, ← hbytes]; exact hp
+          rw [hbytes]
+          simp only [Nat.max_def]
+          split <;> omega
+        · simp only [hp, ↓reduceIte]
+          rw [BitVec.lt_def] at hp
+          have h1 : (st.slots.length + 1) * 16 ≤ st.operandPeak := by
+            rw [← h.operandPeakEq, ← hbytes]; exact Nat.le_of_not_lt hp
+          rw [h.operandPeakEq]
+          simp only [Nat.max_def]
+          split <;> omega
+      rw [concretePushTag_ok cst kind value hf hle]
+      rw [storePushTag_ok st kind value hok hleNat]
+      exact
+        { limitsValid := h.limitsValid
+          limitsEq := h.limitsEq
+          spBound := hspLe
+          cpBound := h.cpBound
+          stepsBound := h.stepsBound
+          phaseValid := h.phaseValid
+          failureZeroQuotaZero := h.failureZeroQuotaZero
+          slotsEq := hslots2
+          contsEq := hconts2
+          phaseEq := h.phaseEq
+          statusRef := h.statusRef
+          stepsEq := h.stepsEq
+          operandPeakEq := hpeak
+          continuationPeakEq := h.continuationPeakEq }
+  · have hne : st.status ≠ .ok := fun hok =>
+      hf ((storeRefines_failure_eq_zero_iff h).mpr hok)
+    rw [concretePushTag_failed cst kind value hf, storePushTag_failed st kind value hne]
+    exact h
+
+theorem linear_pop_kind_refines (cst : LinearRuntimeState) (st : RuntimeStore)
+    (expected : BitVec 32) (h : StoreRefines cst st) :
+    (concretePopKind cst expected).1 = (storePopKind st expected).1 ∧
+    StoreRefines (concretePopKind cst expected).2 (storePopKind st expected).2 := by
+  by_cases hf : cst.failure = 0
+  · have hok : st.status = .ok := (storeRefines_failure_eq_zero_iff h).mp hf
+    cases hs : st.slots with
+    | nil =>
+        have hsp0 : cst.sp.toNat = 0 := by
+          rw [← readSlotsTopFirst_length cst.mem cst.sp.toNat, h.slotsEq, hs]; rfl
+        have hlt : cst.sp < 1 := by
+          rw [BitVec.lt_def, hsp0, bv32_one_toNat_ws]; omega
+        rw [concretePopKind_underflow cst expected hf hlt]
+        rw [storePopKind_underflow st expected hok hs]
+        refine ⟨rfl, ?_⟩
+        have hfr := linear_fail_refines faultCode h (by decide)
+        rw [concreteFail_ok cst faultCode hf] at hfr
+        simpa [RuntimeStore.setFault, hok, faultCode] using hfr
+    | cons top rest =>
+        have hlen : cst.sp.toNat = rest.length + 1 := by
+          rw [← readSlotsTopFirst_length cst.mem cst.sp.toNat, h.slotsEq, hs]; rfl
+        have hle1 : (1 : BitVec 32) ≤ cst.sp := by
+          rw [BitVec.le_def, bv32_one_toNat_ws, hlen]; omega
+        have hsp' : (cst.sp - 1).toNat = rest.length := by
+          rw [BitVec.toNat_sub_of_le hle1, hlen, bv32_one_toNat_ws]; omega
+        have hspSubBound : (cst.sp - 1).toNat ≤ 256 := by
+          have := h.spBound; rw [hsp']; omega
+        have haddr : ((cst.sp - 1) * 16).toNat = rest.length * 16 := by
+          rw [bv32_sp_addr_toNat (cst.sp - 1) hspSubBound, hsp']
+        have hslEq := h.slotsEq
+        rw [hlen, hs] at hslEq
+        simp only [readSlotsTopFirst, List.cons.injEq] at hslEq
+        rcases hslEq with ⟨htop, hrest⟩
+        have htag : loadI32 cst.mem ((cst.sp - 1) * 16).toNat = top.tag := by
+          rw [haddr, ← htop]; rfl
+        have hpay : loadI64 cst.mem (((cst.sp - 1) * 16).toNat + 8) = top.payload := by
+          rw [haddr, ← htop]; rfl
+        by_cases htagEq : top.tag = expected
+        · have heq : loadI32 cst.mem ((cst.sp - 1) * 16).toNat = expected := by
+            rw [htag, htagEq]
+          rw [concretePopKind_ok cst expected hf hle1 heq]
+          rw [concreteTake_ok cst hf hle1]
+          have hs' : st.slots = ⟨expected, top.payload⟩ :: rest := by
+            rw [hs, ← htagEq]
+          rw [storePopKind_ok st expected top.payload rest hok hs']
+          dsimp only
+          refine ⟨hpay, ?_⟩
+          have hslots2 : readSlotsTopFirst
+              (storeI64 (storeI64 cst.mem ((cst.sp - 1) * 16).toNat 0)
+                (((cst.sp - 1) * 16).toNat + 8) 0) (cst.sp - 1).toNat = rest := by
+            have htake := concreteTake_preserves_below cst h.spBound
+            rw [concreteTake_ok cst hf hle1] at htake
+            dsimp only at htake
+            have hbound : (cst.sp.toNat - 1) * 16 = (cst.sp - 1).toNat * 16 := by
+              rw [hsp', hlen]; simp
+            rw [hbound] at htake
+            rw [readSlotsTopFirst_memEqOn htake.symm rfl (Nat.le_refl _), hsp']
+            exact hrest
+          have hconts2 : readContsTopFirst
+              (storeI64 (storeI64 cst.mem ((cst.sp - 1) * 16).toNat 0)
+                (((cst.sp - 1) * 16).toNat + 8) 0) cst.cp.toNat = st.conts := by
+            have htake := concreteTake_preserves_contRegion cst h.spBound
+            rw [concreteTake_ok cst hf hle1] at htake
+            dsimp only at htake
+            have hcp := h.cpBound
+            rw [readContsTopFirst_memEqOn htake.1.symm (Nat.le_refl 4096) (by omega)]
+            exact h.contsEq
+          exact
+            { limitsValid := h.limitsValid
+              limitsEq := h.limitsEq
+              spBound := hspSubBound
+              cpBound := h.cpBound
+              stepsBound := h.stepsBound
+              phaseValid := h.phaseValid
+              failureZeroQuotaZero := h.failureZeroQuotaZero
+              slotsEq := hslots2
+              contsEq := hconts2
+              phaseEq := h.phaseEq
+              statusRef := h.statusRef
+              stepsEq := h.stepsEq
+              operandPeakEq := h.operandPeakEq
+              continuationPeakEq := h.continuationPeakEq }
+        · have hne : loadI32 cst.mem ((cst.sp - 1) * 16).toNat ≠ expected := by
+            rw [htag]; exact htagEq
+          rw [concretePopKind_mismatch cst expected hf hle1 hne]
+          rw [storePopKind_tag_mismatch st expected top rest hok hs htagEq]
+          refine ⟨rfl, ?_⟩
+          have hfr := linear_fail_refines faultCode h (by decide)
+          rw [concreteFail_ok cst faultCode hf] at hfr
+          simpa [RuntimeStore.setFault, hok, faultCode] using hfr
+  · have hne : st.status ≠ .ok := fun hok =>
+      hf ((storeRefines_failure_eq_zero_iff h).mpr hok)
+    rw [concretePopKind_failed cst expected hf, storePopKind_failed st expected hne]
+    exact ⟨rfl, h⟩
+
+theorem linear_enqueue_refines (cst : LinearRuntimeState) (st : RuntimeStore)
+    (fnIdx env : BitVec 32) (h : StoreRefines cst st) :
+    StoreRefines (concreteEnqueue cst fnIdx env) (storeEnqueue st fnIdx env) := by
+  by_cases hf : cst.failure = 0
+  · have hok : st.status = .ok := (storeRefines_failure_eq_zero_iff h).mp hf
+    have hlen : cst.cp.toNat = st.conts.length := by
+      rw [← h.contsEq, readContsTopFirst_length]
+    have hbytes : ((cst.cp + 1) * 8).toNat = (st.conts.length + 1) * 8 := by
+      rw [bv32_cp_bytes_toNat cst.cp h.cpBound, hlen]
+    have hcl : cst.continuationLimit.toNat = st.limits.continuationLimit := h.limitsEq.2.1
+    by_cases hgt : cst.continuationLimit < (cst.cp + 1) * 8
+    · have hgtNat : (st.conts.length + 1) * 8 > st.limits.continuationLimit := by
+        rw [BitVec.lt_def, hbytes, hcl] at hgt; exact hgt
+      rw [concreteEnqueue_quota cst fnIdx env hf hgt]
+      rw [storeEnqueue_quota st fnIdx env hok hgtNat]
+      have hq := linear_quota_refines .continuation h (by decide)
+      rw [concreteQuota_ok cst _ hf] at hq
+      simpa [QuotaReason.code, RuntimeStore.setQuota, hok] using hq
+    · have hle : (cst.cp + 1) * 8 ≤ cst.continuationLimit := by
+        rw [BitVec.le_def]; rw [BitVec.lt_def] at hgt; omega
+      have hleNat : (st.conts.length + 1) * 8 ≤ st.limits.continuationLimit := by
+        rw [BitVec.le_def, hbytes, hcl] at hle; exact hle
+      have hlimCont : st.limits.continuationLimit ≤ 4096 := h.limitsValid.2.1
+      have hcp' : (cst.cp + 1).toNat = cst.cp.toNat + 1 := by
+        rw [BitVec.toNat_add, bv32_one_toNat_ws]
+        have := h.cpBound; omega
+      have hcpLe : (cst.cp + 1).toNat ≤ 512 := by omega
+      have haddr : ((4096 : BitVec 32) + cst.cp * 8).toNat = 4096 + cst.cp.toNat * 8 :=
+        bv32_cp_addr_toNat cst.cp h.cpBound
+      let bytes := (cst.cp + 1) * 8
+      let mem1 := storeI32 cst.mem ((4096 : BitVec 32) + cst.cp * 8).toNat fnIdx
+      let mem2 := storeI32 mem1 (((4096 : BitVec 32) + cst.cp * 8).toNat + 4) env
+      have hconts2 : readContsTopFirst mem2 (cst.cp + 1).toNat = ⟨fnIdx, env⟩ :: st.conts := by
+        rw [hcp']
+        simp only [readContsTopFirst, List.cons.injEq]
+        refine ⟨?_, ?_⟩
+        · unfold readCont
+          have h1 : loadI32 mem2 (4096 + cst.cp.toNat * 8) = fnIdx := by
+            have heq : loadI32 mem2 (4096 + cst.cp.toNat * 8) =
+                loadI32 mem1 (4096 + cst.cp.toNat * 8) := by
+              have hpres0 : MemEqOn (4096 + cst.cp.toNat * 8) (4096 + cst.cp.toNat * 8 + 4) mem1 mem2 := by
+                dsimp only [mem2]
+                refine storeI32_preserves_outside env (Or.inr ?_)
+                rw [haddr]; omega
+              exact loadI32_memEqOn hpres0.symm (Nat.le_refl _) (Nat.le_refl _)
+            rw [heq]
+            dsimp only [mem1]
+            rw [haddr]
+            exact loadI32_storeI32 cst.mem (4096 + cst.cp.toNat * 8) fnIdx
+          have h2 : loadI32 mem2 (4096 + cst.cp.toNat * 8 + 4) = env := by
+            dsimp only [mem2]
+            rw [haddr]
+            exact loadI32_storeI32 mem1 (4096 + cst.cp.toNat * 8 + 4) env
+          rw [h1, h2]
+        · have hpres : MemEqOn 4096 (4096 + cst.cp.toNat * 8) cst.mem mem2 := by
+            have hm1 : MemEqOn 4096 (4096 + cst.cp.toNat * 8) cst.mem mem1 := by
+              dsimp only [mem1]
+              refine storeI32_preserves_outside fnIdx (Or.inr ?_)
+              rw [haddr]; omega
+            have hm2 : MemEqOn 4096 (4096 + cst.cp.toNat * 8) mem1 mem2 := by
+              dsimp only [mem2]
+              refine storeI32_preserves_outside env (Or.inr ?_)
+              rw [haddr]; omega
+            exact hm1.trans hm2
+          rw [readContsTopFirst_memEqOn hpres.symm (Nat.le_refl 4096) (Nat.le_refl _)]
+          exact h.contsEq
+      have hslots2 : readSlotsTopFirst mem2 cst.sp.toNat = st.slots := by
+        have he := concreteEnqueue_preserves_opRegion cst fnIdx env h.cpBound
+        rw [concreteEnqueue_ok cst fnIdx env hf hle] at he
+        have hsp := h.spBound
+        rw [readSlotsTopFirst_memEqOn he.1.symm rfl (by omega)]
+        exact h.slotsEq
+      have hpeak : (if cst.continuationPeak < bytes then bytes else cst.continuationPeak).toNat =
+          Nat.max st.continuationPeak ((st.conts.length + 1) * 8) := by
+        by_cases hp : cst.continuationPeak < bytes
+        · simp only [hp, ↓reduceIte]
+          rw [BitVec.lt_def] at hp
+          have h1 : st.continuationPeak < (st.conts.length + 1) * 8 := by
+            rw [← h.continuationPeakEq, ← hbytes]; exact hp
+          rw [hbytes]
+          simp only [Nat.max_def]
+          split <;> omega
+        · simp only [hp, ↓reduceIte]
+          rw [BitVec.lt_def] at hp
+          have h1 : (st.conts.length + 1) * 8 ≤ st.continuationPeak := by
+            rw [← h.continuationPeakEq, ← hbytes]; exact Nat.le_of_not_lt hp
+          rw [h.continuationPeakEq]
+          simp only [Nat.max_def]
+          split <;> omega
+      rw [concreteEnqueue_ok cst fnIdx env hf hle]
+      have hstEq : storeEnqueue st fnIdx env =
+          { st with
+            conts := ⟨fnIdx, env⟩ :: st.conts
+            continuationPeak := Nat.max st.continuationPeak ((st.conts.length + 1) * 8) } :=
+        storeEnqueue_ok st fnIdx env hok hleNat
+      rw [hstEq]
+      exact
+        { limitsValid := h.limitsValid
+          limitsEq := h.limitsEq
+          spBound := h.spBound
+          cpBound := hcpLe
+          stepsBound := h.stepsBound
+          phaseValid := h.phaseValid
+          failureZeroQuotaZero := h.failureZeroQuotaZero
+          slotsEq := hslots2
+          contsEq := hconts2
+          phaseEq := h.phaseEq
+          statusRef := h.statusRef
+          stepsEq := h.stepsEq
+          operandPeakEq := h.operandPeakEq
+          continuationPeakEq := hpeak }
+  · have hne : st.status ≠ .ok := fun hok =>
+      hf ((storeRefines_failure_eq_zero_iff h).mpr hok)
+    have hstEq : storeEnqueue st fnIdx env = st := by
+      cases hs : st.status with
+      | ok => exact absurd hs hne
+      | quota _ _ => simp [storeEnqueue, hs]
+      | fault _ => simp [storeEnqueue, hs]
+    rw [concreteEnqueue_failed cst fnIdx env hf, hstEq]
+    exact h
+
+theorem linear_dequeue_refines (cst : LinearRuntimeState) (st : RuntimeStore)
+    (c : ContEntry) (rest : List ContEntry)
+    (h : StoreRefines cst st) (hok : st.status = .ok) (hc : st.conts = c :: rest) :
+    (concreteDequeue cst).1 = (c.fnIdx, c.env) ∧
+    StoreRefines (concreteDequeue cst).2 { st with conts := rest } := by
+  have hf : cst.failure = 0 := (storeRefines_failure_eq_zero_iff h).mpr hok
+  have hlen : cst.cp.toNat = rest.length + 1 := by
+    rw [← readContsTopFirst_length cst.mem cst.cp.toNat, h.contsEq, hc]; rfl
+  have hne0 : cst.cp ≠ 0 := by
+    intro hz; simp [hz] at hlen
+  have hge1 : (1 : BitVec 32) ≤ cst.cp := by
+    rw [BitVec.le_def, bv32_one_toNat_ws]; omega
+  have hcp' : (cst.cp - 1).toNat = rest.length := by
+    rw [BitVec.toNat_sub_of_le hge1, hlen, bv32_one_toNat_ws]; omega
+  have hcpSubBound : (cst.cp - 1).toNat ≤ 512 := by
+    have := h.cpBound; rw [hcp']; omega
+  have haddr : ((4096 : BitVec 32) + (cst.cp - 1) * 8).toNat = 4096 + rest.length * 8 := by
+    rw [bv32_cp_addr_toNat (cst.cp - 1) hcpSubBound, hcp']
+  have hceq := h.contsEq
+  rw [hlen, hc] at hceq
+  simp only [readContsTopFirst, List.cons.injEq] at hceq
+  rcases hceq with ⟨hhead, hrest⟩
+  have hfn : loadI32 cst.mem ((4096 : BitVec 32) + (cst.cp - 1) * 8).toNat = c.fnIdx := by
+    rw [haddr, ← hhead]; rfl
+  have henv : loadI32 cst.mem (((4096 : BitVec 32) + (cst.cp - 1) * 8).toNat + 4) = c.env := by
+    rw [haddr, ← hhead]; rfl
+  rw [concreteDequeue_ok cst hf hne0]
+  dsimp only
+  refine ⟨by rw [hfn, henv], ?_⟩
+  have hslots2 : readSlotsTopFirst
+      (storeI64 cst.mem ((4096 : BitVec 32) + (cst.cp - 1) * 8).toNat 0) cst.sp.toNat = st.slots := by
+    have hd := concreteDequeue_preserves_opRegion cst h.cpBound
+    rw [concreteDequeue_ok cst hf hne0] at hd
+    dsimp only at hd
+    have hsp := h.spBound
+    rw [readSlotsTopFirst_memEqOn hd.1.symm rfl (by omega)]
+    exact h.slotsEq
+  have hconts2 : readContsTopFirst
+      (storeI64 cst.mem ((4096 : BitVec 32) + (cst.cp - 1) * 8).toNat 0) (cst.cp - 1).toNat = rest := by
+    have hd := concreteDequeue_preserves_below cst h.cpBound
+    rw [concreteDequeue_ok cst hf hne0] at hd
+    dsimp only at hd
+    have hbound : 4096 + (cst.cp.toNat - 1) * 8 = 4096 + (cst.cp - 1).toNat * 8 := by
+      rw [hcp', hlen]; simp
+    rw [hbound] at hd
+    rw [readContsTopFirst_memEqOn hd.symm (Nat.le_refl 4096) (Nat.le_refl _), hcp']
+    exact hrest
+  exact
+    { limitsValid := h.limitsValid
+      limitsEq := h.limitsEq
+      spBound := h.spBound
+      cpBound := hcpSubBound
+      stepsBound := h.stepsBound
+      phaseValid := h.phaseValid
+      failureZeroQuotaZero := h.failureZeroQuotaZero
+      slotsEq := hslots2
+      contsEq := hconts2
+      phaseEq := h.phaseEq
+      statusRef := h.statusRef
+      stepsEq := h.stepsEq
+      operandPeakEq := h.operandPeakEq
+      continuationPeakEq := h.continuationPeakEq }
+
+theorem linear_runtime_tick_refines (cst : LinearRuntimeState) (st : RuntimeStore)
+    (h : StoreRefines cst st) :
+    (concreteRuntimeTick cst).1 = (storeRuntimeTick st).1 ∧
+    StoreRefines (concreteRuntimeTick cst).2 (storeRuntimeTick st).2 := by
+  by_cases hf : cst.failure = 0
+  · have hok : st.status = .ok := (storeRefines_failure_eq_zero_iff h).mp hf
+    have hsl : cst.stepLimit.toNat = st.limits.stepLimit := h.limitsEq.2.2
+    have hst : cst.steps.toNat = st.steps := h.stepsEq
+    by_cases hge : cst.stepLimit ≤ cst.steps
+    · have hgeNat : st.steps ≥ st.limits.stepLimit := by
+        rw [BitVec.le_def, hsl, hst] at hge; exact hge
+      rw [concreteRuntimeTick_quota cst hf hge]
+      rw [storeRuntimeTick_quota st hok hgeNat]
+      refine ⟨rfl, ?_⟩
+      have hq := linear_quota_refines .steps h (by decide)
+      rw [concreteQuota_ok cst _ hf] at hq
+      simpa [QuotaReason.code, RuntimeStore.setQuota, hok] using hq
+    · have hlt : cst.steps < cst.stepLimit := by
+        rw [BitVec.lt_def]; rw [BitVec.le_def] at hge; omega
+      have hltNat : st.steps < st.limits.stepLimit := by
+        rw [BitVec.lt_def, hsl, hst] at hlt; exact hlt
+      have hlimStep : st.limits.stepLimit ≤ 100000 := h.limitsValid.2.2
+      have hsteps' : (cst.steps + 1).toNat = cst.steps.toNat + 1 := by
+        rw [BitVec.toNat_add, bv32_one_toNat_ws]
+        omega
+      rw [concreteRuntimeTick_ok cst hf hlt]
+      rw [storeRuntimeTick_ok st hok hltNat]
+      refine ⟨rfl, ?_⟩
+      exact
+        { limitsValid := h.limitsValid
+          limitsEq := h.limitsEq
+          spBound := h.spBound
+          cpBound := h.cpBound
+          stepsBound := by dsimp only; rw [hsteps']; omega
+          phaseValid := h.phaseValid
+          failureZeroQuotaZero := h.failureZeroQuotaZero
+          slotsEq := h.slotsEq
+          contsEq := h.contsEq
+          phaseEq := h.phaseEq
+          statusRef := h.statusRef
+          stepsEq := by dsimp only; rw [hsteps', hst]
+          operandPeakEq := h.operandPeakEq
+          continuationPeakEq := h.continuationPeakEq }
+  · have hne : st.status ≠ .ok := fun hok =>
+      hf ((storeRefines_failure_eq_zero_iff h).mpr hok)
+    have hstEq : storeRuntimeTick st = (0, st) := by
+      cases hs : st.status with
+      | ok => exact absurd hs hne
+      | quota _ _ => simp [storeRuntimeTick, hs]
+      | fault _ => simp [storeRuntimeTick, hs]
+    rw [concreteRuntimeTick_failed cst hf, hstEq]
+    exact ⟨rfl, h⟩
+
+/-- Structural writer populating top-first operand slots in `[0, slots.length * 16)`. -/
+def writeSlotsTopFirst (mem : LinearMem) : List TaggedSlot → LinearMem
+  | [] => mem
+  | s :: rest =>
+      let m := writeSlotsTopFirst mem rest
+      let addr := rest.length * 16
+      storeI64 (storeI32 m addr s.tag) (addr + 8) s.payload
+
+/-- Structural writer populating top-first continuation entries in `[4096, 4096 + conts.length * 8)`. -/
+def writeContsTopFirst (mem : LinearMem) : List ContEntry → LinearMem
+  | [] => mem
+  | c :: rest =>
+      let m := writeContsTopFirst mem rest
+      let addr := 4096 + rest.length * 8
+      storeI32 (storeI32 m addr c.fnIdx) (addr + 4) c.env
+
+private theorem readSlotsTopFirst_writeSlotsTopFirst (mem : LinearMem) (slots : List TaggedSlot) :
+    readSlotsTopFirst (writeSlotsTopFirst mem slots) slots.length = slots := by
+  induction slots with
+  | nil => rfl
+  | cons s rest ih =>
+      simp only [List.length_cons, readSlotsTopFirst, List.cons.injEq]
+      let m := writeSlotsTopFirst mem rest
+      let addr := rest.length * 16
+      let m' := storeI64 (storeI32 m addr s.tag) (addr + 8) s.payload
+      refine ⟨?_, ?_⟩
+      · unfold readSlot
+        have hk : loadI32 m' addr = s.tag := by
+          have heq : loadI32 m' addr = loadI32 (storeI32 m addr s.tag) addr := by
+            have hpres0 : MemEqOn addr (addr + 4) (storeI32 m addr s.tag) m' :=
+              storeI64_preserves_outside s.payload (Or.inr (by show addr + 4 ≤ addr + 8; omega))
+            exact loadI32_memEqOn hpres0.symm (Nat.le_refl _) (Nat.le_refl _)
+          rw [heq]
+          exact loadI32_storeI32 m addr s.tag
+        have hv : loadI64 m' (addr + 8) = s.payload :=
+          loadI64_storeI64 (storeI32 m addr s.tag) (addr + 8) s.payload
+        change ⟨loadI32 m' addr, loadI64 m' (addr + 8)⟩ = s
+        rw [hk, hv]
+      · have hpres : MemEqOn 0 (rest.length * 16) m m' := by
+          have hm1 : MemEqOn 0 (rest.length * 16) m (storeI32 m addr s.tag) :=
+            storeI32_preserves_outside s.tag (Or.inr (by omega))
+          have hm2 : MemEqOn 0 (rest.length * 16) (storeI32 m addr s.tag) m' := by
+            dsimp only [m', addr]
+            exact storeI64_preserves_outside s.payload (Or.inr (by omega))
+          exact hm1.trans hm2
+        change readSlotsTopFirst m' rest.length = rest
+        rw [readSlotsTopFirst_memEqOn hpres.symm rfl (Nat.le_refl _)]
+        exact ih
+
+private theorem writeContsTopFirst_preserves_opRegion (mem : LinearMem) (conts : List ContEntry) :
+    MemEqOn 0 4096 mem (writeContsTopFirst mem conts) := by
+  induction conts with
+  | nil => exact MemEqOn.refl 0 4096 mem
+  | cons c rest ih =>
+      let m := writeContsTopFirst mem rest
+      let addr := 4096 + rest.length * 8
+      have hm1 : MemEqOn 0 4096 m (storeI32 m addr c.fnIdx) :=
+        storeI32_preserves_outside c.fnIdx (Or.inr (by omega))
+      have hm2 : MemEqOn 0 4096 (storeI32 m addr c.fnIdx)
+          (storeI32 (storeI32 m addr c.fnIdx) (addr + 4) c.env) :=
+        storeI32_preserves_outside c.env (Or.inr (by omega))
+      exact ih.trans (hm1.trans hm2)
+
+private theorem readContsTopFirst_writeContsTopFirst (mem : LinearMem) (conts : List ContEntry) :
+    readContsTopFirst (writeContsTopFirst mem conts) conts.length = conts := by
+  induction conts with
+  | nil => rfl
+  | cons c rest ih =>
+      simp only [List.length_cons, readContsTopFirst, List.cons.injEq]
+      let m := writeContsTopFirst mem rest
+      let addr := 4096 + rest.length * 8
+      let m' := storeI32 (storeI32 m addr c.fnIdx) (addr + 4) c.env
+      refine ⟨?_, ?_⟩
+      · unfold readCont
+        have h1 : loadI32 m' addr = c.fnIdx := by
+          have heq : loadI32 m' addr = loadI32 (storeI32 m addr c.fnIdx) addr := by
+            have hpres0 : MemEqOn addr (addr + 4) (storeI32 m addr c.fnIdx) m' :=
+              storeI32_preserves_outside c.env (Or.inr (by show addr + 4 ≤ addr + 4; omega))
+            exact loadI32_memEqOn hpres0.symm (Nat.le_refl _) (Nat.le_refl _)
+          rw [heq]
+          exact loadI32_storeI32 m addr c.fnIdx
+        have h2 : loadI32 m' (addr + 4) = c.env :=
+          loadI32_storeI32 (storeI32 m addr c.fnIdx) (addr + 4) c.env
+        change ⟨loadI32 m' addr, loadI32 m' (addr + 4)⟩ = c
+        rw [h1, h2]
+      · have hpres : MemEqOn 4096 (4096 + rest.length * 8) m m' := by
+          have hm1 : MemEqOn 4096 (4096 + rest.length * 8) m (storeI32 m addr c.fnIdx) :=
+            storeI32_preserves_outside c.fnIdx (Or.inr (by omega))
+          have hm2 : MemEqOn 4096 (4096 + rest.length * 8) (storeI32 m addr c.fnIdx) m' := by
+            dsimp only [m', addr]
+            exact storeI32_preserves_outside c.env (Or.inr (by omega))
+          exact hm1.trans hm2
+        change readContsTopFirst m' rest.length = rest
+        rw [readContsTopFirst_memEqOn hpres.symm (Nat.le_refl 4096) (Nat.le_refl _)]
+        exact ih
+
+/-- Realizability: every bounded `RuntimeStore` with valid status globals has a
+    concrete `[0, 8192)` `LinearRuntimeState` realizing it. -/
+theorem storeRefines_realizable (st : RuntimeStore)
+    (hlim : ProfileLimitsValid st.limits)
+    (hsp : st.slots.length ≤ 256)
+    (hcp : st.conts.length ≤ 512)
+    (hsteps : st.steps ≤ 100000)
+    (hphase : 1 + st.phase ≠ 0)
+    (hopPeak : st.operandPeak < 2 ^ 32)
+    (hcontPeak : st.continuationPeak < 2 ^ 32)
+    (hstat : StatusGlobalValid st.status) :
+    ∃ cst, StoreRefines cst st := by
+  let mem := writeContsTopFirst (writeSlotsTopFirst zeroMem st.slots) st.conts
+  let cst : LinearRuntimeState :=
+    { mem := mem
+      sp := BitVec.ofNat 32 st.slots.length
+      cp := BitVec.ofNat 32 st.conts.length
+      failure := st.status.failureGlobal
+      quotaReason := st.status.quotaGlobal
+      phase := st.phase
+      steps := BitVec.ofNat 32 st.steps
+      operandLimit := BitVec.ofNat 32 st.limits.operandLimit
+      continuationLimit := BitVec.ofNat 32 st.limits.continuationLimit
+      stepLimit := BitVec.ofNat 32 st.limits.stepLimit
+      operandPeak := BitVec.ofNat 32 st.operandPeak
+      continuationPeak := BitVec.ofNat 32 st.continuationPeak }
+  have hspNat : cst.sp.toNat = st.slots.length := bv32_ofNat_toNat (by omega)
+  have hcpNat : cst.cp.toNat = st.conts.length := bv32_ofNat_toNat (by omega)
+  have hstepsNat : cst.steps.toNat = st.steps := bv32_ofNat_toNat (by omega)
+  have holNat : cst.operandLimit.toNat = st.limits.operandLimit :=
+    bv32_ofNat_toNat (by have := hlim.1; omega)
+  have hclNat : cst.continuationLimit.toNat = st.limits.continuationLimit :=
+    bv32_ofNat_toNat (by have := hlim.2.1; omega)
+  have hslNat : cst.stepLimit.toNat = st.limits.stepLimit :=
+    bv32_ofNat_toNat (by have := hlim.2.2; omega)
+  have hopNat : cst.operandPeak.toNat = st.operandPeak := bv32_ofNat_toNat hopPeak
+  have hcontNat : cst.continuationPeak.toNat = st.continuationPeak := bv32_ofNat_toNat hcontPeak
+  have hslotsEq : readSlotsTopFirst cst.mem cst.sp.toNat = st.slots := by
+    rw [hspNat]
+    have hpres := writeContsTopFirst_preserves_opRegion (writeSlotsTopFirst zeroMem st.slots) st.conts
+    rw [readSlotsTopFirst_memEqOn hpres.symm rfl (by omega)]
+    exact readSlotsTopFirst_writeSlotsTopFirst zeroMem st.slots
+  have hcontsEq : readContsTopFirst cst.mem cst.cp.toNat = st.conts := by
+    rw [hcpNat]
+    exact readContsTopFirst_writeContsTopFirst (writeSlotsTopFirst zeroMem st.slots) st.conts
+  have hsr : StatusRefines cst.failure cst.quotaReason st.status := by
+    cases hs : st.status with
+    | ok =>
+        dsimp only [cst]
+        rw [hs]
+        exact ⟨rfl, rfl⟩
+    | quota qph r =>
+        rw [hs] at hstat
+        dsimp only [cst]
+        rw [hs]
+        exact ⟨rfl, hstat.1, rfl, hstat.2⟩
+    | fault c =>
+        rw [hs] at hstat
+        dsimp only [cst]
+        rw [hs]
+        exact ⟨rfl, hstat, rfl⟩
+  have hfz : cst.failure = 0 → cst.quotaReason = 0 := by
+    intro hf
+    cases hs : st.status with
+    | ok => simp [cst, hs, FailureStatus.quotaGlobal]
+    | quota qph r =>
+        rw [hs] at hstat
+        simp only [cst, hs, FailureStatus.failureGlobal] at hf
+        exact absurd hf hstat.1
+    | fault c => simp [cst, hs, FailureStatus.quotaGlobal]
+  exact ⟨cst,
+    { limitsValid := hlim
+      limitsEq := ⟨holNat, hclNat, hslNat⟩
+      spBound := by omega
+      cpBound := by omega
+      stepsBound := by omega
+      phaseValid := hphase
+      failureZeroQuotaZero := hfz
+      slotsEq := hslotsEq
+      contsEq := hcontsEq
+      phaseEq := rfl
+      statusRef := hsr
+      stepsEq := hstepsNat
+      operandPeakEq := hopNat
+      continuationPeakEq := hcontNat }⟩
+
+/-- Complete constructive proof discharging `LinearMemorySlotPremise` over `[0, 8192)`. -/
+theorem linearMemorySlotPremise_holds : LinearMemorySlotPremise where
+  pushTagRefines := linear_push_tag_refines
+  popKindRefines := linear_pop_kind_refines
+  enqueueRefines := linear_enqueue_refines
+  dequeueRefines := linear_dequeue_refines
+  runtimeTickRefines := linear_runtime_tick_refines
+  opWritesPreserveContRegion := by
+    intro cst hsp hlim
+    refine ⟨?_, ?_⟩
+    · intro k v
+      have h := concretePushTag_preserves_contRegion cst k v hsp hlim
+      exact ⟨h.1, h.2.1⟩
+    · intro exp
+      have h := concretePopKind_preserves_contRegion cst exp hsp
+      exact ⟨h.1, h.2.1⟩
+  contWritesPreserveOpRegion := by
+    intro cst hcp
+    refine ⟨?_, ?_⟩
+    · intro fnIdx env
+      have h := concreteEnqueue_preserves_opRegion cst fnIdx env hcp
+      exact ⟨h.1, h.2.1⟩
+    · have h := concreteDequeue_preserves_opRegion cst hcp
+      exact ⟨h.1, h.2.1⟩
+  tickPreservesBothRegions := by
+    intro cst
+    have h := concreteRuntimeTick_preserves_mem cst
+    refine ⟨?_, h.2.1, h.2.2.1⟩
+    rw [h.1]
+    exact MemEqOn.refl 0 8192 cst.mem
+  realizable := storeRefines_realizable
+
+/-- Concrete `[0, 8192)` linear-memory Wasm configuration. -/
+structure LinearConfig where
+  frames : List Frame
+  store : LinearRuntimeState
+
+def initLinearConfig (code : List Instr) (cst : LinearRuntimeState) : LinearConfig :=
+  { frames := [⟨[], [], code, 0⟩], store := cst }
+
+def doneLinearConfig (cst : LinearRuntimeState) : LinearConfig :=
+  { frames := [⟨[], [], [], 0⟩], store := cst }
+
+def doneValLinearConfig (v : WVal) (cst : LinearRuntimeState) : LinearConfig :=
+  { frames := [⟨[], [v], [], 1⟩], store := cst }
+
+/-- Concrete `[0, 8192)` small-step operational semantics replacing the abstract store
+    operations with `concretePushTag`, `concretePopKind`, `concreteEnqueue`, and
+    `concreteRuntimeTick`. -/
+inductive LinearWasmStep (env : FuncEnv) : LinearConfig → LinearConfig → Prop where
+  | i32Const {locals vstack rest r cs cst n} :
+      LinearWasmStep env
+        ⟨⟨locals, vstack, .i32Const n :: rest, r⟩ :: cs, cst⟩
+        ⟨⟨locals, .i32 n :: vstack, rest, r⟩ :: cs, cst⟩
+  | i64Const {locals vstack rest r cs cst n} :
+      LinearWasmStep env
+        ⟨⟨locals, vstack, .i64Const n :: rest, r⟩ :: cs, cst⟩
+        ⟨⟨locals, .i64 n :: vstack, rest, r⟩ :: cs, cst⟩
+  | localGet {locals vstack rest r cs cst idx v} :
+      locals[idx]? = some v →
+      LinearWasmStep env
+        ⟨⟨locals, vstack, .localGet idx :: rest, r⟩ :: cs, cst⟩
+        ⟨⟨locals, v :: vstack, rest, r⟩ :: cs, cst⟩
+  | localSet {locals vstack rest r cs cst idx v} :
+      idx < locals.length →
+      LinearWasmStep env
+        ⟨⟨locals, v :: vstack, .localSet idx :: rest, r⟩ :: cs, cst⟩
+        ⟨⟨locals.set idx v, vstack, rest, r⟩ :: cs, cst⟩
+  | i64Add {locals vstack rest r cs cst lhs rhs} :
+      LinearWasmStep env
+        ⟨⟨locals, .i64 rhs :: .i64 lhs :: vstack, .i64Add :: rest, r⟩ :: cs, cst⟩
+        ⟨⟨locals, .i64 (lhs + rhs) :: vstack, rest, r⟩ :: cs, cst⟩
+  | i64Sub {locals vstack rest r cs cst lhs rhs} :
+      LinearWasmStep env
+        ⟨⟨locals, .i64 rhs :: .i64 lhs :: vstack, .i64Sub :: rest, r⟩ :: cs, cst⟩
+        ⟨⟨locals, .i64 (lhs - rhs) :: vstack, rest, r⟩ :: cs, cst⟩
+  | i64Mul {locals vstack rest r cs cst lhs rhs} :
+      LinearWasmStep env
+        ⟨⟨locals, .i64 rhs :: .i64 lhs :: vstack, .i64Mul :: rest, r⟩ :: cs, cst⟩
+        ⟨⟨locals, .i64 (lhs * rhs) :: vstack, rest, r⟩ :: cs, cst⟩
+  | callDefined {locals vstack args vstack' rest r cs cst fid fdef} :
+      env fid = some fdef →
+      vstack = args ++ vstack' →
+      args.length = fdef.paramCount →
+      LinearWasmStep env
+        ⟨⟨locals, vstack, .call fid :: rest, r⟩ :: cs, cst⟩
+        ⟨⟨args.reverse ++ fdef.localDefaults, [], fdef.body, fdef.retArity⟩ ::
+          ⟨locals, vstack', rest, r⟩ :: cs, cst⟩
+  | returnEnd {locals vstack retVals vstackRem r cLocals cVstack cCode cR cs cst} :
+      vstack = retVals ++ vstackRem →
+      retVals.length = r →
+      LinearWasmStep env
+        ⟨⟨locals, vstack, [], r⟩ :: ⟨cLocals, cVstack, cCode, cR⟩ :: cs, cst⟩
+        ⟨⟨cLocals, retVals ++ cVstack, cCode, cR⟩ :: cs, cst⟩
+  | returnInstr {locals vstack retVals vstackRem rest r cLocals cVstack cCode cR cs cst} :
+      vstack = retVals ++ vstackRem →
+      retVals.length = r →
+      LinearWasmStep env
+        ⟨⟨locals, vstack, .return_ :: rest, r⟩ ::
+          ⟨cLocals, cVstack, cCode, cR⟩ :: cs, cst⟩
+        ⟨⟨cLocals, retVals ++ cVstack, cCode, cR⟩ :: cs, cst⟩
+  | callPushTag {locals vstack rest r cs cst k v} :
+      env .pushTag = none →
+      LinearWasmStep env
+        ⟨⟨locals, .i64 v :: .i32 k :: vstack, .call .pushTag :: rest, r⟩ :: cs, cst⟩
+        ⟨⟨locals, vstack, rest, r⟩ :: cs, concretePushTag cst k v⟩
+  | callPopKind {locals vstack rest r cs cst k} :
+      env .popKind = none →
+      LinearWasmStep env
+        ⟨⟨locals, .i32 k :: vstack, .call .popKind :: rest, r⟩ :: cs, cst⟩
+        ⟨⟨locals, .i64 (concretePopKind cst k).1 :: vstack, rest, r⟩ :: cs,
+          (concretePopKind cst k).2⟩
+  | callEnqueue {locals vstack rest r cs cst fnIdx envId} :
+      env .enqueue = none →
+      LinearWasmStep env
+        ⟨⟨locals, .i32 envId :: .i32 fnIdx :: vstack, .call .enqueue :: rest, r⟩ :: cs, cst⟩
+        ⟨⟨locals, vstack, rest, r⟩ :: cs, concreteEnqueue cst fnIdx envId⟩
+  | callRuntimeTick {locals vstack rest r cs cst} :
+      env .runtimeTick = none →
+      LinearWasmStep env
+        ⟨⟨locals, vstack, .call .runtimeTick :: rest, r⟩ :: cs, cst⟩
+        ⟨⟨locals, .i32 (concreteRuntimeTick cst).1 :: vstack, rest, r⟩ :: cs,
+          (concreteRuntimeTick cst).2⟩
+
+/-- Reflexive-transitive closure of `LinearWasmStep`. -/
+inductive LinearWasmSteps (env : FuncEnv) : LinearConfig → LinearConfig → Prop where
+  | refl {c} : LinearWasmSteps env c c
+  | step {c1 c2 c3} : LinearWasmStep env c1 c2 → LinearWasmSteps env c2 c3 → LinearWasmSteps env c1 c3
+
+theorem LinearWasmSteps.single {env c1 c2} (h : LinearWasmStep env c1 c2) :
+    LinearWasmSteps env c1 c2 :=
+  .step h .refl
+
+/-- Single concrete Wasm step refines `WasmStep`. -/
+theorem linearWasmStep_refines {env frames frames' cst cst' st}
+    (hstep : LinearWasmStep env ⟨frames, cst⟩ ⟨frames', cst'⟩)
+    (href : StoreRefines cst st) :
+    ∃ st', WasmStep env ⟨frames, st⟩ ⟨frames', st'⟩ ∧ StoreRefines cst' st' := by
+  cases hstep with
+  | i32Const => exact ⟨st, .i32Const, href⟩
+  | i64Const => exact ⟨st, .i64Const, href⟩
+  | localGet hg => exact ⟨st, .localGet hg, href⟩
+  | localSet hl => exact ⟨st, .localSet hl, href⟩
+  | i64Add => exact ⟨st, .i64Add, href⟩
+  | i64Sub => exact ⟨st, .i64Sub, href⟩
+  | i64Mul => exact ⟨st, .i64Mul, href⟩
+  | callDefined he hvs hlen => exact ⟨st, .callDefined he hvs hlen, href⟩
+  | returnEnd hvs hlen => exact ⟨st, .returnEnd hvs hlen, href⟩
+  | returnInstr hvs hlen => exact ⟨st, .returnInstr hvs hlen, href⟩
+  | callPushTag hnone =>
+      exact ⟨storePushTag st _ _, .callPushTag hnone, linear_push_tag_refines cst st _ _ href⟩
+  | @callPopKind _ _ _ _ _ _ k hnone =>
+      have hp := linear_pop_kind_refines cst st k href
+      refine ⟨(storePopKind st k).2, ?_, hp.2⟩
+      rw [hp.1]
+      exact .callPopKind hnone
+  | callEnqueue hnone =>
+      exact ⟨storeEnqueue st _ _, .callEnqueue hnone, linear_enqueue_refines cst st _ _ href⟩
+  | callRuntimeTick hnone =>
+      have ht := linear_runtime_tick_refines cst st href
+      refine ⟨(storeRuntimeTick st).2, ?_, ht.2⟩
+      rw [ht.1]
+      exact .callRuntimeTick hnone
+
+/-- Multi-step concrete Wasm execution refines `WasmSteps`. -/
+theorem linearWasmSteps_refines {env frames frames' cst cst' st}
+    (hsteps : LinearWasmSteps env ⟨frames, cst⟩ ⟨frames', cst'⟩)
+    (href : StoreRefines cst st) :
+    ∃ st', WasmSteps env ⟨frames, st⟩ ⟨frames', st'⟩ ∧ StoreRefines cst' st' := by
+  generalize hc1 : (⟨frames, cst⟩ : LinearConfig) = c1 at hsteps
+  generalize hc2 : (⟨frames', cst'⟩ : LinearConfig) = c2 at hsteps
+  induction hsteps generalizing frames cst st with
+  | refl =>
+      subst hc1
+      injection hc2 with hf hs
+      subst hf; subst hs
+      exact ⟨st, .refl, href⟩
+  | @step c1 cm c2 hs _ ih =>
+      subst hc1 hc2
+      rcases cm with ⟨fMid, cstMid⟩
+      obtain ⟨stMid, hws, hrefMid⟩ := linearWasmStep_refines hs href
+      obtain ⟨st', hwss, href'⟩ := ih hrefMid rfl rfl
+      exact ⟨st', .step hws hwss, href'⟩
+
+/-- Concrete execution of one continuation block (`functions.rs:50-103`). -/
+inductive LinearExecContBlock (env : FuncEnv) (blk : ContBlock) (envId : BitVec 32) :
+    LinearRuntimeState → LinearRuntimeState → Prop where
+  | alreadyFailed {cst} :
+      cst.failure ≠ 0 →
+      LinearExecContBlock env blk envId cst cst
+  | noNext {cst cstFinal} :
+      cst.failure = 0 →
+      blk.next = none →
+      LinearWasmSteps env (initLinearConfig blk.body cst) (doneLinearConfig cstFinal) →
+      LinearExecContBlock env blk envId cst cstFinal
+  | withNextFailed {cst cstEnq nextIdx} :
+      cst.failure = 0 →
+      blk.next = some nextIdx →
+      LinearWasmSteps env
+        (initLinearConfig [.i32Const (BitVec.ofNat 32 nextIdx), .i32Const envId, .call .enqueue] cst)
+        (doneLinearConfig cstEnq) →
+      cstEnq.failure ≠ 0 →
+      LinearExecContBlock env blk envId cst cstEnq
+  | withNextOk {cst cstEnq cstFinal nextIdx} :
+      cst.failure = 0 →
+      blk.next = some nextIdx →
+      LinearWasmSteps env
+        (initLinearConfig [.i32Const (BitVec.ofNat 32 nextIdx), .i32Const envId, .call .enqueue] cst)
+        (doneLinearConfig cstEnq) →
+      cstEnq.failure = 0 →
+      LinearWasmSteps env (initLinearConfig blk.body cstEnq) (doneLinearConfig cstFinal) →
+      LinearExecContBlock env blk envId cst cstFinal
+
+/-- One concrete iteration of `$dispatch` (`stack.wat:78-88`) using `concreteDequeue`. -/
+inductive LinearDispatchStep (env : FuncEnv) (tbl : ProgramTable) :
+    LinearRuntimeState → LinearRuntimeState → Prop where
+  | tickQuota {cst cstTick} :
+      cst.failure = 0 →
+      cst.cp ≠ 0 →
+      LinearWasmSteps env
+        ⟨[⟨[], [], [.call .runtimeTick], 1⟩], cst⟩
+        (doneValLinearConfig (.i32 0) cstTick) →
+      LinearDispatchStep env tbl cst cstTick
+  | invokeOk {cst cstTick cstFinal blk} :
+      cst.failure = 0 →
+      cst.cp ≠ 0 →
+      LinearWasmSteps env
+        ⟨[⟨[], [], [.call .runtimeTick], 1⟩], cst⟩
+        (doneValLinearConfig (.i32 1) cstTick) →
+      tbl (concreteDequeue cstTick).1.1.toNat = some blk →
+      LinearExecContBlock env blk (concreteDequeue cstTick).1.2 (concreteDequeue cstTick).2 cstFinal →
+      LinearDispatchStep env tbl cst cstFinal
+  | invokeMissing {cst cstTick} :
+      cst.failure = 0 →
+      cst.cp ≠ 0 →
+      LinearWasmSteps env
+        ⟨[⟨[], [], [.call .runtimeTick], 1⟩], cst⟩
+        (doneValLinearConfig (.i32 1) cstTick) →
+      tbl (concreteDequeue cstTick).1.1.toNat = none →
+      LinearDispatchStep env tbl cst (concreteFail (concreteDequeue cstTick).2 faultCode)
+
+/-- Concrete `$dispatch` run to termination (`failure ≠ 0 ∨ cp = 0`). -/
+inductive LinearDispatchRun (env : FuncEnv) (tbl : ProgramTable) :
+    LinearRuntimeState → LinearRuntimeState → Prop where
+  | halted {cst} :
+      (cst.failure ≠ 0 ∨ cst.cp = 0) →
+      LinearDispatchRun env tbl cst cst
+  | step {c0 c1 c2} :
+      LinearDispatchStep env tbl c0 c1 →
+      LinearDispatchRun env tbl c1 c2 →
+      LinearDispatchRun env tbl c0 c2
+
+/-- Complete concrete `[0, 8192)` execution of a lowered program from `entry`. -/
+def linearRunLowered (env : FuncEnv) (entry : Nat) (ops : List ArithOp)
+    (cst final : LinearRuntimeState) : Prop :=
+  ∃ cstEnq,
+    LinearWasmSteps env
+      (initLinearConfig [.i32Const (BitVec.ofNat 32 entry), .i32Const 0, .call .enqueue] cst)
+      (doneLinearConfig cstEnq) ∧
+    LinearDispatchRun env (lowerProgram entry ops) cstEnq final
+
+theorem linearExecContBlock_refines {env blk envId cst cstFinal st}
+    (hex : LinearExecContBlock env blk envId cst cstFinal)
+    (href : StoreRefines cst st) :
+    ∃ stFinal, ExecContBlock env blk envId st stFinal ∧ StoreRefines cstFinal stFinal := by
+  cases hex with
+  | alreadyFailed hne =>
+      have hne' : st.status ≠ .ok := fun hok =>
+        hne ((storeRefines_failure_eq_zero_iff href).mpr hok)
+      exact ⟨st, .alreadyFailed hne', href⟩
+  | noNext hf hnone hsteps =>
+      have hok : st.status = .ok := (storeRefines_failure_eq_zero_iff href).mp hf
+      obtain ⟨stFinal, hw, hrefFinal⟩ := linearWasmSteps_refines hsteps href
+      exact ⟨stFinal, .noNext hok hnone hw, hrefFinal⟩
+  | withNextFailed hf hsome hsteps hfail =>
+      have hok : st.status = .ok := (storeRefines_failure_eq_zero_iff href).mp hf
+      obtain ⟨stEnq, hw, hrefEnq⟩ := linearWasmSteps_refines hsteps href
+      have hne' : stEnq.status ≠ .ok := fun hok' =>
+        hfail ((storeRefines_failure_eq_zero_iff hrefEnq).mpr hok')
+      exact ⟨stEnq, .withNextFailed hok hsome hw hne', hrefEnq⟩
+  | withNextOk hf hsome hsteps1 hf1 hsteps2 =>
+      have hok : st.status = .ok := (storeRefines_failure_eq_zero_iff href).mp hf
+      obtain ⟨stEnq, hw1, hrefEnq⟩ := linearWasmSteps_refines hsteps1 href
+      have hok1 : stEnq.status = .ok := (storeRefines_failure_eq_zero_iff hrefEnq).mp hf1
+      obtain ⟨stFinal, hw2, hrefFinal⟩ := linearWasmSteps_refines hsteps2 hrefEnq
+      exact ⟨stFinal, .withNextOk hok hsome hw1 hok1 hw2, hrefFinal⟩
+
+private theorem wasmSteps_runtimeTick_one_ok {env st stTick}
+    (hnone : env .runtimeTick = none) (hok : st.status = .ok)
+    (hwtick : WasmSteps env ⟨[⟨[], [], [.call .runtimeTick], 1⟩], st⟩ (doneValConfig (.i32 1) stTick)) :
+    stTick = { st with steps := st.steps + 1 } := by
+  generalize hcfg : doneValConfig (.i32 1) stTick = c2 at hwtick
+  cases hwtick with
+  | refl => cases hcfg
+  | step hs1 hs2 =>
+      cases hs1 with
+      | callDefined he => rw [hnone] at he; cases he
+      | callRuntimeTick =>
+          cases hs2 with
+          | refl =>
+              by_cases hlt : st.steps < st.limits.stepLimit
+              · have hokTick := storeRuntimeTick_ok st hok hlt
+                rw [hokTick] at hcfg
+                exact (doneValConfig_inj hcfg).2
+              · have hge := Nat.not_lt.mp hlt
+                have hqTick := storeRuntimeTick_quota st hok hge
+                rw [hqTick] at hcfg
+                have hv := (doneValConfig_inj hcfg).1
+                cases hv
+          | step hs3 _ => cases hs3
+
+theorem linearDispatchStep_refines {env tbl cst cst' st}
+    (hnone : env .runtimeTick = none)
+    (hstep : LinearDispatchStep env tbl cst cst')
+    (href : StoreRefines cst st) :
+    ∃ st', DispatchStep env tbl st st' ∧ StoreRefines cst' st' := by
+  cases hstep with
+  | tickQuota hf hcp htick =>
+      have hok : st.status = .ok := (storeRefines_failure_eq_zero_iff href).mp hf
+      have hc : ∃ c rest, st.conts = c :: rest := by
+        cases hcs : st.conts with
+        | nil =>
+            have hcp0 : cst.cp.toNat = 0 := by
+              rw [← readContsTopFirst_length cst.mem cst.cp.toNat, href.contsEq, hcs]; rfl
+            exact absurd (BitVec.eq_of_toNat_eq (by simpa using hcp0)) hcp
+        | cons c rest => exact ⟨c, rest, rfl⟩
+      rcases hc with ⟨c, rest, hc⟩
+      obtain ⟨stTick, hwtick, hrefTick⟩ := linearWasmSteps_refines htick href
+      exact ⟨stTick, .tickQuota hok hc hwtick, hrefTick⟩
+  | invokeOk hf hcp htick htbl hex =>
+      have hok : st.status = .ok := (storeRefines_failure_eq_zero_iff href).mp hf
+      have hc : ∃ c rest, st.conts = c :: rest := by
+        cases hcs : st.conts with
+        | nil =>
+            have hcp0 : cst.cp.toNat = 0 := by
+              rw [← readContsTopFirst_length cst.mem cst.cp.toNat, href.contsEq, hcs]; rfl
+            exact absurd (BitVec.eq_of_toNat_eq (by simpa using hcp0)) hcp
+        | cons c rest => exact ⟨c, rest, rfl⟩
+      rcases hc with ⟨c, rest, hc⟩
+      obtain ⟨stTick, hwtick, hrefTick⟩ := linearWasmSteps_refines htick href
+      have htickEq := wasmSteps_runtimeTick_one_ok hnone hok hwtick
+      have htickOk : stTick.status = .ok := by rw [htickEq]; exact hok
+      have htickConts : stTick.conts = c :: rest := by rw [htickEq]; exact hc
+      obtain ⟨hdeqVal, hdeqRef⟩ := linear_dequeue_refines _ stTick c rest hrefTick htickOk htickConts
+      have hfn : (concreteDequeue _).1.1 = c.fnIdx := congrArg Prod.fst hdeqVal
+      have henv : (concreteDequeue _).1.2 = c.env := congrArg Prod.snd hdeqVal
+      rw [hfn] at htbl
+      rw [henv] at hex
+      obtain ⟨stFinal, hexAbs, hrefFinal⟩ := linearExecContBlock_refines hex hdeqRef
+      exact ⟨stFinal, .invokeOk hok hc hwtick htbl hexAbs, hrefFinal⟩
+  | invokeMissing hf hcp htick htbl =>
+      have hok : st.status = .ok := (storeRefines_failure_eq_zero_iff href).mp hf
+      have hc : ∃ c rest, st.conts = c :: rest := by
+        cases hcs : st.conts with
+        | nil =>
+            have hcp0 : cst.cp.toNat = 0 := by
+              rw [← readContsTopFirst_length cst.mem cst.cp.toNat, href.contsEq, hcs]; rfl
+            exact absurd (BitVec.eq_of_toNat_eq (by simpa using hcp0)) hcp
+        | cons c rest => exact ⟨c, rest, rfl⟩
+      rcases hc with ⟨c, rest, hc⟩
+      obtain ⟨stTick, hwtick, hrefTick⟩ := linearWasmSteps_refines htick href
+      have htickEq := wasmSteps_runtimeTick_one_ok hnone hok hwtick
+      have htickOk : stTick.status = .ok := by rw [htickEq]; exact hok
+      have htickConts : stTick.conts = c :: rest := by rw [htickEq]; exact hc
+      obtain ⟨hdeqVal, hdeqRef⟩ := linear_dequeue_refines _ stTick c rest hrefTick htickOk htickConts
+      have hfn : (concreteDequeue _).1.1 = c.fnIdx := congrArg Prod.fst hdeqVal
+      rw [hfn] at htbl
+      exact ⟨({ stTick with conts := rest }.setFault faultCode),
+        .invokeMissing hok hc hwtick htbl,
+        linear_fail_refines faultCode hdeqRef (by decide)⟩
+
+theorem linearDispatchRun_refines {env tbl cst cstFinal st}
+    (hnone : env .runtimeTick = none)
+    (hrun : LinearDispatchRun env tbl cst cstFinal)
+    (href : StoreRefines cst st) :
+    ∃ stFinal, DispatchRun env tbl st stFinal ∧ StoreRefines cstFinal stFinal := by
+  induction hrun generalizing st with
+  | halted hhalt =>
+      have hhalt' : st.status ≠ .ok ∨ st.conts = [] := by
+        rcases hhalt with hf | hcp
+        · exact Or.inl (fun hok => hf ((storeRefines_failure_eq_zero_iff href).mpr hok))
+        · right
+          rw [← href.contsEq, hcp]
+          rfl
+      exact ⟨st, .halted hhalt', href⟩
+  | step hs _ ih =>
+      obtain ⟨stMid, hds, hrefMid⟩ := linearDispatchStep_refines hnone hs href
+      obtain ⟨stFinal, hdr, hrefFinal⟩ := ih hrefMid
+      exact ⟨stFinal, .step hds hdr, hrefFinal⟩
+
+/-- Soundness of concrete `[0, 8192)` `linearRunLowered` relative to abstract `runLowered`. -/
+theorem linearRunLowered_refines_runLowered (entry : Nat) (ops : List ArithOp)
+    (cst cstFinal : LinearRuntimeState) (st : RuntimeStore)
+    (hrun : linearRunLowered runtimeEnv entry ops cst cstFinal)
+    (href : StoreRefines cst st) :
+    ∃ stFinal, runLowered runtimeEnv entry ops st stFinal ∧ StoreRefines cstFinal stFinal := by
+  rcases hrun with ⟨cstEnq, henq, hdisp⟩
+  obtain ⟨stEnq, hwenq, hrefEnq⟩ := linearWasmSteps_refines henq href
+  obtain ⟨stFinal, hwdisp, hrefFinal⟩ := linearDispatchRun_refines rfl hdisp hrefEnq
+  exact ⟨stFinal, ⟨stEnq, hwenq, hwdisp⟩, hrefFinal⟩
+
+private theorem linearWasmSteps_preserves_failure_ne {env f cst f' cst'}
+    (h : LinearWasmSteps env ⟨f, cst⟩ ⟨f', cst'⟩) (hf : cst.failure ≠ 0) :
+    cst'.failure ≠ 0 := by
+  generalize hc1 : (⟨f, cst⟩ : LinearConfig) = c1 at h
+  generalize hc2 : (⟨f', cst'⟩ : LinearConfig) = c2 at h
+  induction h generalizing f cst with
+  | refl =>
+      subst hc1
+      injection hc2 with _ hs
+      subst hs
+      exact hf
+  | @step c1 cm c2 hs _ ih =>
+      subst hc1 hc2
+      rcases cm with ⟨fm, cstm⟩
+      have hm : cstm.failure ≠ 0 := by
+        cases hs with
+        | i32Const | i64Const | localGet _ | localSet _ | i64Add | i64Sub | i64Mul
+        | callDefined _ _ _ | returnEnd _ _ | returnInstr _ _ => exact hf
+        | callPushTag _ => rw [concretePushTag_failed _ _ _ hf]; exact hf
+        | callPopKind _ => rw [concretePopKind_failed _ _ hf]; exact hf
+        | callEnqueue _ => rw [concreteEnqueue_failed _ _ _ hf]; exact hf
+        | callRuntimeTick _ => rw [concreteRuntimeTick_failed _ hf]; exact hf
+      exact ih hm rfl rfl
+
+private theorem linearDispatchRun_preserves_failure_ne {env tbl cst cst'}
+    (h : LinearDispatchRun env tbl cst cst') (hf : cst.failure ≠ 0) :
+    cst'.failure ≠ 0 := by
+  cases h with
+  | halted _ => exact hf
+  | step hs _ =>
+      cases hs with
+      | tickQuota h0 _ _ => exact absurd h0 hf
+      | invokeOk h0 _ _ _ _ => exact absurd h0 hf
+      | invokeMissing h0 _ _ _ => exact absurd h0 hf
+
+/-- End-to-end soundness: any clean concrete `[0, 8192)` linear-memory run of a lowered
+    program simulates `NobleContracts.Exec (toMc1Code ops) before after`. -/
+theorem linearRunLowered_sound_exec (entry : Nat) (ops : List ArithOp)
+    (before : Stack) (cst cstFinal : LinearRuntimeState) (st : RuntimeStore)
+    (hrange : EntryRangeValid entry ops)
+    (href : StoreRefines cst st)
+    (hconts : cst.cp = 0)
+    (hrel : StackRel before st.slots)
+    (hrun : linearRunLowered runtimeEnv entry ops cst cstFinal)
+    (hfok : cstFinal.failure = 0) :
+    ∃ after stFinal,
+      StoreRefines cstFinal stFinal ∧
+      StackRel after stFinal.slots ∧
+      NobleContracts.Exec (toMc1Code ops) before after := by
+  have hcstOk : cst.failure = 0 := by
+    refine Classical.byContradiction fun hfne => ?_
+    rcases hrun with ⟨cstEnq, henq, hdisp⟩
+    have h1 := linearWasmSteps_preserves_failure_ne henq hfne
+    have h2 := linearDispatchRun_preserves_failure_ne hdisp h1
+    exact h2 hfok
+  have hstOk : st.status = .ok := (storeRefines_failure_eq_zero_iff href).mp hcstOk
+  have hstConts : st.conts = [] := by
+    rw [← href.contsEq, hconts]
+    rfl
+  obtain ⟨stFinal, hrunAbs, hrefFinal⟩ :=
+    linearRunLowered_refines_runLowered entry ops cst cstFinal st hrun href
+  have hfinalOk : stFinal.status = .ok := (storeRefines_failure_eq_zero_iff hrefFinal).mp hfok
+  obtain ⟨after, hrelAfter, _, hexec⟩ :=
+    runLowered_sound entry ops before st stFinal hrange hstOk hstConts hrel hrunAbs hfinalOk
+  exact ⟨after, stFinal, hrefFinal, hrelAfter, hexec⟩
+
+private theorem linear_opSub_steps_ok
+    (cst3 cst4 cst5 cstFinal : LinearRuntimeState) (left right : BitVec 64)
+    (hpop1 : concretePopKind cst3 tagI64 = (right, cst4))
+    (hpop2 : concretePopKind cst4 tagI64 = (left, cst5))
+    (hpush : concretePushTag cst5 tagI64 (left - right) = cstFinal) :
+    LinearWasmSteps runtimeEnv
+      (initLinearConfig [.call .opSub] cst3)
+      (doneLinearConfig cstFinal) := by
+  unfold initLinearConfig doneLinearConfig
+  have hcall : LinearWasmStep runtimeEnv
+      ⟨[⟨[], [], [.call .opSub], 0⟩], cst3⟩
+      ⟨[⟨[.i64 0, .i64 0], [], defOpSub.body, 0⟩, ⟨[], [], [], 0⟩], cst3⟩ :=
+    @LinearWasmStep.callDefined runtimeEnv [] [] [] [] [] 0 [] cst3 .opSub defOpSub rfl rfl rfl
+  refine .step hcall ?_
+  refine .step .i32Const ?_
+  refine .step (by simpa [hpop1] using
+    @LinearWasmStep.callPopKind runtimeEnv _ _ _ _ _ cst3 tagI64 rfl) ?_
+  refine .step (.localSet (by simp)) ?_
+  refine .step .i32Const ?_
+  refine .step (by simpa [hpop2] using
+    @LinearWasmStep.callPopKind runtimeEnv _ _ _ _ _ cst4 tagI64 rfl) ?_
+  refine .step (.localSet (by simp)) ?_
+  refine .step (.localGet (by rfl)) ?_
+  refine .step (.localGet (by rfl)) ?_
+  refine .step .i64Sub ?_
+  have hpushCall : LinearWasmStep runtimeEnv
+      ⟨⟨[.i64 right, .i64 left], [.i64 (left - right)], [.call .pushI64], 0⟩ ::
+        [⟨[], [], [], 0⟩], cst5⟩
+      ⟨⟨[.i64 (left - right)], [], defPushI64.body, 0⟩ ::
+        ⟨[.i64 right, .i64 left], [], [], 0⟩ :: [⟨[], [], [], 0⟩], cst5⟩ :=
+    @LinearWasmStep.callDefined runtimeEnv [.i64 right, .i64 left]
+      [.i64 (left - right)] [.i64 (left - right)] [] [] 0 [⟨[], [], [], 0⟩]
+      cst5 .pushI64 defPushI64 rfl rfl rfl
+  refine .step hpushCall ?_
+  refine .step .i32Const ?_
+  refine .step (.localGet (by rfl)) ?_
+  refine .step (by simpa [hpush] using
+    @LinearWasmStep.callPushTag runtimeEnv _ _ _ _ _ cst5 tagI64 (left - right) rfl) ?_
+  refine .step (@LinearWasmStep.returnEnd runtimeEnv _ [] [] [] 0 _ _ _ _ _ _ rfl rfl) ?_
+  exact .single (@LinearWasmStep.returnEnd runtimeEnv _ [] [] [] 0 _ _ _ _ _ _ rfl rfl)
+
+private theorem linear_ordered_sub_with_tail_aux
+    (tailSlots : List TaggedSlot) (cst0 : LinearRuntimeState)
+    (hf0 : cst0.failure = 0) (hsp0 : cst0.sp = 4) (hcp0 : cst0.cp = 0)
+    (hsteps0 : cst0.steps = 0) (hol0 : cst0.operandLimit = 2048)
+    (hcl0 : cst0.continuationLimit = 4096) (hsl0 : cst0.stepLimit = 100000)
+    (hslots0 : readSlotsTopFirst cst0.mem 4 = [⟨tagI64, 3⟩, ⟨tagI64, 10⟩] ++ tailSlots) :
+    ∃ cstFinal,
+      linearRunLowered runtimeEnv 0 [.sub] cst0 cstFinal ∧
+      cstFinal.failure = 0 ∧
+      cstFinal.cp = 0 ∧
+      cstFinal.sp = 3 ∧
+      readSlotsTopFirst cstFinal.mem 3 = ⟨tagI64, 7⟩ :: tailSlots ∧
+      MemEqOn 0 32 cst0.mem cstFinal.mem := by
+  obtain ⟨cst1, hcst1Def⟩ : ∃ x, x = concreteEnqueue cst0 0 0 := ⟨_, rfl⟩
+  have henq : LinearWasmSteps runtimeEnv
+      (initLinearConfig [.i32Const (BitVec.ofNat 32 0), .i32Const 0, .call .enqueue] cst0)
+      (doneLinearConfig cst1) :=
+    .step .i32Const (.step .i32Const (.single (by rw [hcst1Def]; exact .callEnqueue rfl)))
+  have hcst1Lim : (cst0.cp + 1) * 8 ≤ cst0.continuationLimit := by
+    rw [hcp0, hcl0]; decide
+  have hcst1Eq : cst1 =
+      { cst0 with
+        mem := storeI32 (storeI32 cst0.mem 4096 0) 4100 0
+        cp := cst0.cp + 1
+        continuationPeak := if cst0.continuationPeak < (cst0.cp + 1) * 8 then (cst0.cp + 1) * 8 else cst0.continuationPeak } := by
+    have h := concreteEnqueue_ok cst0 0 0 hf0 hcst1Lim
+    have haddr : ((4096 : BitVec 32) + cst0.cp * 8).toNat = 4096 := by rw [hcp0]; decide
+    dsimp only at h
+    rw [haddr] at h
+    rw [hcst1Def]
+    exact h
+  have hcst1f : cst1.failure = 0 := by rw [hcst1Eq]; exact hf0
+  have hcst1cp : cst1.cp = 1 := by rw [hcst1Eq]; dsimp only; rw [hcp0]; decide
+  have hcst1sp : cst1.sp = 4 := by rw [hcst1Eq]; exact hsp0
+  have hcst1ol : cst1.operandLimit = 2048 := by rw [hcst1Eq]; exact hol0
+  have hcst1steps : cst1.steps = 0 := by rw [hcst1Eq]; exact hsteps0
+  have hcst1sl : cst1.stepLimit = 100000 := by rw [hcst1Eq]; exact hsl0
+  have hmem01 : MemEqOn 0 4096 cst0.mem cst1.mem := by
+    rw [hcst1Def]
+    exact (concreteEnqueue_preserves_opRegion cst0 0 0 (by rw [hcp0]; decide)).1
+  obtain ⟨cst2, hcst2Def⟩ : ∃ x, x = (concreteRuntimeTick cst1).2 := ⟨_, rfl⟩
+  have htickVal : concreteRuntimeTick cst1 = (1, { cst1 with steps := cst1.steps + 1 }) :=
+    concreteRuntimeTick_ok cst1 hcst1f (by rw [hcst1steps, hcst1sl]; decide)
+  have hcst2Eq : cst2 = { cst1 with steps := 1 } := by
+    rw [hcst2Def, htickVal, hcst1steps]
+    rfl
+  have htick : LinearWasmSteps runtimeEnv
+      ⟨[⟨[], [], [.call .runtimeTick], 1⟩], cst1⟩
+      (doneValLinearConfig (.i32 1) cst2) := by
+    have ht : LinearWasmStep runtimeEnv
+        ⟨[⟨[], [], [.call .runtimeTick], 1⟩], cst1⟩
+        (doneValLinearConfig (.i32 (concreteRuntimeTick cst1).1) (concreteRuntimeTick cst1).2) :=
+      .callRuntimeTick rfl
+    rw [← hcst2Def] at ht
+    have h1 : (concreteRuntimeTick cst1).1 = 1 := by rw [htickVal]
+    rw [h1] at ht
+    exact .single ht
+  have hcst2f : cst2.failure = 0 := by rw [hcst2Eq]; exact hcst1f
+  have hcst2cp : cst2.cp = 1 := by rw [hcst2Eq]; exact hcst1cp
+  have hcst2sp : cst2.sp = 4 := by rw [hcst2Eq]; exact hcst1sp
+  have hcst2ol : cst2.operandLimit = 2048 := by rw [hcst2Eq]; exact hcst1ol
+  have hmem12 : MemEqOn 0 4096 cst1.mem cst2.mem := by
+    rw [hcst2Eq]; exact MemEqOn.refl 0 4096 cst1.mem
+  have hdeq : concreteDequeue cst2 =
+      ((loadI32 cst2.mem 4096, loadI32 cst2.mem 4100),
+       { cst2 with mem := storeI64 cst2.mem 4096 0, cp := 0 }) := by
+    have hcpNe : cst2.cp ≠ 0 := by rw [hcst2cp]; decide
+    have h := concreteDequeue_ok cst2 hcst2f hcpNe
+    have hcpSub : cst2.cp - 1 = 0 := by rw [hcst2cp]; decide
+    have haddr : ((4096 : BitVec 32) + (cst2.cp - 1) * 8).toNat = 4096 := by
+      rw [hcpSub]; decide
+    dsimp only at h
+    rw [haddr, hcpSub] at h
+    exact h
+  obtain ⟨cst3, hcst3Def⟩ : ∃ x, x = (concreteDequeue cst2).2 := ⟨_, rfl⟩
+  have hcst3Eq : cst3 = { cst2 with mem := storeI64 cst2.mem 4096 0, cp := 0 } := by
+    rw [hcst3Def, hdeq]
+  have hcst3f : cst3.failure = 0 := by rw [hcst3Eq]; exact hcst2f
+  have hcst3cp : cst3.cp = 0 := by rw [hcst3Eq]
+  have hcst3sp : cst3.sp = 4 := by rw [hcst3Eq]; exact hcst2sp
+  have hcst3ol : cst3.operandLimit = 2048 := by rw [hcst3Eq]; exact hcst2ol
+  have hmem23 : MemEqOn 0 4096 cst2.mem cst3.mem := by
+    rw [hcst3Def]
+    exact (concreteDequeue_preserves_opRegion cst2 (by rw [hcst2cp]; decide)).1
+  have hmem03 : MemEqOn 0 4096 cst0.mem cst3.mem := (hmem01.trans hmem12).trans hmem23
+  have hsl03 : readSlotsTopFirst cst3.mem 4 = [⟨tagI64, 3⟩, ⟨tagI64, 10⟩] ++ tailSlots := by
+    rw [readSlotsTopFirst_memEqOn hmem03.symm rfl (by omega)]
+    exact hslots0
+  have hsl03' : readSlot cst3.mem 3 :: readSlotsTopFirst cst3.mem 3 =
+      ⟨tagI64, 3⟩ :: (⟨tagI64, 10⟩ :: tailSlots) := hsl03
+  injection hsl03' with hread3 hsl3_tail
+  have hle3 : (1 : BitVec 32) ≤ cst3.sp := by rw [hcst3sp]; decide
+  have haddr3 : ((cst3.sp - 1) * 16).toNat = 3 * 16 := by rw [hcst3sp]; decide
+  have htag3 : loadI32 cst3.mem ((cst3.sp - 1) * 16).toNat = tagI64 := by
+    rw [haddr3]
+    exact congrArg TaggedSlot.tag hread3
+  have hpay3 : loadI64 cst3.mem (((cst3.sp - 1) * 16).toNat + 8) = 3 := by
+    rw [haddr3]
+    exact congrArg TaggedSlot.payload hread3
+  obtain ⟨cst4, hcst4Def⟩ : ∃ x, x = (concretePopKind cst3 tagI64).2 := ⟨_, rfl⟩
+  have hpop1 : concretePopKind cst3 tagI64 = (3, cst4) := by
+    rw [hcst4Def]
+    rw [concretePopKind_ok cst3 tagI64 hcst3f hle3 htag3, concreteTake_ok cst3 hcst3f hle3]
+    simp only [hpay3]
+  have hcst4Eq : cst4 =
+      { cst3 with
+        mem := storeI64 (storeI64 cst3.mem 48 0) 56 0
+        sp := cst3.sp - 1 } := by
+    rw [hcst4Def, concretePopKind_ok cst3 tagI64 hcst3f hle3 htag3, concreteTake_ok cst3 hcst3f hle3]
+    dsimp only
+    rw [haddr3]
+  have hcst4sp : cst4.sp = 3 := by rw [hcst4Eq]; dsimp only; rw [hcst3sp]; decide
+  have hcst4f : cst4.failure = 0 := by rw [hcst4Eq]; exact hcst3f
+  have hcst4cp : cst4.cp = 0 := by rw [hcst4Eq]; exact hcst3cp
+  have hcst4ol : cst4.operandLimit = 2048 := by rw [hcst4Eq]; exact hcst3ol
+  have hmem34 : MemEqOn 0 48 cst3.mem cst4.mem := by
+    have h := concretePopKind_preserves_below cst3 tagI64 (by rw [hcst3sp]; decide)
+    have hsp3 : (cst3.sp.toNat - 1) * 16 = 48 := by rw [hcst3sp]; decide
+    rw [hsp3, ← hcst4Def] at h
+    exact h
+  have hsl04 : readSlotsTopFirst cst4.mem 3 = ⟨tagI64, 10⟩ :: tailSlots := by
+    rw [readSlotsTopFirst_memEqOn hmem34.symm rfl (by omega)]
+    exact hsl3_tail
+  have hsl04' : readSlot cst4.mem 2 :: readSlotsTopFirst cst4.mem 2 =
+      ⟨tagI64, 10⟩ :: tailSlots := hsl04
+  injection hsl04' with hread4 hsl4_tail
+  have hle4 : (1 : BitVec 32) ≤ cst4.sp := by rw [hcst4sp]; decide
+  have haddr4 : ((cst4.sp - 1) * 16).toNat = 2 * 16 := by rw [hcst4sp]; decide
+  have htag4 : loadI32 cst4.mem ((cst4.sp - 1) * 16).toNat = tagI64 := by
+    rw [haddr4]
+    exact congrArg TaggedSlot.tag hread4
+  have hpay4 : loadI64 cst4.mem (((cst4.sp - 1) * 16).toNat + 8) = 10 := by
+    rw [haddr4]
+    exact congrArg TaggedSlot.payload hread4
+  obtain ⟨cst5, hcst5Def⟩ : ∃ x, x = (concretePopKind cst4 tagI64).2 := ⟨_, rfl⟩
+  have hpop2 : concretePopKind cst4 tagI64 = (10, cst5) := by
+    rw [hcst5Def]
+    rw [concretePopKind_ok cst4 tagI64 hcst4f hle4 htag4, concreteTake_ok cst4 hcst4f hle4]
+    simp only [hpay4]
+  have hcst5Eq : cst5 =
+      { cst4 with
+        mem := storeI64 (storeI64 cst4.mem 32 0) 40 0
+        sp := cst4.sp - 1 } := by
+    rw [hcst5Def, concretePopKind_ok cst4 tagI64 hcst4f hle4 htag4, concreteTake_ok cst4 hcst4f hle4]
+    dsimp only
+    rw [haddr4]
+  have hcst5sp : cst5.sp = 2 := by rw [hcst5Eq]; dsimp only; rw [hcst4sp]; decide
+  have hcst5f : cst5.failure = 0 := by rw [hcst5Eq]; exact hcst4f
+  have hcst5cp : cst5.cp = 0 := by rw [hcst5Eq]; exact hcst4cp
+  have hcst5ol : cst5.operandLimit = 2048 := by rw [hcst5Eq]; exact hcst4ol
+  have hmem45 : MemEqOn 0 32 cst4.mem cst5.mem := by
+    have h := concretePopKind_preserves_below cst4 tagI64 (by rw [hcst4sp]; decide)
+    have hsp4 : (cst4.sp.toNat - 1) * 16 = 32 := by rw [hcst4sp]; decide
+    rw [hsp4, ← hcst5Def] at h
+    exact h
+  obtain ⟨cstFinal, hcstFinalDef⟩ : ∃ x, x = concretePushTag cst5 tagI64 ((10 : BitVec 64) - 3) := ⟨_, rfl⟩
+  have hpushLim : (cst5.sp + 1) * 16 ≤ cst5.operandLimit := by
+    rw [hcst5sp, hcst5ol]; decide
+  have hcstFinalEq : cstFinal =
+      { cst5 with
+        mem := storeI64 (storeI32 cst5.mem (cst5.sp * 16).toNat tagI64)
+                 ((cst5.sp * 16).toNat + 8) ((10 : BitVec 64) - 3)
+        sp := cst5.sp + 1
+        operandPeak := if cst5.operandPeak < (cst5.sp + 1) * 16 then (cst5.sp + 1) * 16 else cst5.operandPeak } := by
+    rw [hcstFinalDef]
+    exact concretePushTag_ok cst5 tagI64 ((10 : BitVec 64) - 3) hcst5f hpushLim
+  have hmem5F : MemEqOn 0 32 cst5.mem cstFinal.mem := by
+    have h := concretePushTag_preserves_below cst5 tagI64 ((10 : BitVec 64) - 3) (by rw [hcst5sp]; decide)
+    have hsp5 : cst5.sp.toNat * 16 = 32 := by rw [hcst5sp]; decide
+    rw [hsp5, ← hcstFinalDef] at h
+    exact h
+  have hmem0F : MemEqOn 0 32 cst0.mem cstFinal.mem :=
+    (((hmem03.mono (by omega) (by omega)).trans (hmem34.mono (by omega) (by omega))).trans hmem45).trans hmem5F
+  have hopSub : LinearWasmSteps runtimeEnv
+      (initLinearConfig [.call .opSub] cst3)
+      (doneLinearConfig cstFinal) :=
+    linear_opSub_steps_ok cst3 cst4 cst5 cstFinal 10 3 hpop1 hpop2 hcstFinalDef.symm
+  have hfnIdx : (concreteDequeue cst2).1.1 = 0 := by
+    rw [hdeq]
+    dsimp only
+    have h4096 : MemEqOn 4096 4100 cst1.mem cst2.mem := by
+      rw [hcst2Eq]; exact MemEqOn.refl _ _ _
+    rw [← @loadI32_memEqOn _ _ 4096 4100 4096 h4096 (by omega) (by omega), hcst1Eq]
+    dsimp only
+    have hpres0 : MemEqOn 4096 4100 (storeI32 cst0.mem 4096 0)
+        (storeI32 (storeI32 cst0.mem 4096 0) 4100 0) :=
+      storeI32_preserves_outside (0 : BitVec 32) (Or.inr (by omega))
+    rw [loadI32_memEqOn hpres0.symm (Nat.le_refl _) (Nat.le_refl _)]
+    exact loadI32_storeI32 cst0.mem 4096 0
+  have htbl : lowerProgram 0 [.sub] (concreteDequeue cst2).1.1.toNat = some ⟨none, lowerOp .sub⟩ := by
+    rw [hfnIdx]; simp [lowerProgram]
+  have hblock : LinearExecContBlock runtimeEnv ⟨none, lowerOp .sub⟩
+      (concreteDequeue cst2).1.2 (concreteDequeue cst2).2 cstFinal :=
+    .noNext (by rw [← hcst3Def]; exact hcst3f) rfl (by rw [← hcst3Def]; exact hopSub)
+  have hdisp : LinearDispatchRun runtimeEnv (lowerProgram 0 [.sub]) cst1 cstFinal :=
+    .step (.invokeOk hcst1f (by rw [hcst1cp]; decide) htick htbl hblock)
+      (.halted (Or.inr (by rw [hcstFinalEq]; exact hcst5cp)))
+  have hslFinal : readSlotsTopFirst cstFinal.mem 3 = ⟨tagI64, 7⟩ :: tailSlots := by
+    change readSlot cstFinal.mem 2 :: readSlotsTopFirst cstFinal.mem 2 = ⟨tagI64, 7⟩ :: tailSlots
+    rw [List.cons.injEq]
+    refine ⟨?_, ?_⟩
+    · unfold readSlot
+      have hsubEq : (10 : BitVec 64) - 3 = 7 := by decide
+      have haddr5 : (cst5.sp * 16).toNat = 32 := by rw [hcst5sp]; decide
+      rw [hcstFinalEq, haddr5, hsubEq]
+      have hk : loadI32 (storeI64 (storeI32 cst5.mem 32 tagI64) 40 7) 32 = tagI64 := by
+        have hpres0 : MemEqOn 32 36 (storeI32 cst5.mem 32 tagI64)
+            (storeI64 (storeI32 cst5.mem 32 tagI64) 40 7) :=
+          storeI64_preserves_outside (7 : BitVec 64) (Or.inr (by omega))
+        rw [loadI32_memEqOn hpres0.symm (Nat.le_refl _) (Nat.le_refl _)]
+        exact loadI32_storeI32 cst5.mem 32 tagI64
+      have hv : loadI64 (storeI64 (storeI32 cst5.mem 32 tagI64) 40 7) 40 = 7 :=
+        loadI64_storeI64 (storeI32 cst5.mem 32 tagI64) 40 7
+      dsimp only
+      rw [hk, hv]
+    · rw [readSlotsTopFirst_memEqOn (hmem45.trans hmem5F).symm rfl (by omega)]
+      exact hsl4_tail
+  refine ⟨cstFinal, ⟨cst1, henq, hdisp⟩, ?_, ?_, ?_, hslFinal, hmem0F⟩
+  · rw [hcstFinalEq]; exact hcst5f
+  · rw [hcstFinalEq]; exact hcst5cp
+  · rw [hcstFinalEq]; dsimp only; rw [hcst5sp]; decide
+
+/-- Concrete non-vacuity witness on `[0, 8192)` linear memory: ordered subtraction
+    `[ - ]` on `[.i64 10, .i64 3]` above nonempty mixed tail `[.bool true, .i64 99]`
+    preserves `[0, 32)` tail bytes and computes `10 - 3 = 7`. -/
+theorem linear_ordered_sub_with_tail_witness :
+    let tail : Stack := [.bool true, .i64 99]
+    let tailSlots : List TaggedSlot := [⟨tagI64, 99⟩, ⟨tagBool, 1⟩]
+    let inpSlots : List TaggedSlot := [⟨tagI64, 3⟩, ⟨tagI64, 10⟩]
+    let initMem := writeSlotsTopFirst zeroMem (inpSlots ++ tailSlots)
+    let cst0 : LinearRuntimeState :=
+      { mem := initMem
+        sp := 4
+        cp := 0
+        failure := 0
+        quotaReason := 0
+        phase := execPhase
+        steps := 0
+        operandLimit := 2048
+        continuationLimit := 4096
+        stepLimit := 100000
+        operandPeak := 64
+        continuationPeak := 0 }
+    ∃ cstFinal,
+      linearRunLowered runtimeEnv 0 [.sub] cst0 cstFinal ∧
+      cstFinal.failure = 0 ∧
+      cstFinal.cp = 0 ∧
+      cstFinal.sp = 3 ∧
+      readSlotsTopFirst cstFinal.mem 3 = ⟨tagI64, 7⟩ :: tailSlots ∧
+      MemEqOn 0 32 cst0.mem cstFinal.mem ∧
+      NobleContracts.Exec (toMc1Code [.sub]) (tail ++ [.i64 10, .i64 3]) (tail ++ [.i64 7]) := by
+  intro tail tailSlots inpSlots initMem cst0
+  have hsl0 : readSlotsTopFirst cst0.mem 4 = [⟨tagI64, 3⟩, ⟨tagI64, 10⟩] ++ tailSlots :=
+    readSlotsTopFirst_writeSlotsTopFirst zeroMem (inpSlots ++ tailSlots)
+  obtain ⟨cstFinal, hrun, hf, hcp, hsp, hsl, hmem⟩ :=
+    linear_ordered_sub_with_tail_aux tailSlots cst0 rfl rfl rfl rfl rfl rfl rfl hsl0
+  have hexecTail :
+      NobleContracts.Exec (toMc1Code [.sub]) (tail ++ [.i64 10, .i64 3]) (tail ++ [.i64 7]) := by
+    change NobleContracts.Exec [.word 5] (tail ++ [.i64 10, .i64 3]) (tail ++ [.i64 7])
+    rw [exec_sub_iff, (by decide : (10 : BitVec 64) - 3 = 7)]
+  exact ⟨cstFinal, hrun, hf, hcp, hsp, hsl, hmem, hexecTail⟩
 
 end NobleContracts.WasmStep
