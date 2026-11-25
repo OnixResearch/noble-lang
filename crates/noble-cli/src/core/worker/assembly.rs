@@ -38,6 +38,7 @@ pub(crate) fn assemble_wat_optimized(
         manifest: None,
         framed: false,
         optimized,
+        engine: super::super::arguments::Engine::V8,
         type_directed_experimental: false,
         lowering_selected: false,
         emit: Some(directory.to_path_buf()),

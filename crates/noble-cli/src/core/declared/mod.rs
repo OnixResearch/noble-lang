@@ -548,6 +548,15 @@ impl super::Session {
         source: &[u8],
         options: &super::arguments::Options,
     ) -> Result<super::output::Report, super::output::Failure> {
+        if options.engine == super::arguments::Engine::WasmtimeCore {
+            return Err(super::output::Failure::new(
+                super::output::ErrorContext {
+                    stage: "wasm",
+                    outcome: "unsupported",
+                },
+                "wasmtime-core does not support declared-modules",
+            ));
+        }
         if self.worker.is_none() {
             self.worker = Some(attempt!(super::worker::Engine::start(options)));
         }

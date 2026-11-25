@@ -14,6 +14,7 @@ pub(crate) mod output;
 pub(crate) mod preview;
 mod report;
 pub(crate) mod spec_quality;
+mod wasmtime_core;
 pub(crate) mod worker;
 mod worker_candidate;
 pub(crate) mod worker_package;
@@ -187,12 +188,12 @@ pub const USAGE: &str = "usage:
   PAA-1: the opt-in `noble-proof-artifact-admission/v1` envelope joins the owner-law proof recheck and
   subject binding with the host rebuild and final-byte comparison, then instantiates exactly the
   compared subject and certified-call buffers in fresh workers. Separate tools below.
-  noble run SOURCE [--opt off|on] [--emit NEW_DIR]
+  noble run SOURCE [--engine v8|wasmtime-core] [--opt off|on] [--emit NEW_DIR]
   noble compile SOURCE [--text-byte-cursor | --checked-i64] [--lowering baseline|type-directed-experimental] [--input-type I64|Bool|Text|Unit ...]
   noble compile SOURCE --declared-modules --bindings HOST_FILE [--module MODULE_FILE ...] [--input-type MODULE@VERSION.TYPE ...]
   noble compile SOURCE --declared-modules --signed-self-recursion --bindings HOST_FILE [--module MODULE_FILE ...]
   noble compile SOURCE --declared-modules --text-byte-cursor [--signed-self-recursion] [--module MODULE_FILE ...]
-  noble session [--text-byte-cursor | --checked-i64] [--framed] [--opt off|on] [--emit NEW_DIR]
+  noble session [--engine v8|wasmtime-core] [--text-byte-cursor | --checked-i64] [--framed] [--opt off|on] [--emit NEW_DIR]
   noble session --framed --declared-modules --bindings HOST_FILE [--opt off|on] [--emit NEW_DIR]
   noble session --framed --declared-modules --signed-self-recursion --bindings HOST_FILE [--opt off|on] [--emit NEW_DIR]
   noble session --framed --declared-modules --text-byte-cursor [--signed-self-recursion] [--opt off|on] [--emit NEW_DIR]
@@ -258,11 +259,27 @@ struct Session {
     compiler: noble_wasm::source::Compiler,
     stack: std::vec::Vec<noble_kernel::types::Ty>,
     worker: Option<worker::Engine>,
+    wasmtime_core: Option<wasmtime_core::Engine>,
     submissions: u64,
 }
 
 impl Session {
     fn new(options: &arguments::Options) -> Result<Self, output::Failure> {
+        if options.engine == arguments::Engine::WasmtimeCore
+            && (options.declared_modules
+                || options.signed_self_recursion
+                || options.size_change_evidence
+                || options.text_byte_cursor
+                || options.checked_i64)
+        {
+            return Err(output::Failure::new(
+                output::ErrorContext {
+                    stage: "wasm",
+                    outcome: "unsupported",
+                },
+                "wasmtime-core supports only the Core-Bootstrap profile",
+            ));
+        }
         let declared = if options.declared_modules {
             let bindings = options
                 .manifest
@@ -319,6 +336,7 @@ impl Session {
             },
             stack: std::vec::Vec::new(),
             worker: None,
+            wasmtime_core: None,
             submissions: 0,
         })
     }
@@ -378,19 +396,38 @@ impl Session {
                 ))
             }
         };
-        if self.worker.is_none() {
-            self.worker = Some(attempt!(worker::Engine::start(options)));
-        }
-        let engine = attempt!(self.worker.as_mut().ok_or_else(|| {
-            output::Failure::new(
-                output::ErrorContext {
-                    stage: "wasm",
-                    outcome: "internal-failure",
-                },
-                "missing engine worker",
-            )
-        }));
-        let prepared_report = attempt!(engine.prepare(compiled.wat(), source, self.submissions));
+        let prepared_report = match options.engine {
+            arguments::Engine::V8 => {
+                if self.worker.is_none() {
+                    self.worker = Some(attempt!(worker::Engine::start(options)));
+                }
+                let engine = attempt!(self.worker.as_mut().ok_or_else(|| {
+                    output::Failure::new(
+                        output::ErrorContext {
+                            stage: "wasm",
+                            outcome: "internal-failure",
+                        },
+                        "missing engine worker",
+                    )
+                }));
+                attempt!(engine.prepare(compiled.wat(), source, self.submissions))
+            }
+            arguments::Engine::WasmtimeCore => {
+                if self.wasmtime_core.is_none() {
+                    self.wasmtime_core = Some(attempt!(wasmtime_core::Engine::start(options)));
+                }
+                let engine = attempt!(self.wasmtime_core.as_mut().ok_or_else(|| {
+                    output::Failure::new(
+                        output::ErrorContext {
+                            stage: "wasm",
+                            outcome: "internal-failure",
+                        },
+                        "missing wasmtime-core engine",
+                    )
+                }));
+                attempt!(engine.prepare(compiled.wat(), source, self.submissions))
+            }
+        };
         if prepared_report.outcome != "ready" {
             return Ok(prepared_report);
         }
@@ -403,7 +440,32 @@ impl Session {
             .frontend
             .commit(prepared)
             .map_err(output::Failure::source));
-        let report = attempt!(engine.execute());
+        let report = match options.engine {
+            arguments::Engine::V8 => {
+                let engine = attempt!(self.worker.as_mut().ok_or_else(|| {
+                    output::Failure::new(
+                        output::ErrorContext {
+                            stage: "wasm",
+                            outcome: "internal-failure",
+                        },
+                        "missing engine worker",
+                    )
+                }));
+                attempt!(engine.execute())
+            }
+            arguments::Engine::WasmtimeCore => {
+                let engine = attempt!(self.wasmtime_core.as_mut().ok_or_else(|| {
+                    output::Failure::new(
+                        output::ErrorContext {
+                            stage: "wasm",
+                            outcome: "internal-failure",
+                        },
+                        "missing wasmtime-core engine",
+                    )
+                }));
+                attempt!(engine.execute())
+            }
+        };
         if report.outcome == "normal" {
             self.stack = output_types;
         }
