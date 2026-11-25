@@ -281,6 +281,151 @@ theorem foldBody_derives {env : Env} {cand : Candidate} {limits : Limits} :
                                 · rw [hjoin.2.2] at hout'
                                   exact hout'
 
+/-- A successful fold step appends exactly the node's derivation record. -/
+theorem stepFold_derivations {fold stepped : Fold} {cost node : Nat} {iface : Interface}
+    (h : stepFold fold cost node iface = .ok stepped) :
+    stepped.derivations = fold.derivations ++ [⟨node, iface⟩] := by
+  unfold stepFold at h
+  cases hc : charge fold.work cost with
+  | none => simp only [hc] at h; cases h
+  | some w =>
+      simp only [hc] at h
+      injection h with hs
+      rw [← hs]
+
+/-- Every derivation appended by a successful fold names an existing node
+reached by the folded body. -/
+theorem foldBody_derivations {env : Env} {cand : Candidate} {limits : Limits} :
+    ∀ (fuel depth : Nat) (body : List Nat) (stack : TyList) (derivedIn : EffSet)
+      (fold : Fold) (final : TyList) (finalBound : EffSet) (next : Fold),
+      foldBody env cand limits depth fuel body stack derivedIn fold
+          = .ok final finalBound next →
+      ∀ entry, entry ∈ next.derivations →
+        entry ∈ fold.derivations ∨
+          (NodeInBody cand body entry.node ∧ (cand.nodes[entry.node]?).isSome = true) := by
+  intro fuel
+  induction fuel with
+  | zero =>
+    intro depth body stack derivedIn fold final finalBound next h
+    simp only [foldBody] at h
+    cases h
+  | succ fuel ih =>
+    intro depth body stack derivedIn fold final finalBound next h entry hmem
+    cases body with
+    | nil =>
+      simp only [foldBody] at h
+      injection h with _ _ h3
+      rw [← h3] at hmem
+      exact Or.inl hmem
+    | cons id rest =>
+      simp only [foldBody] at h
+      cases hnode : cand.nodes[id]? with
+      | none => simp only [hnode] at h; cases h
+      | some node =>
+        cases node with
+        | literal lit inst =>
+          simp only [hnode] at h
+          cases hap : applyScheme env limits (litScheme lit) inst with
+          | error problem => simp only [hap] at h; cases h
+          | ok pair =>
+            obtain ⟨iface, _⟩ := pair
+            cases hj : joinInterface stack derivedIn iface limits with
+            | error problem => simp only [hap, hj] at h; cases h
+            | ok pair =>
+              obtain ⟨joined, bound⟩ := pair
+              cases hst : stepFold fold (schemeCost (litScheme lit)
+                  + joinCost iface) id iface with
+              | error problem => simp only [hap, hj, hst] at h; cases h
+              | ok stepped =>
+                simp only [hap, hj, hst] at h
+                rcases ih depth rest joined bound stepped final finalBound next h entry hmem with
+                  hstep | ⟨hreach, hex⟩
+                · rw [stepFold_derivations hst, List.mem_append, List.mem_singleton] at hstep
+                  rcases hstep with hfold | rfl
+                  · exact Or.inl hfold
+                  · exact Or.inr ⟨NodeInBody.here List.mem_cons_self, by simp [hnode]⟩
+                · exact Or.inr ⟨hreach.mono (fun _ hx => List.mem_cons_of_mem id hx), hex⟩
+        | invocation index inst =>
+          simp only [hnode] at h
+          cases hscheme : env.scheme index with
+          | none => simp only [hscheme] at h; cases h
+          | some scheme =>
+            simp only [hscheme] at h
+            cases hap : applyScheme env limits scheme inst with
+            | error problem => simp only [hap] at h; cases h
+            | ok pair =>
+              obtain ⟨iface, resolved⟩ := pair
+              simp only [hap] at h
+              split at h
+              · cases h
+              · cases hj : joinInterface stack derivedIn iface limits with
+                | error problem => simp only [hj] at h; cases h
+                | ok pair =>
+                  obtain ⟨joined, bound⟩ := pair
+                  cases hst : stepFold fold (schemeCost scheme
+                      + joinCost iface) id iface with
+                  | error problem => simp only [hj, hst] at h; cases h
+                  | ok stepped =>
+                    simp only [hj, hst] at h
+                    rcases ih depth rest joined bound stepped final finalBound next h entry hmem with
+                      hstep | ⟨hreach, hex⟩
+                    · rw [stepFold_derivations hst, List.mem_append, List.mem_singleton] at hstep
+                      rcases hstep with hfold | rfl
+                      · exact Or.inl hfold
+                      · exact Or.inr ⟨NodeInBody.here List.mem_cons_self, by simp [hnode]⟩
+                    · exact Or.inr ⟨hreach.mono (fun _ hx => List.mem_cons_of_mem id hx), hex⟩
+        | quotation qbody inst =>
+          simp only [hnode] at h
+          cases hap : applyScheme env limits quotationScheme inst with
+          | error problem => simp only [hap] at h; cases h
+          | ok pair =>
+            obtain ⟨iface, resolved⟩ := pair
+            simp only [hap] at h
+            split at h
+            · cases h
+            · cases hs1 : resolved.stack 1 with
+              | none => simp only [hs1] at h; cases h
+              | some start =>
+                cases hs2 : resolved.stack 2 with
+                | none => simp only [hs1, hs2] at h; cases h
+                | some claimed =>
+                  cases hs3 : resolved.effects 3 with
+                  | none => simp only [hs1, hs2, hs3] at h; cases h
+                  | some bound =>
+                    simp only [hs1, hs2, hs3] at h
+                    cases hinner : foldBody env cand limits (depth + 1) fuel
+                        qbody start EffSet.empty ⟨fold.work, fold.derivations⟩ with
+                    | failed problem => cases problem <;> simp only [hinner] at h <;> simp at h
+                    | ok innerFinal innerBound inner =>
+                      simp only [hinner] at h
+                      split at h
+                      · cases h
+                      · split at h
+                        · cases h
+                        · cases hj : joinInterface stack derivedIn iface limits with
+                          | error problem => simp only [hj] at h; cases h
+                          | ok pair =>
+                            obtain ⟨joined, outerBound⟩ := pair
+                            cases hst : stepFold inner (joinCost iface) id iface with
+                            | error problem => simp only [hj, hst] at h; cases h
+                            | ok stepped =>
+                              simp only [hj, hst] at h
+                              rcases ih depth rest joined outerBound stepped final finalBound
+                                  next h entry hmem with hstep | ⟨hreach, hex⟩
+                              · rw [stepFold_derivations hst, List.mem_append,
+                                  List.mem_singleton] at hstep
+                                rcases hstep with hinnerMem | rfl
+                                · rcases ih (depth + 1) qbody start EffSet.empty
+                                      ⟨fold.work, fold.derivations⟩ innerFinal innerBound inner
+                                      hinner entry hinnerMem with hfold | ⟨hreach, hex⟩
+                                  · exact Or.inl hfold
+                                  · exact Or.inr
+                                      ⟨NodeInBody.nested List.mem_cons_self hnode hreach, hex⟩
+                                · exact Or.inr
+                                    ⟨NodeInBody.here List.mem_cons_self, by simp [hnode]⟩
+                              · exact Or.inr
+                                  ⟨hreach.mono (fun _ hx => List.mem_cons_of_mem id hx), hex⟩
+
 /-- At a fold's entry the incoming bound is empty, so the derivation's
 right-nested index and the fold's left-nested accumulation coincide. -/
 theorem foldBody_entry_derives {env : Env} {cand : Candidate} {limits : Limits}
@@ -350,8 +495,14 @@ theorem check_soundness {env : Env} {request : Request} {cand : Candidate}
                           simpa using hfc
                         have hsub2 : derived.subsetOf request.expected.allowedEffects
                             = true := by simpa using hsub
+                        have hderivs := foldBody_derivations request.limits.work 0 cand.body
+                          request.expected.stackIn EffSet.empty ⟨request.limits.work, []⟩
+                          final derived fold hf
                         refine ⟨⟨rfl, by rw [hfin], subsetOf_subset hsub2,
-                          fun _ _ => Or.inr trivial⟩, ?_⟩
+                          fun entry hmem => ?_⟩, ?_⟩
+                        · rcases hderivs entry hmem with hnil | hok
+                          · cases hnil
+                          · exact hok
                         have hentry := foldBody_entry_derives hf
                         rw [hfin] at hentry
                         exact hentry

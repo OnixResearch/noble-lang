@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
  * Source-bound receipt for live-slot lanes that are not conformance gates: LREF-CASE-02, 04, 05
- * and 06 (`.cairn/changes/live-reference-lifetimes`, r[LREF-CTR-01], r[LREF-ESCAPE-01],
+ * and 06 (`.cairn/archive/2026-11-23-live-reference-lifetimes`, r[LREF-CTR-01], r[LREF-ESCAPE-01],
  * r[LREF-EV-01]: non-wrapping counters, escaped results, saved generic callers and held roots) and
- * ID-05's capture change (`.cairn/changes/runtime-program-template-identity`, P-ID-03). Each case
- * runs its own lane and is recorded separately:
+ * ID-05's capture change (`.cairn/archive/2026-11-23-runtime-program-template-identity`, P-ID-03).
+ * Each case runs its own lane and is recorded separately:
  *   LREF-CASE-02 - crates/noble-cli/tests/live_slot_counter_exhaustion.mjs (in-process registry
  *                  fixtures; the compiler's install generation is the noble-wasm unit test
  *                  `install_generation_refuses_at_its_maximum_without_wrapping`, run by Cargo)

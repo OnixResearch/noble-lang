@@ -1,6 +1,6 @@
 # Package retention across slot replacement (LREF-CASE-03)
 
-`.cairn/changes/live-reference-lifetimes` designs LREF-CASE-03. Slot S's version v1 is module
+`.cairn/archive/2026-11-23-live-reference-lifetimes` designs LREF-CASE-03. Slot S's version v1 is module
 M1's root, whose body returns `[ h ]`; the compiled body reads `def h [ 1 + ]` through an M1
 global. A root R dispatches to v1 through `slot.invoke` and saves the returned Program O. Then v2
 replaces v1, and the module sweep runs. The case expects `20 O run` to yield 21, and M1's span to

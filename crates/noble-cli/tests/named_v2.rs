@@ -22,6 +22,8 @@ use std::{
 
 #[path = "named_v2/obligations.rs"]
 mod obligations;
+#[path = "named_v2/v3.rs"]
+mod v3;
 
 const DEFINITIONS: &str = "module Definitions@5 [ export step def step [ 1 + ] ]";
 const IMPORT: &str = "import Definitions@5 as d";

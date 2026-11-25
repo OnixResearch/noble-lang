@@ -20,6 +20,8 @@ mod cases;
 mod implicit;
 #[path = "declared/named.rs"]
 mod named;
+#[path = "declared/named/v3.rs"]
+mod named_v3;
 #[path = "declared/origin.rs"]
 mod origin;
 

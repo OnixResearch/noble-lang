@@ -1,5 +1,8 @@
 # Bounded live-update corpus (Noble)
 
+Historical-only since 2026-11-23: the design document this tree reads as a live input moved to
+`.cairn/archive/2026-11-23-live-reference-lifetimes/`; see [HISTORICAL.md](HISTORICAL.md).
+
 This directory implements Noble's part of issue #119. It exports bounded observations from the existing live-slot fixture lanes and compares them with compiler-lab's Makepad Relax lane over the same scenarios. It does not add a runtime or change the meaning of those lanes.
 
 ## Scope and evidence model

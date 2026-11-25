@@ -42,6 +42,11 @@ pub struct ModuleSession {
     /// (IMPL-TRUST-01). Absent unless a host opts in; elaboration then runs
     /// under the limits' own work ceiling.
     proof_budgets: Option<crate::intrinsic::ProofBudgets>,
+    /// Whether this session is the editor-only proof-hole analysis transport.
+    /// Ordinary sessions refuse the reserved `(editor-hole LABEL)` proof form
+    /// while parsing; only the goal view's transport session admits it, and
+    /// that session is never reachable from an admission command.
+    proof_editor: bool,
     pub(super) source: crate::source::Session,
 }
 
@@ -1635,6 +1640,15 @@ impl ModulePrepared {
     }
 }
 
+/// Profile flags selected when constructing a [`ModuleSession`].
+#[derive(Clone, Copy)]
+struct SessionProfile {
+    signed_self: bool,
+    declared_text: bool,
+    calculator: bool,
+    proof_editor: bool,
+}
+
 #[expect(
     tigerstyle::interior_mutability_in_core,
     reason = "Owner: noble-contracts; K-CHECK-07 request budget: one request-local Rc<Cell<u32>> counter a host opts into with ModuleSession::share_request_work; it is single-threaded (Rc is !Send), never outlives the session and its staged snapshots, and every meter debits it so nested checking cannot restart the request's budget. Explicit threading would turn the &self closure-walk and origin-replay APIs into &mut ones."
@@ -1645,7 +1659,16 @@ impl ModuleSession {
         bindings: &[super::BoundOperation],
         retained_source_limit: crate::source::RetainedSourceLimit,
     ) -> Result<Self, crate::source::Error> {
-        Self::initialize(bindings, false, false, false, retained_source_limit.bytes())
+        Self::initialize(
+            bindings,
+            SessionProfile {
+                signed_self: false,
+                declared_text: false,
+                calculator: false,
+                proof_editor: false,
+            },
+            retained_source_limit.bytes(),
+        )
     }
 
     /// Select the signed source grammar. Valid lexical ownership, kernel
@@ -1654,7 +1677,16 @@ impl ModuleSession {
         bindings: &[super::BoundOperation],
         retained_source_limit: crate::source::RetainedSourceLimit,
     ) -> Result<Self, crate::source::Error> {
-        Self::initialize(bindings, true, false, false, retained_source_limit.bytes())
+        Self::initialize(
+            bindings,
+            SessionProfile {
+                signed_self: true,
+                declared_text: false,
+                calculator: false,
+                proof_editor: false,
+            },
+            retained_source_limit.bytes(),
+        )
     }
 
     /// Selected pure declared text profile; its signed self extension is explicit.
@@ -1672,27 +1704,53 @@ impl ModuleSession {
         }
         Self::initialize(
             bindings,
-            signed_self,
-            true,
-            false,
+            SessionProfile {
+                signed_self,
+                declared_text: true,
+                calculator: false,
+                proof_editor: false,
+            },
             retained_source_limit.bytes(),
         )
     }
 
     /// Calculator modules are separately selected and never receive adapters.
     pub fn new_calculator() -> Result<Self, crate::source::Error> {
-        Self::initialize(&[], false, false, true, CALCULATOR_RETAINED_SOURCE_BYTES)
+        Self::initialize(
+            &[],
+            SessionProfile {
+                signed_self: false,
+                declared_text: false,
+                calculator: true,
+                proof_editor: false,
+            },
+            CALCULATOR_RETAINED_SOURCE_BYTES,
+        )
     }
 
-    #[expect(
-        tigerstyle::ambiguous_params,
-        reason = "Owner: noble-contracts; the same-typed parameters are positional coordinates at each checked call site; a newtype would not change the call shape."
-    )]
+    /// The editor-only proof-hole analysis session. It accepts the reserved
+    /// `(editor-hole LABEL)` proof form so the goal view can locate each hole;
+    /// no admission command constructs it, and every other session refuses the
+    /// form as source.
+    pub fn new_proof_editor(
+        bindings: &[super::BoundOperation],
+        retained_source_limit: crate::source::RetainedSourceLimit,
+    ) -> Result<Self, crate::source::Error> {
+        Self::initialize(
+            bindings,
+            SessionProfile {
+                signed_self: false,
+                declared_text: false,
+                calculator: false,
+                proof_editor: true,
+            },
+            retained_source_limit.bytes(),
+        )
+    }
+
     fn initialize(
         bindings: &[super::BoundOperation],
-        signed_self: bool,
-        declared_text: bool,
-        calculator: bool,
+        profile: SessionProfile,
         retained_source_limit_bytes: u32,
     ) -> Result<Self, crate::source::Error> {
         if bindings.len() > super::MODULE_CAP {
@@ -1727,9 +1785,9 @@ impl ModuleSession {
                 "invalid, duplicate or mismatched adapter binding",
             ));
         }
-        let mut environment = attempt!((if calculator {
+        let mut environment = attempt!((if profile.calculator {
             noble_kernel::contracts::calculator_environment()
-        } else if declared_text {
+        } else if profile.declared_text {
             noble_kernel::contracts::declared_text_environment()
         } else {
             noble_kernel::contracts::environment()
@@ -1737,14 +1795,14 @@ impl ModuleSession {
         .map_err(|_| super::error(crate::source::Stage::Check, "invalid kernel environment")));
         environment.declared_modules = true;
         let mut source_session = crate::source::Session::without_test_hosts();
-        source_session.calculator = calculator;
+        source_session.calculator = profile.calculator;
         source_session.declared = Some(super::Context {
             environment,
             words: alloc::vec::Vec::new(),
             aliases: alloc::vec::Vec::new(),
             owner: None,
-            signed_self,
-            declared_text,
+            signed_self: profile.signed_self,
+            declared_text: profile.declared_text,
             request_work: None,
         });
         Ok(Self {
@@ -1756,6 +1814,7 @@ impl ModuleSession {
             generation: 0,
             retained_source_limit: retained_source_limit_bytes,
             proof_budgets: None,
+            proof_editor: profile.proof_editor,
         })
     }
 
@@ -1842,6 +1901,7 @@ impl ModuleSession {
             generation: self.generation,
             retained_source_limit: self.retained_source_limit,
             proof_budgets: self.proof_budgets,
+            proof_editor: self.proof_editor,
         }
     }
 }

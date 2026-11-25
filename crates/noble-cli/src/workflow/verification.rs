@@ -1,6 +1,7 @@
 mod compilation;
 mod evidence;
 pub(super) mod named_v2;
+pub(super) mod named_v3;
 
 pub(crate) struct Acceptance {
     pub(crate) axioms: std::vec::Vec<std::string::String>,
@@ -109,7 +110,7 @@ pub(super) fn verify(
         workspace: attempt!(Workspace::create(library, true)),
         deadline,
     };
-    attempt!(session.compile_library(library));
+    attempt!(session.compile_library_for(library, &["NobleContracts"]));
     attempt!(session.compile_obligation(obligation));
     attempt!(session.compile_submission(proof));
     // The exporter may load untrusted producer objects. Only bounded textual
@@ -145,7 +146,7 @@ pub(super) fn verify_intrinsic_pure(
         workspace: attempt!(Workspace::create(library, false)),
         deadline,
     };
-    attempt!(session.compile_library(library));
+    attempt!(session.compile_library_for(library, &["NobleContracts"]));
     let source = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/../../proofs/mc1/IntrinsicTypeWitness.lean"

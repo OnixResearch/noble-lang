@@ -1,0 +1,14 @@
+module exact_big_cmp@1 [
+    # big_cmp_raw: [ S Bool List<I64> Bool List<I64> -- S I64 ! pure ]
+    # B = 3 (root, big_cmp_raw, mag_cmp_acc)!
+    signature big_cmp_raw forall<S:stack> [ S Bool List<I64> Bool List<I64> -- S I64 ! pure ]
+    export big_cmp_raw
+    def big_cmp_raw [
+        [ swap ] dip
+        [ 0 swap ] dip exact_mag_add@1.mag_cmp_acc
+        swap
+        [ swap [ 0 swap - ] [ drop 1 ] if ]
+        [ swap [ drop -1 ] [ ] if ]
+        if
+    ]
+]

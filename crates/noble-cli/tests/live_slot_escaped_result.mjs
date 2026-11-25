@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { cli, expectOutcome, selectedAuthority } from './live_slot_resource_ref_cli.mjs';
 
-// LREF-CASE-04 (`.cairn/changes/live-reference-lifetimes`): an escaped result never follows
+// LREF-CASE-04 (`.cairn/archive/2026-11-23-live-reference-lifetimes`): an escaped result never follows
 // publication. Slot S's v1 returns `1 quote [ + ] compose`, a Program that captured 1; a root R
 // dispatches to v1 through `slot.invoke` and saves the returned Program O. v2, which returns the
 // Program that captured 2, then replaces v1. O on 20 must still give 21 after the publication,

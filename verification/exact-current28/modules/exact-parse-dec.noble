@@ -1,0 +1,36 @@
+module exact_parse_dec@1 [
+    signature scan_int forall<S:stack> [ S Text -- S Text I64 I64 Bool Bool ! pure ]
+    export scan_int
+    def scan_int [
+        0 text.byte 45 =
+        [
+            1 exact_parse_scan@1.scan_digits
+            [ 1 swap dup 1 swap < ] dip
+            [ ] [ drop false ] if
+            true swap
+        ]
+        [
+            0 exact_parse_scan@1.scan_digits
+            [ 0 swap dup 0 swap < ] dip
+            [ ] [ drop false ] if
+            false swap
+        ]
+        if
+    ]
+
+    signature scan_frac forall<S:stack> [ S Text I64 -- S Text I64 I64 Bool ! pure ]
+    export scan_frac
+    def scan_frac [
+        dup [ text.byte ] dip swap 46 =
+        [
+            1 +
+            [ dup ] dip swap [ dup ] dip swap
+            exact_parse_scan@1.scan_digits
+            [ [ drop ] dip ] dip
+            [ [ dup ] dip swap [ dup ] dip swap < ] dip
+            [ ] [ drop false ] if
+        ]
+        [ drop 0 0 false ]
+        if
+    ]
+]

@@ -6,8 +6,10 @@ pub const USAGE: &str = "usage:
   noble explain-proof CONTRACT
   noble verify-module SOURCE [--module PREVIOUS_SOURCE ...] [--timeout-ms N]
       [--normalization-work N] [--substitution-work N] [--report-schema v1|v2]
+      [--emit NEW_DIR] [--evidence DIR ...]
   noble obligations SOURCE [--module PREVIOUS_SOURCE ...]
-  noble goal-view SOURCE [--module PREVIOUS_SOURCE ...]
+  noble goal-view SOURCE [--module PREVIOUS_SOURCE ...] [--evidence DIR ...]
+  noble goal-view --proof-holes JSON_FILE [--module PREVIOUS_SOURCE ...] [--evidence DIR ...]
   noble --internal-budget-smoke <u32>
 
 Consumer configuration (absolute paths): NOBLE_LEAN, NOBLE_BWRAP,
@@ -27,7 +29,18 @@ they never run the proof consumer and are never acceptance evidence.
 Explanation never executes Lean. Proof source runs only in a Linux bubblewrap
 sandbox with no network, credentials, or writable host directories.
 Proof checking requires an active user systemd manager and XDG_RUNTIME_DIR.
---emit creates a new directory; existing destinations are never overwritten.";
+--emit creates a new directory; existing destinations are never overwritten.
+The proof-hole document is editor-only `noble-proof-editor/v1`: `format` plus a
+`module` array of verbatim text and `{\"kind\":\"proof-hole\",\"label\":LABEL}`.
+It is analyzed through the ordinary preparation and obligation map; every hole
+is reported incomplete and the declaration is never checked. A hole never
+parses as .noble source: an ordinary session refuses the reserved form.
+`verify-module --emit DIR` retains accepted evidence (evidence.json and the
+exact source.noble); `--evidence DIR` offers a retained record and refuses
+`intrinsic-stale-proof` when it no longer matches the current subject. The goal
+view lists a retained record for its original subject without rewriting it,
+marks a differing record stale, and never grants checked without a fresh
+checker run.";
 
 pub(crate) const SOURCE_LIMIT: usize = 1_048_576;
 pub(crate) const PROOF_LIMIT: usize = 524_288;
@@ -43,6 +56,7 @@ pub(crate) mod artifacts;
 mod counterexample;
 pub(crate) mod diagnostics;
 pub(crate) mod encoding;
+pub(crate) mod evidence;
 pub(crate) mod intrinsic;
 pub(crate) mod obligations;
 pub(crate) mod output;

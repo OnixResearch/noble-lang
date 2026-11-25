@@ -16256,6 +16256,594 @@
       "phase": 2,
       "role": "resource-negative",
       "claim": "untyped acquire alloc stores a live resource in a heap cell"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.step_trace_any",
+      "phase": 2,
+      "role": "wiring-trace",
+      "claim": "Every small step either leaves the trace alone or appends exactly one event"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.step_trace",
+      "phase": 2,
+      "role": "wiring-trace",
+      "claim": "One step either leaves the trace alone or appends exactly one event, whose label is in the declared effect bound"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.effect_sound",
+      "phase": 2,
+      "role": "wiring-trace",
+      "claim": "Effect soundness for every finite execution prefix, including denied and failed requests"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.trace_within_bound",
+      "phase": 2,
+      "role": "wiring-trace",
+      "claim": "From a typed program: every event of every reachable configuration is within the bound"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.trace_prefix",
+      "phase": 2,
+      "role": "wiring-trace",
+      "claim": "A trace only grows by appending: any reached trace has the starting trace as a prefix"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.halted_no_step",
+      "phase": 2,
+      "role": "wiring-trace",
+      "claim": "Halted configurations (denied or failed) take no further step, so no later request is performed after a denial or failure"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.step_append_code",
+      "phase": 2,
+      "role": "wiring-trace",
+      "claim": "Every small step commutes with appending an untouched code suffix to the continuation"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.reach_append_code",
+      "phase": 2,
+      "role": "wiring-trace",
+      "claim": "Reachability commutes with appending an untouched code suffix"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.execFrom_append",
+      "phase": 2,
+      "role": "wiring-trace",
+      "claim": "Composition of two finite normal executions, with the trace being the left trace followed by the right trace"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.reach_step",
+      "phase": 2,
+      "role": "wiring-trace",
+      "claim": "A single step is a one-step reach"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.push_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "push_execFrom"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.dup_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "dup_execFrom"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.swap_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "swap_execFrom"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.drop_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "drop_execFrom"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.pair_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "pair_execFrom"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.unpair_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "unpair_execFrom"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.inl_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "inl_execFrom"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.inr_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "inr_execFrom"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.block_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "block_execFrom"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.restore_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "restore_execFrom"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.dip_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "dip with a static body: it moves the value below the body into a restore frame, runs the body, then restores the value exactly once"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.dipValue_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "A dynamic dip: the program value on the stack is executed"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.runValue_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "run of a Program value already on the stack: execute its body, then pop the pin frame that retains the value while the body runs"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.run_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "push (prog p) then run executes p"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.quote_run_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "quote then run: the quotation of a constant value pushes it back and issues no host request"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.compose_run_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "compose two Program values then run: the left program runs to completion, then the right, with the trace concatenated in that order"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.casesLeft_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "cases on an inl payload selects the left body and leaves the right body unrun"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.casesRight_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "casesRight_execFrom"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.ifte_true_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "ifte with a nonzero condition runs the deeper (p) program"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.ifte_false_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "ifte_false_execFrom"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.execFrom_then",
+      "phase": 2,
+      "role": "wiring-trace",
+      "claim": "A trace-preserving prefix followed by a trace-bearing suffix: the workhorse for the derived words, where every construction word leaves the trace unchanged"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.first_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "first runs p on the first component, holds the second in a frame, restores it exactly once and repairs the pair"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.second_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "second runs p on the second component while holding the first"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.split_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "split: run first with the first Program while holding the second, then second with the held Program"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.fanout_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "fanout duplicates a Data input and then splits it"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.left_inl_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "left on an inl payload runs the Program and wraps the result"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.left_inr_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "left on an inr payload returns it unchanged; the Program is not run and issues no request"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.right_inr_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "right on an inr payload runs the Program"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.right_inl_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "right on an inl payload returns it unchanged"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.choose_inl_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "choose on inl runs the first Program and discards the second unrun"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.choose_inr_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "choose on inr runs the second Program and discards the first unrun"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.join_inl_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "join on inl runs the first Program and discards the second"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.join_inr_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "join on inr runs the second Program and discards the first"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.then_left_id",
+      "phase": 2,
+      "role": "wiring-t-law",
+      "claim": "L1, left identity: [ ] p compose and p have the same run and trace"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.then_right_id",
+      "phase": 2,
+      "role": "wiring-t-law",
+      "claim": "L2, right identity: p [ ] compose and p have the same run and trace"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.then_assoc",
+      "phase": 2,
+      "role": "wiring-t-law",
+      "claim": "L3, associativity: both groupings run the same words in the same order, so they have the same trace and result"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.apply_quote",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "L4a: v quote run pushes v back and issues no request"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.apply_compose",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "L4b: p q compose run runs p then q, with the trace concatenated"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.under_fuse",
+      "phase": 2,
+      "role": "wiring-t-law",
+      "claim": "L5, frame fusion: [p] under [q] under and [p q] under hold the same value, run p then q, and restore the value once; both traces are p's requests followed by q's"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.pair_unpair_exec",
+      "phase": 2,
+      "role": "wiring-t-law",
+      "claim": "L6a: pair unpair returns the original stack and issues no request"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.unpair_pair_exec",
+      "phase": 2,
+      "role": "wiring-t-law",
+      "claim": "L6b: unpair pair returns the original pair"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.swap_swap_exec",
+      "phase": 2,
+      "role": "wiring-t-law",
+      "claim": "L6c: swap_pair is an involution on a pair and issues no request"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.first_fuse",
+      "phase": 2,
+      "role": "wiring-t-law",
+      "claim": "L7, first fusion: [p] first [q] first and [p q] first produce the same pair and the trace p's requests then q's"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.split_first_second",
+      "phase": 2,
+      "role": "wiring-t-law",
+      "claim": "L8, split definition: w.split and first then second have the same trace and the same pair"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.fanout_dup_pair_split",
+      "phase": 2,
+      "role": "wiring-t-law",
+      "claim": "L10, fanout: duplicating a Data input and splitting is the fanout word; the trace is still p's then q's"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.left_beta_inl",
+      "phase": 2,
+      "role": "wiring-t-law",
+      "claim": "L11, left β on inl: the selected program runs and the result is wrapped; the trace is exactly the program's"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.left_beta_inr",
+      "phase": 2,
+      "role": "wiring-t-law",
+      "claim": "L11, left β on inr: the payload is returned and the program never runs, so no request is issued"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.branch_true",
+      "phase": 2,
+      "role": "wiring-t-law",
+      "claim": "L13, branch β: a nonzero condition runs the deeper program"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.branch_false",
+      "phase": 2,
+      "role": "wiring-t-law",
+      "claim": "L13, branch β: zero runs the top program"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.behavioral_not_identity",
+      "phase": 2,
+      "role": "wiring-t-law",
+      "claim": "L14: [ 1 1 + ] and [ 2 ] have the same normal result and trace (no request), but they are different programs"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.typed_not_stuck",
+      "phase": 2,
+      "role": "wiring-failure-class",
+      "claim": "Typed running configurations are never stuck: the progress theorem covers every host answer"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.underflow_stuck",
+      "phase": 2,
+      "role": "wiring-failure-class",
+      "claim": "A stack underflow is a stuck untyped configuration, not a trap: there is no step and the status is still running"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.wrong_shape_stuck",
+      "phase": 2,
+      "role": "wiring-failure-class",
+      "claim": "A wrong operand shape is also stuck, not a trap"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.result_error_is_normal",
+      "phase": 2,
+      "role": "wiring-failure-class",
+      "claim": "An ordinary error value (an inl sum payload) is a normal return: the stack carries the error and the status stays running"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.retireOne_live",
+      "phase": 2,
+      "role": "wiring-host-cleanup",
+      "claim": "retireOne removes its own id from live"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.retireOne_retired",
+      "phase": 2,
+      "role": "wiring-host-cleanup",
+      "claim": "retireOne records its id in retired"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.retireOne_live_subset",
+      "phase": 2,
+      "role": "wiring-host-cleanup",
+      "claim": "retireOne only removes from live"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.retireOne_retired_superset",
+      "phase": 2,
+      "role": "wiring-host-cleanup",
+      "claim": "retireOne only adds to retired"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.retireOne_idempotent",
+      "phase": 2,
+      "role": "wiring-host-cleanup",
+      "claim": "Repeating one retirement changes nothing"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.retireOne_identity",
+      "phase": 2,
+      "role": "wiring-host-cleanup",
+      "claim": "An id that is already retired and no longer live is untouched by a further retirement of itself"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.retire_live_subset",
+      "phase": 2,
+      "role": "wiring-host-cleanup",
+      "claim": "Retirement only removes from live"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.retire_retired_superset",
+      "phase": 2,
+      "role": "wiring-host-cleanup",
+      "claim": "Retirement only adds to retired"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.retire_live",
+      "phase": 2,
+      "role": "wiring-host-cleanup",
+      "claim": "Retirement removes every id in the list from live"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.retire_retired",
+      "phase": 2,
+      "role": "wiring-host-cleanup",
+      "claim": "Retirement records every id in the list"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.retire_single_idempotent",
+      "phase": 2,
+      "role": "wiring-host-cleanup",
+      "claim": "Repeating the retirement of one id is a no-op: the repeat-retirement rule"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.retire_next",
+      "phase": 2,
+      "role": "wiring-host-cleanup",
+      "claim": "Retirement leaves the fresh counter unchanged"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.retired_never_reacquired",
+      "phase": 2,
+      "role": "wiring-host-cleanup",
+      "claim": "A retired id is never reissued: the guest's fresh counter is above it, and an acquisition uses exactly the counter, not the retired id"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.retire_then_acquire_keeps_retired",
+      "phase": 2,
+      "role": "wiring-host-cleanup",
+      "claim": "Retirement followed by the fresh acquisition keeps the id retired and absent from live"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.normal_cleanup_is_guest",
+      "phase": 2,
+      "role": "wiring-host-cleanup",
+      "claim": "Normal-path ownership stays with the guest: in a normal-return configuration every live id is present in the whole-configuration owner multiset, so it has not been silently retired"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.abnormal_cleanup_is_host",
+      "phase": 2,
+      "role": "wiring-host-cleanup",
+      "claim": "Abnormal cleanup is the host's: a halted guest takes no further step, so the guest cannot run cleanup"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.emit_execFrom",
+      "phase": 2,
+      "role": "wiring-word-execution",
+      "claim": "One permitted emit step, with the event appended to the trace"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.exchange_changes_trace",
+      "phase": 2,
+      "role": "wiring-counterexample",
+      "claim": "L9 under T: the two sides of the exchange have the same normal result but different ordered traces (1, 2 versus 2, 1)"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.pair_with_resource_not_copy",
+      "phase": 2,
+      "role": "wiring-t-law",
+      "claim": "A pair carrying a resource on either side is not copyable"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.sum_with_resource_not_copy",
+      "phase": 2,
+      "role": "wiring-resource",
+      "claim": "A sum carrying a resource in either alternative is not copyable"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.list_with_resource_not_copy",
+      "phase": 2,
+      "role": "wiring-resource",
+      "claim": "A list whose element type carries a resource is not copyable"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.program_interface_resource_is_copyable",
+      "phase": 2,
+      "role": "wiring-resource",
+      "claim": "A Program interface may mention a resource without making the Program value, or its body, resource-owning"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.fanout_at_resource_untypable",
+      "phase": 2,
+      "role": "wiring-t-law",
+      "claim": "The wiring fanout word duplicates its shared input: a resource-bearing pair is refused at the dup, so fanout has no specialization at a resource"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.project_first_at_resource_untypable",
+      "phase": 2,
+      "role": "wiring-resource",
+      "claim": "project_first is unpair drop; dropping a resource-bearing payload is refused, so the projection has no specialization at a resource"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.quote_at_resource_untypable",
+      "phase": 2,
+      "role": "wiring-resource",
+      "claim": "quote of a resource is refused: capture requires Copy, and a resource is never copyable"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.exchange_changes_failure_point",
+      "phase": 2,
+      "role": "wiring-counterexample",
+      "claim": "L9 under F (denied request): both orders abort, but the failed request and the recorded cleanup point differ (1, 2 versus 2, 1)"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.halted_reach_eq",
+      "phase": 2,
+      "role": "wiring-model",
+      "claim": "Once a configuration is halted, no further step is possible, so every reach from it is the trivial one and its trace is final"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.halted_trace_final",
+      "phase": 2,
+      "role": "wiring-host-cleanup",
+      "claim": "A halted configuration's trace is final: earlier effects are not rolled back and no later program appends a request"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.under_holds_resource_in_frame",
+      "phase": 2,
+      "role": "wiring-t-law",
+      "claim": "O for the under word: a held resource is in exactly one restore frame while the body runs, the stack holds no owner, and the resource is restored once and released on the normal path"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.owners_track_multiplicity",
+      "phase": 2,
+      "role": "wiring-resource",
+      "claim": "a pair holding the same resource id twice contributes two owners and cannot satisfy Own against a duplicate-free live set"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.no_waiting_status",
+      "phase": 2,
+      "role": "wiring-failure-class",
+      "claim": "the guest status has no waiting constructor: the synchronous host oracle always answers"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.untyped_loop_steps",
+      "phase": 2,
+      "role": "wiring-failure-class",
+      "claim": "the untyped self-call steps to itself"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.untyped_loop_reach_self",
+      "phase": 2,
+      "role": "wiring-failure-class",
+      "claim": "every reach from the untyped loop configuration is that configuration"
+    },
+    {
+      "name": "NobleFoundation.WiringLaws.untyped_loop_diverges",
+      "phase": 2,
+      "role": "wiring-failure-class",
+      "claim": "the untyped loop has a next step from every finite reach, so divergence is distinct from a stuck state"
     }
   ],
   "private_theorems": [

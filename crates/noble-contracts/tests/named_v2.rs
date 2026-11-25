@@ -290,3 +290,5 @@ fn refuses_orphan_and_misbound_rows(
 
 #[path = "named_v2/proofs.rs"]
 mod proofs;
+#[path = "named_v2/v3.rs"]
+mod v3;

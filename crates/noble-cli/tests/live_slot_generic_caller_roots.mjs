@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { cli, expectOutcome, selectedAuthority } from './live_slot_resource_ref_cli.mjs';
 
-// LREF-CASE-05 (`.cairn/changes/live-reference-lifetimes`): a saved generic caller across roots.
-// G is the installed generic caller `slot.invoke` over `[I64, LiveRef<I64,I64,pure>]`, installed
+// LREF-CASE-05 (`.cairn/archive/2026-11-23-live-reference-lifetimes`): a saved generic caller across
+// roots. G is the installed generic caller `slot.invoke` over `[I64, LiveRef<I64,I64,pure>]`, installed
 // once and reused. Root R1 runs G with a fresh ref to S at epoch 1 and selects S-v1; S-v2 is
 // published; root R2 runs the same G with a fresh ref and selects S-v2. G's identity is unchanged:
 // the same installed artifact and handle serve both roots, and its reflected dispatch site names

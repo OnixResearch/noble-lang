@@ -271,6 +271,17 @@ selected `result@1` library, local bindings, unit invariants, portable
 package/cache transport, general capability modules and later MA/MW entry
 gates are unaffected.
 
+## Current Cairn campaign routes
+
+Owner decisions 56–60 (2026-11-23) select bounded, Mathlib-free structured Wasm
+research; extractable Rust as the authoritative live-slot ledger route;
+`current28` in `ma-language-prerequisites` task 4; and keeping the wiring
+known-graph task open until artifact correspondence validates flattening. None
+is a proof or production-profile selection. Remaining syncs, registrations and
+archives use a recorded integrator review with owner veto and their existing
+evidence gates. Before either intrinsic proofs or reusable calls syncs, reconcile
+their overlapping `V-INTRINSIC-01` deltas so neither loses the other's obligations.
+
 ## Open decisions
 
 1. General inference, candidate encoding, recursive checking, and declaration syntax beyond finite DXM1.

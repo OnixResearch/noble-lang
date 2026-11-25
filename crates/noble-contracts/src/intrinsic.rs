@@ -13,7 +13,9 @@ use alloc::{boxed::Box, string::String, vec::Vec};
 mod named_v2;
 pub use named_v2::prepare_named_contract;
 mod named_v3;
-pub use named_v3::{claim_shape, prepare_named_v3, CallRecord, Envelope, PreparedV3};
+pub use named_v3::{
+    claim_shape, prepare_named_v3, prepare_named_v3_contract, CallRecord, Envelope, PreparedV3,
+};
 mod elaborate;
 pub use elaborate::{
     elaborate_obligations, Elaborated, ElaborationRecord, InsertedArgument, ELABORATION_REVISION,
@@ -335,6 +337,11 @@ pub struct NamedUseOrigin {
     pub candidate_node: noble_kernel::untrusted::NodeId,
 }
 #[derive(Clone, Debug)]
+pub struct ProofImportBinding {
+    pub alias: String,
+    pub owner: u64,
+}
+#[derive(Clone, Debug)]
 pub struct SubjectBinding {
     pub module: String,
     pub version: u32,
@@ -344,6 +351,8 @@ pub struct SubjectBinding {
     pub source_dependencies: Vec<ResolvedSourceModule>,
     /// Alias snapshot at source installation, not the current mutable alias map.
     pub named_imports: Vec<NamedImportBinding>,
+    /// Full module-alias snapshot frozen at revision-3 contract binding.
+    pub proof_imports: Vec<ProofImportBinding>,
     /// Source-resolved, per-use provenance; empty for historical contract 1.
     pub named_uses: Vec<NamedUseOrigin>,
     /// Session-local only; this number is never used as a portable artifact hash.
@@ -804,7 +813,6 @@ enum Code {
 /// reviewed arithmetic rule identities, so revisions 1 and 2 keep their
 /// variable-only `Eq`.
 #[derive(Clone, PartialEq, Eq)]
-#[cfg_attr(test, derive(Debug))]
 enum Term {
     Variable(usize),
     I64(i64),
@@ -966,6 +974,22 @@ impl<T> WorkStack<T> {
         // Spill only when a real walk exhausts its inline slots.
         self.spill.push(value);
         self.total = total;
+        Ok(())
+    }
+
+    #[expect(
+        tigerstyle::mutating_input_in_pure,
+        reason = "Owner: noble-contracts; the traversal stack is locally owned state and its mutation is the operation"
+    )]
+    #[expect(
+        tigerstyle::numeric_units,
+        reason = "Owner: noble-contracts; the bound is the frame count supplied by the tree budget"
+    )]
+    /// Push one frame, returning an exhausted diagnostic at `span` if the limit is reached.
+    fn push_at(&mut self, value: T, limit: usize, span: Span) -> Result<(), Diagnostic> {
+        if self.push_bounded(value, limit).is_err() {
+            return Err(exhausted(span));
+        }
         Ok(())
     }
 
@@ -1180,7 +1204,9 @@ fn size_step<'a>(
             work_push!(pending, SizeNode::Term(left), bound).ok()?;
             work_push!(pending, SizeNode::Code(code), bound).ok()?;
         }
-        SizeNode::Term(Term::Add(left, right) | Term::Sub(left, right) | Term::Mul(left, right)) => {
+        SizeNode::Term(
+            Term::Add(left, right) | Term::Sub(left, right) | Term::Mul(left, right),
+        ) => {
             *size = size.checked_add(1)?;
             work_push!(pending, SizeNode::Term(right), bound).ok()?;
             work_push!(pending, SizeNode::Term(left), bound).ok()?;
@@ -1239,12 +1265,12 @@ enum Rewritten {
 }
 macro_rules! push_rewrite_frame {
     ($stack:ident,$value:expr,$bound:expr,$span:expr) => {
-        work_push!($stack, $value, $bound).map_err(|()| exhausted($span))
+        $stack.push_at($value, $bound, $span)
     };
 }
 macro_rules! push_rewritten {
     ($stack:ident,$value:expr,$bound:expr,$span:expr) => {
-        work_push!($stack, $value, $bound).map_err(|()| exhausted($span))
+        $stack.push_at($value, $bound, $span)
     };
 }
 macro_rules! take_code {
@@ -1524,6 +1550,18 @@ fn variable_rewrite(
     tigerstyle::no_recursion,
     reason = "Owner: noble-contracts; the walk follows a finite, already parsed term and spends one unit of its node budget per visit, so it terminates on every input"
 )]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; `remaining` is the walk's node budget cursor, decremented once per visited AST node"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite"
+)]
+#[expect(
+    tigerstyle::fragile_exhaustive_enum_match,
+    reason = "Owner: noble-contracts; `Term` is private and sealed inside this module, and every match covers all variants"
+)]
 fn rewrite_term(
     term: &Term,
     mode: Rewrite<'_>,
@@ -1762,7 +1800,7 @@ fn parse_tree<'a>(
 // frames are pending.
 macro_rules! schedule_frame {
     ($frames:ident,$bound:ident,$frame:expr,$at:expr) => {
-        work_push!($frames, $frame, $bound).map_err(|()| exhausted($at))?
+        $frames.push_at($frame, $bound, $at)?
     };
 }
 /// Parse one frame: read a form or assemble a value from parsed parts.
@@ -2005,6 +2043,14 @@ fn parse_equality(
     tigerstyle::no_recursion,
     reason = "Owner: noble-contracts; the walk follows the finite parsed logical form and spends one unit of its node budget per visit, so it terminates on every input"
 )]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; `remaining` is the parse walk's node budget cursor, decremented once per visited form"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite"
+)]
 fn parse_term(
     form: &Form,
     context: &WorkStack<Binder>,
@@ -2030,9 +2076,8 @@ fn parse_term(
             }
         }
         FormKind::List(items) => {
-            let head = head_atom(items).ok_or_else(|| {
-                reject(form.span, "expected bounded scalar term")
-            })?;
+            let head = head_atom(items)
+                .ok_or_else(|| reject(form.span, "expected bounded scalar term"))?;
             if items.len() != 3 {
                 return Err(reject(form.span, "expected bounded scalar term"));
             }
@@ -2346,7 +2391,7 @@ fn lean_step<'a>(
 ) -> Result<(), Diagnostic> {
     macro_rules! push {
         ($frame:expr) => {
-            work_push!(pending, $frame, bounds.frames).map_err(|()| exhausted(span))?
+            pending.push_at($frame, bounds.frames, span)?
         };
     }
     macro_rules! append {
@@ -2457,13 +2502,11 @@ fn lean_step<'a>(
             Term::Add(left, right) | Term::Sub(left, right) | Term::Mul(left, right) => {
                 push!(LeanFrame::Text(")"));
                 push!(LeanFrame::Term(right));
-                push!(
-                    LeanFrame::Text(match term {
-                        Term::Add(..) => " + ",
-                        Term::Sub(..) => " - ",
-                        _ => " * ",
-                    })
-                );
+                push!(LeanFrame::Text(match term {
+                    Term::Add(..) => " + ",
+                    Term::Sub(..) => " - ",
+                    _ => " * ",
+                }));
                 push!(LeanFrame::Term(left));
                 push!(LeanFrame::Text("("));
             }
@@ -2996,8 +3039,7 @@ fn infer_step<'a>(
         advance!(
             *meter,
             meter.substitute(
-                proposition_size(dependency_goal, bound)
-                    .ok_or_else(|| exhausted(term.span))?,
+                proposition_size(dependency_goal, bound).ok_or_else(|| exhausted(term.span))?,
                 term.span
             )
         );
@@ -3079,12 +3121,7 @@ fn infer_step<'a>(
                 Box::new(Term::Add(Box::new(b.clone()), Box::new(c.clone()))),
             ),
         );
-        let body = rule_text(
-            "BitVec.add_assoc",
-            &[a, b, c],
-            term.span,
-            meter.tree_bounds,
-        )?;
+        let body = rule_text("BitVec.add_assoc", &scalars, term.span, meter.tree_bounds)?;
         *completed = Some(ProofValue::Inferred(proposition, body));
         return Ok(());
     }
@@ -3096,7 +3133,7 @@ fn infer_step<'a>(
             Term::Add(Box::new(a.clone()), Box::new(b.clone())),
             Term::Add(Box::new(b.clone()), Box::new(a.clone())),
         );
-        let body = rule_text("BitVec.add_comm", &[a, b], term.span, meter.tree_bounds)?;
+        let body = rule_text("BitVec.add_comm", &scalars, term.span, meter.tree_bounds)?;
         *completed = Some(ProofValue::Inferred(proposition, body));
         return Ok(());
     }
@@ -3114,7 +3151,7 @@ fn infer_step<'a>(
                 Box::new(Term::Mul(Box::new(a.clone()), Box::new(c.clone()))),
             ),
         );
-        let body = rule_text("BitVec.mul_add", &[a, b, c], term.span, meter.tree_bounds)?;
+        let body = rule_text("BitVec.mul_add", &scalars, term.span, meter.tree_bounds)?;
         *completed = Some(ProofValue::Inferred(proposition, body));
         return Ok(());
     }
@@ -3138,16 +3175,18 @@ fn scalar_arguments(
 /// arithmetic rule.
 fn rule_text(
     declaration: &str,
-    arguments: &[&Term],
+    arguments: &[Term],
     span: Span,
     bounds: TreeBounds,
 ) -> Result<String, Diagnostic> {
     let mut text = String::from("(");
     text.push_str(declaration);
-    for argument in arguments {
-        let rendered = lean_text(LeanFrame::Term(argument), span, bounds)?;
+    let mut index = 0;
+    while index < arguments.len() {
+        let rendered = lean_text(LeanFrame::Term(&arguments[index]), span, bounds)?;
         text.push(' ');
         text.push_str(&rendered);
+        index += 1;
     }
     text.push(')');
     Ok(text)
@@ -3368,12 +3407,14 @@ fn subst_equation_step<'a>(
         depth,
     } = equation;
     let (equation, equality_lean) = take_inferred!(completed, evidence.span)?;
+    #[expect(
+        tigerstyle::fragile_exhaustive_enum_match,
+        reason = "Owner: noble-contracts; `Proposition` is private to this module and all variants are handled explicitly here"
+    )]
     let (equation_code, before_argument, after_argument) = match equation {
-        Proposition::Eq(equation_code, left, right) => (
-            equation_code,
-            Argument::Value(left),
-            Argument::Value(right),
-        ),
+        Proposition::Eq(equation_code, left, right) => {
+            (equation_code, Argument::Value(left), Argument::Value(right))
+        }
         Proposition::EqTerm(equation_code, left, right) => {
             (equation_code, Argument::Term(left), Argument::Term(right))
         }
@@ -3458,8 +3499,57 @@ fn subst_equation_step<'a>(
 /// Resume a frame waiting on its completed child: finish an `apply`, compare
 /// an inferred proposition with its goal, or wrap a checked `subst` premise.
 #[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the meter records normalization work charged to this application argument"
+)]
+fn apply_value_argument(
+    argument: &Form,
+    expected: Code,
+    context: &WorkStack<Binder>,
+    bound: usize,
+    meter: &mut Meter<'_>,
+) -> Result<(Argument, String), Diagnostic> {
+    if let FormKind::Atom(name) = &argument.kind {
+        if let Some((value, sort)) = stack_binder(context, name) {
+            advance!(
+                *meter,
+                meter.normalize(
+                    code_size(&expected, bound).ok_or_else(|| exhausted(argument.span))?,
+                    argument.span
+                )
+            );
+            if sort != &Sort::Value(expected) {
+                return Err(reject(argument.span, "apply value has wrong code"));
+            }
+            return Ok((Argument::Value(value), variable(value)));
+        }
+        if expected != Code::I64 || name.parse::<i64>().is_err() {
+            return Err(reject(argument.span, "apply value is unbound"));
+        }
+    }
+    if expected != Code::I64 {
+        return Err(reject(argument.span, "apply value has wrong code"));
+    }
+    let local = WorkStack::new();
+    let mut remaining = bound;
+    let scalar = parse_term(argument, context, &local, 0, &mut remaining)?;
+    advance!(
+        *meter,
+        meter.normalize(
+            term_size(&scalar, bound).ok_or_else(|| exhausted(argument.span))?,
+            argument.span
+        )
+    );
+    let expression = lean_text(LeanFrame::Term(&scalar), argument.span, meter.tree_bounds)?;
+    Ok((Argument::Term(scalar), expression))
+}
+#[expect(
     tigerstyle::fragile_exhaustive_enum_match,
-    reason = "Owner: noble-contracts; the matched enum is deliberately sealed, so every exhaustive match over it is reviewed when a variant is added"
+    reason = "Owner: noble-contracts; the matched enums are deliberately sealed, so every exhaustive match over them is reviewed when a variant is added"
 )]
 #[expect(
     tigerstyle::function_length,
@@ -3467,7 +3557,7 @@ fn subst_equation_step<'a>(
 )]
 #[expect(
     tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite"
 )]
 #[expect(
     tigerstyle::mutating_input_in_pure,
@@ -3555,58 +3645,9 @@ fn continuation_step<'a>(
                     );
                 }
                 Sort::Value(expected) => {
-                    if let FormKind::Atom(name) = &argument.kind {
-                        if let Some((value, sort)) = stack_binder(context, name) {
-                            advance!(
-                                *meter,
-                                meter.normalize(
-                                    code_size(&expected, bound)
-                                        .ok_or_else(|| exhausted(argument.span))?,
-                                    argument.span
-                                )
-                            );
-                            if sort != &Sort::Value(expected) {
-                                return Err(reject(argument.span, "apply value has wrong code"));
-                            }
-                            finish_apply!(
-                                term,
-                                depth,
-                                body,
-                                index,
-                                Argument::Value(value),
-                                lowered,
-                                variable(value)
-                            );
-                            return Ok(());
-                        }
-                        if expected != Code::I64 || name.parse::<i64>().is_err() {
-                            return Err(reject(argument.span, "apply value is unbound"));
-                        }
-                    }
-                    if expected != Code::I64 {
-                        return Err(reject(argument.span, "apply value has wrong code"));
-                    }
-                    let local = WorkStack::new();
-                    let mut remaining = bound;
-                    let scalar = parse_term(argument, context, &local, 0, &mut remaining)?;
-                    advance!(
-                        *meter,
-                        meter.normalize(
-                            term_size(&scalar, bound).ok_or_else(|| exhausted(argument.span))?,
-                            argument.span
-                        )
-                    );
-                    let expression =
-                        lean_text(LeanFrame::Term(&scalar), argument.span, meter.tree_bounds)?;
-                    finish_apply!(
-                        term,
-                        depth,
-                        body,
-                        index,
-                        Argument::Term(scalar),
-                        lowered,
-                        expression
-                    );
+                    let (value, expression) =
+                        apply_value_argument(argument, expected, context, bound, meter)?;
+                    finish_apply!(term, depth, body, index, value, lowered, expression);
                 }
                 Sort::Premise(expected) => {
                     let child_depth = deeper(depth, argument.span)?;
@@ -3705,6 +3746,18 @@ fn continuation_step<'a>(
     }
     Ok(())
 }
+const fn has_revision_three_obligation(obligations: &[ProofObligation]) -> bool {
+    let mut has_contracts = false;
+    let mut ob_i = 0;
+    while !has_contracts && ob_i < obligations.len() {
+        if obligations[ob_i].revision == 3 {
+            has_contracts = true;
+        }
+        ob_i += 1;
+    }
+    has_contracts
+}
+
 /// Checks only the closed predicative fragment; contract proofs have a separate
 /// finite reviewed MC1 rule checker below. An unchecked term is never lowered.
 pub fn check_batch(batch: &ProofBatch, limits: Limits) -> Result<Vec<CheckedProof>, Diagnostic> {
@@ -3756,17 +3809,14 @@ pub fn check_batch_with_budgets(
     // Contract proofs become importable dependencies only for a batch that
     // carries a revision-3 obligation; every other batch keeps the published
     // refusal of a contract in the pure fragment.
-    let allow_contracts = batch
-        .obligations
-        .iter()
-        .any(|obligation| obligation.revision == 3);
+    let has_contracts = has_revision_three_obligation(&batch.obligations);
     let mut index = 0;
     let mut dependencies = Ok(());
     while dependencies.is_ok() && index < batch.dependencies.len() {
         dependencies = admit_dependency(
             &batch.dependencies[index],
             &mut admitted,
-            allow_contracts,
+            has_contracts,
             &mut meter,
         );
         index += 1;
@@ -3818,7 +3868,10 @@ fn admit_dependency(
             "private proof cannot be imported",
         ));
     }
-    let checked = advance!(*meter, check_dependency(dependency, allow_contracts, *meter));
+    let checked = advance!(
+        *meter,
+        check_dependency(dependency, allow_contracts, *meter)
+    );
     if admitted.available.len() >= admitted.available_bound {
         return Err(exhausted(dependency.declaration.span));
     }
@@ -5198,6 +5251,102 @@ fn replace_all(text: &str, marker: &str, value: &str) -> String {
     replaced
 }
 
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; marks one visited node index in caller's preallocated bitset"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid node ids and duplicates return typed Diagnostic"
+)]
+fn check_flat_node_step(
+    nodes: &[noble_kernel::untrusted::Node],
+    id: noble_kernel::untrusted::NodeId,
+    seen: &mut [bool],
+    span: Span,
+) -> Result<(), Diagnostic> {
+    let Ok(index) = usize::try_from(id.0) else {
+        return Err(reject(span, "revision-3 subject has an invalid node"));
+    };
+    let Some(slot) = seen.get_mut(index) else {
+        return Err(reject(
+            span,
+            "revision-3 subject node lies outside the flat recipe",
+        ));
+    };
+    if *slot {
+        return Err(reject(
+            span,
+            "revision-3 subject repeats or omits a node occurrence",
+        ));
+    }
+    *slot = true;
+    if matches!(
+        nodes[index],
+        noble_kernel::untrusted::Node::Quotation { .. }
+            | noble_kernel::untrusted::Node::SignedSelf { .. }
+            | noble_kernel::untrusted::Node::SlotInvoke { .. }
+    ) {
+        return Err(unsupported(
+            span,
+            "revision-3 subject node is outside the pure profile",
+        ));
+    }
+    Ok(())
+}
+
+/// Verify the header and unique pure node coverage of a flat candidate body.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear check are enforced by its callers and the revision-3 contract suite"
+)]
+fn check_flat_nodes(
+    body: &noble_kernel::execution::Body,
+    request: &noble_kernel::untrusted::Request,
+    span: Span,
+    max_nodes: usize,
+) -> Result<usize, Diagnostic> {
+    let count = body.candidate.nodes.len();
+    if !body.texts.is_empty() || count != body.candidate.body.len() || count == 0 {
+        return Err(reject(
+            span,
+            "revision-3 subject has orphan nodes, text or a wrong recipe revision",
+        ));
+    }
+    if count > max_nodes || u32::try_from(count).map_or(true, |nodes| nodes > request.limits.nodes)
+    {
+        return Err(reject(
+            span,
+            "revision-3 subject has orphan nodes, text or a wrong recipe revision",
+        ));
+    }
+    if body.candidate.format != noble_kernel::untrusted::CANDIDATE_FORMAT
+        || body.candidate.revision != noble_kernel::untrusted::SEMANTIC_REVISION
+    {
+        return Err(reject(
+            span,
+            "revision-3 subject has orphan nodes, text or a wrong recipe revision",
+        ));
+    }
+    let mut seen = alloc::vec![false; count];
+    let mut position = 0;
+    let mut outcome = Ok(());
+    while position < body.candidate.body.len() {
+        outcome = check_flat_node_step(
+            &body.candidate.nodes,
+            body.candidate.body[position],
+            &mut seen,
+            span,
+        );
+        if outcome.is_err() {
+            break;
+        }
+        position += 1;
+    }
+    outcome?;
+    Ok(count)
+}
+
 /// Re-accept one flat, pure revision-3 candidate body: every listed node is
 /// visited exactly once, the recipe carries no text or quotation, and the
 /// independent kernel acceptance agrees with the body's derivations and with
@@ -5213,52 +5362,7 @@ pub(crate) fn checked_flat(
     span: Span,
     max_nodes: usize,
 ) -> Result<noble_kernel::untrusted::Checked, Diagnostic> {
-    let count = body.candidate.nodes.len();
-    if !body.texts.is_empty()
-        || count != body.candidate.body.len()
-        || count == 0
-        || count > max_nodes
-        || u32::try_from(count).map_or(true, |nodes| nodes > request.limits.nodes)
-        || body.candidate.format != noble_kernel::untrusted::CANDIDATE_FORMAT
-        || body.candidate.revision != noble_kernel::untrusted::SEMANTIC_REVISION
-    {
-        return Err(reject(
-            span,
-            "revision-3 subject has orphan nodes, text or a wrong recipe revision",
-        ));
-    }
-    let mut seen = alloc::vec![false; count];
-    let mut position = 0;
-    while position < body.candidate.body.len() {
-        let id = body.candidate.body[position];
-        let index = usize::try_from(id.0)
-            .map_err(|_| reject(span, "revision-3 subject has an invalid node"))?;
-        let Some(slot) = seen.get_mut(index) else {
-            return Err(reject(
-                span,
-                "revision-3 subject node lies outside the flat recipe",
-            ));
-        };
-        if *slot {
-            return Err(reject(
-                span,
-                "revision-3 subject repeats or omits a node occurrence",
-            ));
-        }
-        *slot = true;
-        if matches!(
-            body.candidate.nodes[index],
-            noble_kernel::untrusted::Node::Quotation { .. }
-                | noble_kernel::untrusted::Node::SignedSelf { .. }
-                | noble_kernel::untrusted::Node::SlotInvoke { .. }
-        ) {
-            return Err(unsupported(
-                span,
-                "revision-3 subject node is outside the pure profile",
-            ));
-        }
-        position += 1;
-    }
+    let count = check_flat_nodes(body, request, span, max_nodes)?;
     let noble_kernel::untrusted::Outcome::Accepted(result) =
         noble_kernel::acceptance::check(environment, request, &body.candidate)
     else {
@@ -5267,9 +5371,13 @@ pub(crate) fn checked_flat(
             "revision-3 subject is not independently kernel accepted",
         ));
     };
-    if result.derivations.len() != count
-        || result.interface.stack_in != request.expected.stack_in
-        || result.interface.stack_out != request.expected.stack_out
+    if result.derivations.len() != count || result.interface.stack_in != request.expected.stack_in {
+        return Err(reject(
+            span,
+            "revision-3 subject derivations differ from its complete accepted body",
+        ));
+    }
+    if result.interface.stack_out != request.expected.stack_out
         || result.interface.effects != request.expected.allowed_effects
     {
         return Err(reject(
@@ -5278,13 +5386,17 @@ pub(crate) fn checked_flat(
         ));
     }
     let mut position = 0;
-    let mut derivations_differ = false;
-    while !derivations_differ && position < result.derivations.len() && position < body.candidate.body.len()
+    let mut has_differing_derivations = false;
+    while !has_differing_derivations
+        && position < result.derivations.len()
+        && position < body.candidate.body.len()
     {
-        derivations_differ = result.derivations[position].node != body.candidate.body[position];
+        if result.derivations[position].node != body.candidate.body[position] {
+            has_differing_derivations = true;
+        }
         position += 1;
     }
-    if derivations_differ {
+    if has_differing_derivations {
         return Err(reject(
             span,
             "revision-3 subject derivations differ from its ordered body",
@@ -5298,6 +5410,17 @@ mod form_impl_tests {
     //! The hand-written `Form`/`FormKind` and `ProofDependency` impls must agree
     //! exactly with the derived impls they replace; `mirror` keeps those derives
     //! for comparison.
+    impl core::fmt::Debug for super::Term {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            match self {
+                Self::Variable(i) => f.debug_tuple("Variable").field(i).finish(),
+                Self::I64(n) => f.debug_tuple("I64").field(n).finish(),
+                Self::Add(a, b) => f.debug_tuple("Add").field(a).field(b).finish(),
+                Self::Sub(a, b) => f.debug_tuple("Sub").field(a).field(b).finish(),
+                Self::Mul(a, b) => f.debug_tuple("Mul").field(a).field(b).finish(),
+            }
+        }
+    }
     #[expect(
         tigerstyle::non_trait_imports,
         reason = "Owner: noble-contracts; the module imports these domain types directly, and the qualified form at every use site would add noise without changing the dependency"

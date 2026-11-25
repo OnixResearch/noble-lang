@@ -1,0 +1,26 @@
+module exact_mag_sub@1 [
+    signature mag_sub_borrow forall<S:stack> [ S I64 List<I64> List<I64> -- S List<I64> ! pure ]
+    export mag_sub_borrow
+    def mag_sub_borrow [
+        swap
+        [ drop drop nil ]
+        [
+            [ swap ] dip swap
+            [
+                [ swap - dup 0 < [ 1000000000 + 1 swap ] [ 0 swap ] if ] dip
+                swap [ nil mag_sub_borrow ] dip swap cons
+            ]
+            [
+                [ swap ] dip
+                [ [ - swap - dup 0 < [ 1000000000 + 1 swap ] [ 0 swap ] if ] dip ] dip
+                [ swap ] dip swap [ mag_sub_borrow ] dip swap cons
+            ]
+            list.case
+        ]
+        list.case
+    ]
+
+    signature mag_sub forall<S:stack> [ S List<I64> List<I64> -- S List<I64> ! pure ]
+    export mag_sub
+    def mag_sub [ [ 0 swap ] dip mag_sub_borrow exact_mag_core@1.mag_norm ]
+]

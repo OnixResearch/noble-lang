@@ -31,8 +31,10 @@ The refusal comes after the composing root ran. It is `execution-failed` with th
 the session ends with `terminated-after-guest-failure`, as every failed root does in this profile.
 The lane checks this for the left-deep chain. So OWN-CASE-03's left- and right-deep 8-leaf trees
 cannot run on this runtime as designed; the balanced tree is the one that fits. Whether a failed
-root should end the session is the poison-or-continue decision that
-`.cairn/changes/live-reference-lifetimes` leaves open.
+root should end the session was then the poison-or-continue decision that
+live-reference-lifetimes left open; LREF-EXIT-01 (owner decision 6; archived as
+`.cairn/archive/2026-11-23-live-reference-lifetimes`) now continues the session when the pin
+ledger proves an exact release, as the current OWN gate (`verification/own-cases`) observes.
 
 ## Evidence
 

@@ -1,12 +1,10 @@
 //! The opt-in revision-3 reusable named-call profile: exact envelope
 //! reconstruction, a deterministic symbolic checker over the bounded
-//! `I64`/`Bool` vocabulary, a bounded scalar-term equality, and isolated
-//! dependency replay. Revisions 1 and 2 keep their own modules and meanings.
-//!
-//! A call never reads a callee body as a proof: it consumes the callee's
-//! accepted contract claim, the caller supplies an explicit bridge and a final
-//! join, and every distinct closure member is replayed by the same bounded
-//! checkers before the caller is accepted.
+//! `I64`/`Bool` vocabulary, a bounded scalar-term equality, isolated
+//! dependency replay, and closed `NamedV3Lifted` Lean lowering.
+//! Revisions 1 and 2 keep their own modules and meanings.
+
+mod lower;
 
 #[expect(
     tigerstyle::non_trait_imports,
@@ -14,8 +12,8 @@
 )]
 use super::{
     atom, head_atom, list, operation, reject, unsupported, CheckedProof, ContractGoal, Form,
-    FormKind, Meter, NamedUseOrigin, PendingGoal, ProofBudgets, ProofDependency, ProofKind,
-    ProofObligation, TreeBounds, Transition, MeterConfig,
+    FormKind, Meter, MeterConfig, NamedUseOrigin, PendingGoal, ProofBudgets, ProofDependency,
+    ProofKind, ProofObligation, Transition, TreeBounds,
 };
 #[expect(
     tigerstyle::non_trait_imports,
@@ -77,38 +75,57 @@ fn budget(span: Span) -> Diagnostic {
     )
 }
 
-/// A Decision 6 diagnostic: a code, then a bounded detail that never claims
-/// the target proposition is false.
-fn refined(span: Span, code: &str, detail: &str) -> Diagnostic {
-    let mut message = String::from(code);
+/// A Decision 6 diagnostic: a reason code followed by bounded detail text that
+/// never claims the target proposition is false.
+struct Reason<'a> {
+    code: &'a str,
+    detail: &'a str,
+}
+
+fn refined(span: Span, reason: Reason<'_>) -> Diagnostic {
+    let mut message = String::from(reason.code);
     message.push_str(": ");
-    message.push_str(detail);
+    message.push_str(reason.detail);
     Diagnostic::new(DiagnosticKind::Invalid, span, &message)
 }
 
 /// One Type0 sort the profile admits.
 #[derive(Clone, Copy, PartialEq, Eq)]
+#[octet::sealed_enum]
 enum Sort3 {
     I64,
     Bool,
 }
 
 impl Sort3 {
-    fn from_word(word: &str) -> Option<Self> {
-        if word == "I64" {
+    const fn from_word(word: &str) -> Option<Self> {
+        if str_eq(word, "I64") {
             Some(Self::I64)
-        } else if word == "Bool" {
+        } else if str_eq(word, "Bool") {
             Some(Self::Bool)
         } else {
             None
         }
     }
 
-    fn from_ty(ty: &noble_kernel::types::Ty) -> Option<Self> {
+    const fn from_ty(ty: &noble_kernel::types::Ty) -> Option<Self> {
         match ty {
             noble_kernel::types::Ty::I64 => Some(Self::I64),
             noble_kernel::types::Ty::Bool => Some(Self::Bool),
-            _ => None,
+            noble_kernel::types::Ty::Unit
+            | noble_kernel::types::Ty::Text
+            | noble_kernel::types::Ty::Syntax
+            | noble_kernel::types::Ty::Contract
+            | noble_kernel::types::Ty::Evidence
+            | noble_kernel::types::Ty::Certified
+            | noble_kernel::types::Ty::Pair(..)
+            | noble_kernel::types::Ty::Sum(..)
+            | noble_kernel::types::Ty::List(..)
+            | noble_kernel::types::Ty::Program(..)
+            | noble_kernel::types::Ty::LiveRef(..)
+            | noble_kernel::types::Ty::Resource(..)
+            | noble_kernel::types::Ty::Nominal(..)
+            | noble_kernel::types::Ty::GenericNominal(..) => None,
         }
     }
 
@@ -124,6 +141,7 @@ impl Sort3 {
 /// `Bound` one explicit lemma or motive binder, and `Ghost` the fresh value of
 /// one call occurrence's output that no postcondition equation determined.
 #[derive(Clone, PartialEq, Eq)]
+#[octet::sealed_enum]
 enum Term3 {
     Input(usize),
     Output(usize),
@@ -139,6 +157,7 @@ enum Term3 {
 
 /// One proposition of the revision-3 assertion vocabulary.
 #[derive(Clone, PartialEq, Eq)]
+#[octet::sealed_enum]
 enum Prop3 {
     True,
     False,
@@ -152,6 +171,7 @@ enum Prop3 {
 /// A lemma's statement: explicit `I64`/`Bool` binders ending in one
 /// proposition. Only lemma proofs carry a Pi; assertions never do.
 #[derive(Clone)]
+#[octet::sealed_enum]
 enum Statement3 {
     Prop(Prop3),
     Pi {
@@ -161,13 +181,37 @@ enum Statement3 {
     },
 }
 
-/// The name-resolution scope of one assertion or lemma statement.
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; constant byte-wise equality check for Aeneas extraction"
+)]
+const fn str_eq(text: &str, expected: &str) -> bool {
+    let a = text.as_bytes();
+    let b = expected.as_bytes();
+    if a.len() != b.len() {
+        return false;
+    }
+    let mut is_same = true;
+    let mut i = 0usize;
+    while is_same && i < a.len() {
+        if a[i] != b[i] {
+            is_same = false;
+        }
+        i += 1;
+    }
+    is_same
+}
+
+/// The name-resolution scope of one assertion, motive, or lemma statement.
+#[derive(Clone, Copy)]
 struct Scope<'a> {
     inputs: &'a [(String, Sort3)],
     outputs: &'a [(String, Sort3)],
     bound: &'a [(String, Sort3)],
     /// Lemma statements may not mention a program interface.
     interface: bool,
+    /// Lemma statements and `subst` motives accept `(Eq Sort left right)` as well as `(eq left right)`.
+    allow_typed_eq: bool,
 }
 
 impl Scope<'_> {
@@ -176,396 +220,813 @@ impl Scope<'_> {
     }
 }
 
-fn make_scope<'a>(
+#[octet::sealed_enum]
+#[derive(Clone, Copy)]
+enum ScopeMode {
+    Assertion,
+    Motive,
+    Lemma,
+}
+
+const fn make_scope<'a>(
     inputs: &'a [(String, Sort3)],
     outputs: &'a [(String, Sort3)],
     bound: &'a [(String, Sort3)],
-    interface: bool,
+    mode: ScopeMode,
 ) -> Scope<'a> {
+    let (interface, allow_typed_eq) = match mode {
+        ScopeMode::Assertion => (true, false),
+        ScopeMode::Motive => (true, true),
+        ScopeMode::Lemma => (false, true),
+    };
     Scope {
         inputs,
         outputs,
         bound,
         interface,
+        allow_typed_eq,
     }
 }
 
-/// The sort of a term under one scope.
+#[octet::sealed_enum]
+enum SortStep {
+    Visit(Term3),
+    CombineArith,
+    CombineEq,
+}
+
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; pushes work items and resolved sorts onto caller stacks"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; updates iterative sort work and value stacks"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; Vec::push/pop are not const"
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; bounded iterative sort check keeps scope slices and work/value stacks explicit"
+)]
+fn sort_step(
+    step: SortStep,
+    inputs: &[(String, Sort3)],
+    outputs: &[(String, Sort3)],
+    bound: &[(String, Sort3)],
+    work: &mut Vec<SortStep>,
+    values: &mut Vec<Sort3>,
+) -> bool {
+    match step {
+        SortStep::Visit(node) => match node {
+            Term3::Input(index) => match inputs.get(index) {
+                Some((_, code)) => {
+                    values.push(*code);
+                    true
+                }
+                None => false,
+            },
+            Term3::Output(index) => match outputs.get(index) {
+                Some((_, code)) => {
+                    values.push(*code);
+                    true
+                }
+                None => false,
+            },
+            Term3::Bound(index) => match bound.get(index) {
+                Some((_, code)) => {
+                    values.push(*code);
+                    true
+                }
+                None => false,
+            },
+            Term3::Ghost(_, _, code) => {
+                values.push(code);
+                true
+            }
+            Term3::I64(_) => {
+                values.push(Sort3::I64);
+                true
+            }
+            Term3::Bool(_) => {
+                values.push(Sort3::Bool);
+                true
+            }
+            Term3::Add(left, right) | Term3::Sub(left, right) | Term3::Mul(left, right) => {
+                work.push(SortStep::CombineArith);
+                work.push(SortStep::Visit(*right));
+                work.push(SortStep::Visit(*left));
+                true
+            }
+            Term3::Equals(left, right) => {
+                work.push(SortStep::CombineEq);
+                work.push(SortStep::Visit(*right));
+                work.push(SortStep::Visit(*left));
+                true
+            }
+        },
+        SortStep::CombineArith => match (values.pop(), values.pop()) {
+            (Some(Sort3::I64), Some(Sort3::I64)) => {
+                values.push(Sort3::I64);
+                true
+            }
+            _ => false,
+        },
+        SortStep::CombineEq => match (values.pop(), values.pop()) {
+            (Some(right), Some(left)) if left == right => {
+                values.push(Sort3::Bool);
+                true
+            }
+            _ => false,
+        },
+    }
+}
+
+/// The sort of a term under one scope, checked iteratively without recursion.
 fn sort_of(
     term: &Term3,
     inputs: &[(String, Sort3)],
     outputs: &[(String, Sort3)],
     bound: &[(String, Sort3)],
 ) -> Option<Sort3> {
-    match term {
-        Term3::Input(index) => inputs.get(*index).map(|(_, code)| *code),
-        Term3::Output(index) => outputs.get(*index).map(|(_, code)| *code),
-        Term3::Bound(index) => bound.get(*index).map(|(_, code)| *code),
-        Term3::Ghost(_, _, code) => Some(*code),
-        Term3::I64(_) => Some(Sort3::I64),
-        Term3::Bool(_) => Some(Sort3::Bool),
-        Term3::Add(left, right) | Term3::Sub(left, right) | Term3::Mul(left, right) => {
-            if sort_of(left, inputs, outputs, bound) == Some(Sort3::I64)
-                && sort_of(right, inputs, outputs, bound) == Some(Sort3::I64)
-            {
-                Some(Sort3::I64)
-            } else {
-                None
-            }
-        }
-        Term3::Equals(left, right) => {
-            let left = sort_of(left, inputs, outputs, bound);
-            let right = sort_of(right, inputs, outputs, bound);
-            if left.is_some() && left == right {
-                Some(Sort3::Bool)
-            } else {
-                None
-            }
-        }
+    let mut work = Vec::new();
+    work.push(SortStep::Visit(term.clone()));
+    let mut values: Vec<Sort3> = Vec::new();
+    let mut is_ok = true;
+    while is_ok {
+        let Some(step) = work.pop() else {
+            break;
+        };
+        is_ok = sort_step(step, inputs, outputs, bound, &mut work, &mut values);
+    }
+    if is_ok && values.len() == 1 {
+        values.pop()
+    } else {
+        None
     }
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; bounded iterative tree predicate"
+)]
 fn mentions_output(term: &Term3) -> bool {
-    match term {
-        Term3::Output(_) => true,
-        Term3::Add(left, right)
-        | Term3::Sub(left, right)
-        | Term3::Mul(left, right)
-        | Term3::Equals(left, right) => mentions_output(left) || mentions_output(right),
-        Term3::Input(_) | Term3::Bound(_) | Term3::Ghost(..) | Term3::I64(_) | Term3::Bool(_) => {
-            false
+    let mut pending = Vec::from([term]);
+    while let Some(node) = pending.pop() {
+        match node {
+            Term3::Output(_) => return true,
+            Term3::Add(left, right)
+            | Term3::Sub(left, right)
+            | Term3::Mul(left, right)
+            | Term3::Equals(left, right) => {
+                pending.push(right);
+                pending.push(left);
+            }
+            Term3::Input(_)
+            | Term3::Bound(_)
+            | Term3::Ghost(..)
+            | Term3::I64(_)
+            | Term3::Bool(_) => {}
         }
     }
+    false
 }
 
 fn prop_mentions_output(prop: &Prop3) -> bool {
-    match prop {
-        Prop3::True | Prop3::False => false,
-        Prop3::Not(body) => prop_mentions_output(body),
-        Prop3::And(left, right) => prop_mentions_output(left) || prop_mentions_output(right),
-        Prop3::Eq(left, right) | Prop3::Lt(left, right) | Prop3::Le(left, right) => {
-            mentions_output(left) || mentions_output(right)
+    let mut pending = Vec::from([prop]);
+    while let Some(node) = pending.pop() {
+        match node {
+            Prop3::True | Prop3::False => {}
+            Prop3::Not(body) => pending.push(body),
+            Prop3::And(left, right) => {
+                pending.push(right);
+                pending.push(left);
+            }
+            Prop3::Eq(left, right) | Prop3::Lt(left, right) | Prop3::Le(left, right) => {
+                if mentions_output(left) || mentions_output(right) {
+                    return true;
+                }
+            }
+        }
+    }
+    false
+}
+
+#[derive(Clone, Copy)]
+#[octet::sealed_enum]
+enum BinTermOp {
+    Add,
+    Sub,
+    Mul,
+    Equals,
+}
+
+#[octet::sealed_enum]
+enum NormTermStep {
+    Visit(Term3),
+    Combine(BinTermOp),
+}
+
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; updates caller workstack and output vector in place"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; advances bounded normalization workstack and output stack"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; Vec::push/pop are not const"
+)]
+fn norm_term_step(step: NormTermStep, work: &mut Vec<NormTermStep>, out: &mut Vec<Term3>) {
+    match step {
+        NormTermStep::Visit(node) => match node {
+            Term3::Add(left, right) => {
+                work.push(NormTermStep::Combine(BinTermOp::Add));
+                work.push(NormTermStep::Visit(*right));
+                work.push(NormTermStep::Visit(*left));
+            }
+            Term3::Sub(left, right) => {
+                work.push(NormTermStep::Combine(BinTermOp::Sub));
+                work.push(NormTermStep::Visit(*right));
+                work.push(NormTermStep::Visit(*left));
+            }
+            Term3::Mul(left, right) => {
+                work.push(NormTermStep::Combine(BinTermOp::Mul));
+                work.push(NormTermStep::Visit(*right));
+                work.push(NormTermStep::Visit(*left));
+            }
+            Term3::Equals(left, right) => {
+                work.push(NormTermStep::Combine(BinTermOp::Equals));
+                work.push(NormTermStep::Visit(*right));
+                work.push(NormTermStep::Visit(*left));
+            }
+            Term3::Input(_)
+            | Term3::Output(_)
+            | Term3::Bound(_)
+            | Term3::Ghost(..)
+            | Term3::I64(_)
+            | Term3::Bool(_) => out.push(node),
+        },
+        NormTermStep::Combine(op) => {
+            if let (Some(right), Some(left)) = (out.pop(), out.pop()) {
+                out.push(fold_binary_term(op, left, right));
+            }
         }
     }
 }
 
-/// Fold closed literal arithmetic and simplify the two-valued connectives.
-/// Nothing is reordered: the fold decides only on literal children, which is
-/// Decision 3's bounded closed-literal computation.
+/// Fold closed literal arithmetic iteratively.
 fn normalize_term(term: &Term3) -> Term3 {
-    match term {
-        Term3::Add(left, right) => {
-            let left = normalize_term(left);
-            let right = normalize_term(right);
-            match (&left, &right) {
-                (Term3::I64(a), Term3::I64(b)) => Term3::I64(a.wrapping_add(*b)),
-                _ => Term3::Add(Box::new(left), Box::new(right)),
+    let mut work = Vec::new();
+    work.push(NormTermStep::Visit(term.clone()));
+    let mut out: Vec<Term3> = Vec::new();
+    while let Some(step) = work.pop() {
+        norm_term_step(step, &mut work, &mut out);
+    }
+    out.pop().unwrap_or(Term3::Bool(false))
+}
+
+fn fold_binary_term(op: BinTermOp, left: Term3, right: Term3) -> Term3 {
+    match op {
+        BinTermOp::Add => match (&left, &right) {
+            (Term3::I64(a), Term3::I64(b)) => Term3::I64(a.wrapping_add(*b)),
+            _ => Term3::Add(Box::new(left), Box::new(right)),
+        },
+        BinTermOp::Sub => match (&left, &right) {
+            (Term3::I64(a), Term3::I64(b)) => Term3::I64(a.wrapping_sub(*b)),
+            _ => Term3::Sub(Box::new(left), Box::new(right)),
+        },
+        BinTermOp::Mul => match (&left, &right) {
+            (Term3::I64(a), Term3::I64(b)) => Term3::I64(a.wrapping_mul(*b)),
+            _ => Term3::Mul(Box::new(left), Box::new(right)),
+        },
+        BinTermOp::Equals => match (&left, &right) {
+            (Term3::I64(a), Term3::I64(b)) => Term3::Bool(a == b),
+            (Term3::Bool(a), Term3::Bool(b)) => Term3::Bool(a == b),
+            _ => Term3::Equals(Box::new(left), Box::new(right)),
+        },
+    }
+}
+
+#[octet::sealed_enum]
+enum NormPropStep {
+    Visit(Prop3),
+    CombineNot,
+    CombineAnd,
+}
+
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; updates caller workstack and output vector in place"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; advances bounded proposition normalization workstack"
+)]
+fn norm_prop_step(step: NormPropStep, work: &mut Vec<NormPropStep>, out: &mut Vec<Prop3>) {
+    match step {
+        NormPropStep::Visit(node) => match node {
+            Prop3::True | Prop3::False => out.push(node),
+            Prop3::Not(body) => {
+                work.push(NormPropStep::CombineNot);
+                work.push(NormPropStep::Visit(*body));
+            }
+            Prop3::And(left, right) => {
+                work.push(NormPropStep::CombineAnd);
+                work.push(NormPropStep::Visit(*right));
+                work.push(NormPropStep::Visit(*left));
+            }
+            Prop3::Eq(left, right) => {
+                out.push(fold_eq_prop(normalize_term(&left), normalize_term(&right)));
+            }
+            Prop3::Lt(left, right) => {
+                out.push(fold_order_prop(
+                    normalize_term(&left),
+                    normalize_term(&right),
+                    true,
+                ));
+            }
+            Prop3::Le(left, right) => {
+                out.push(fold_order_prop(
+                    normalize_term(&left),
+                    normalize_term(&right),
+                    false,
+                ));
+            }
+        },
+        NormPropStep::CombineNot => {
+            if let Some(body) = out.pop() {
+                out.push(match body {
+                    Prop3::True => Prop3::False,
+                    Prop3::False => Prop3::True,
+                    Prop3::Not(inner) => *inner,
+                    other => Prop3::Not(Box::new(other)),
+                });
             }
         }
-        Term3::Sub(left, right) => {
-            let left = normalize_term(left);
-            let right = normalize_term(right);
-            match (&left, &right) {
-                (Term3::I64(a), Term3::I64(b)) => Term3::I64(a.wrapping_sub(*b)),
-                _ => Term3::Sub(Box::new(left), Box::new(right)),
+        NormPropStep::CombineAnd => {
+            if let (Some(right), Some(left)) = (out.pop(), out.pop()) {
+                out.push(match (&left, &right) {
+                    (Prop3::False, _) | (_, Prop3::False) => Prop3::False,
+                    (Prop3::True, _) => right,
+                    (_, Prop3::True) => left,
+                    _ => Prop3::And(Box::new(left), Box::new(right)),
+                });
             }
         }
-        Term3::Mul(left, right) => {
-            let left = normalize_term(left);
-            let right = normalize_term(right);
-            match (&left, &right) {
-                (Term3::I64(a), Term3::I64(b)) => Term3::I64(a.wrapping_mul(*b)),
-                _ => Term3::Mul(Box::new(left), Box::new(right)),
-            }
-        }
-        Term3::Equals(left, right) => {
-            let left = normalize_term(left);
-            let right = normalize_term(right);
-            match (&left, &right) {
-                (Term3::I64(a), Term3::I64(b)) => Term3::Bool(a == b),
-                (Term3::Bool(a), Term3::Bool(b)) => Term3::Bool(a == b),
-                _ => Term3::Equals(Box::new(left), Box::new(right)),
-            }
-        }
-        Term3::Input(_)
-        | Term3::Output(_)
-        | Term3::Bound(_)
-        | Term3::Ghost(..)
-        | Term3::I64(_)
-        | Term3::Bool(_) => term.clone(),
     }
 }
 
 fn normalize_prop(prop: &Prop3) -> Prop3 {
-    match prop {
-        Prop3::True | Prop3::False => prop.clone(),
-        Prop3::Not(body) => match normalize_prop(body) {
-            Prop3::True => Prop3::False,
-            Prop3::False => Prop3::True,
-            Prop3::Not(inner) => *inner,
-            other => Prop3::Not(Box::new(other)),
-        },
-        Prop3::And(left, right) => {
-            let left = normalize_prop(left);
-            let right = normalize_prop(right);
-            match (&left, &right) {
-                (Prop3::False, _) | (_, Prop3::False) => Prop3::False,
-                (Prop3::True, _) => right,
-                (_, Prop3::True) => left,
-                _ => Prop3::And(Box::new(left), Box::new(right)),
+    let mut work = Vec::new();
+    work.push(NormPropStep::Visit(prop.clone()));
+    let mut out: Vec<Prop3> = Vec::new();
+    while let Some(step) = work.pop() {
+        norm_prop_step(step, &mut work, &mut out);
+    }
+    out.pop().unwrap_or(Prop3::False)
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; `PartialEq` is not const on the pinned compiler"
+)]
+fn fold_eq_prop(left: Term3, right: Term3) -> Prop3 {
+    match (&left, &right) {
+        (Term3::I64(a), Term3::I64(b)) => {
+            if a == b {
+                Prop3::True
+            } else {
+                Prop3::False
             }
         }
-        Prop3::Eq(left, right) => {
-            let left = normalize_term(left);
-            let right = normalize_term(right);
-            match (&left, &right) {
-                (Term3::I64(a), Term3::I64(b)) => {
-                    if a == b {
-                        Prop3::True
-                    } else {
-                        Prop3::False
-                    }
-                }
-                (Term3::Bool(a), Term3::Bool(b)) => {
-                    if a == b {
-                        Prop3::True
-                    } else {
-                        Prop3::False
-                    }
-                }
-                _ => Prop3::Eq(left, right),
+        (Term3::Bool(a), Term3::Bool(b)) => {
+            if a == b {
+                Prop3::True
+            } else {
+                Prop3::False
             }
         }
-        Prop3::Lt(left, right) => {
-            let left = normalize_term(left);
-            let right = normalize_term(right);
-            match (&left, &right) {
-                (Term3::I64(a), Term3::I64(b)) => {
-                    if a < b {
-                        Prop3::True
-                    } else {
-                        Prop3::False
-                    }
-                }
-                _ => Prop3::Lt(left, right),
+        _ => Prop3::Eq(left, right),
+    }
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; `Term3` owns boxed allocations so `fold_order_prop` cannot be `const`"
+)]
+fn fold_order_prop(left: Term3, right: Term3, is_strict: bool) -> Prop3 {
+    match (&left, &right) {
+        (Term3::I64(a), Term3::I64(b)) => {
+            let is_true = if is_strict { *a < *b } else { *a <= *b };
+            if is_true {
+                Prop3::True
+            } else {
+                Prop3::False
             }
         }
-        Prop3::Le(left, right) => {
-            let left = normalize_term(left);
-            let right = normalize_term(right);
-            match (&left, &right) {
-                (Term3::I64(a), Term3::I64(b)) => {
-                    if a <= b {
-                        Prop3::True
-                    } else {
-                        Prop3::False
-                    }
-                }
-                _ => Prop3::Le(left, right),
+        _ => {
+            if is_strict {
+                Prop3::Lt(left, right)
+            } else {
+                Prop3::Le(left, right)
             }
         }
     }
 }
 
-/// Replace the assertion's `in`/`out` binders by concrete terms.
-fn instantiate_term(term: &Term3, inputs: &[Term3], outputs: &[Term3]) -> Term3 {
-    match term {
-        Term3::Input(index) => match inputs.get(*index) {
-            Some(argument) => argument.clone(),
-            None => term.clone(),
-        },
-        Term3::Output(index) => match outputs.get(*index) {
-            Some(argument) => argument.clone(),
-            None => term.clone(),
-        },
-        Term3::Add(left, right) => Term3::Add(
-            Box::new(instantiate_term(left, inputs, outputs)),
-            Box::new(instantiate_term(right, inputs, outputs)),
-        ),
-        Term3::Sub(left, right) => Term3::Sub(
-            Box::new(instantiate_term(left, inputs, outputs)),
-            Box::new(instantiate_term(right, inputs, outputs)),
-        ),
-        Term3::Mul(left, right) => Term3::Mul(
-            Box::new(instantiate_term(left, inputs, outputs)),
-            Box::new(instantiate_term(right, inputs, outputs)),
-        ),
-        Term3::Equals(left, right) => Term3::Equals(
-            Box::new(instantiate_term(left, inputs, outputs)),
-            Box::new(instantiate_term(right, inputs, outputs)),
-        ),
-        Term3::Bound(_) | Term3::Ghost(..) | Term3::I64(_) | Term3::Bool(_) => term.clone(),
+#[octet::sealed_enum]
+enum MapTermStep {
+    Visit(Term3),
+    Build(BinTermOp),
+}
+
+#[derive(Clone, Copy)]
+#[octet::sealed_enum]
+enum TermSubst<'a> {
+    Interface {
+        inputs: &'a [Term3],
+        outputs: &'a [Term3],
+    },
+    Binder {
+        level: usize,
+        argument: &'a Term3,
+    },
+}
+
+struct BoundLookup {
+    index: usize,
+    level: usize,
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; clones `argument: &Term3` when binder index matches"
+)]
+fn map_bound_term(lookup: BoundLookup, argument: &Term3) -> Term3 {
+    if lookup.index == lookup.level {
+        argument.clone()
+    } else if lookup.index > lookup.level {
+        Term3::Bound(lookup.index.saturating_sub(1))
+    } else {
+        Term3::Bound(lookup.index)
     }
+}
+
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; updates caller workstack and output vector in place"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; advances bounded term substitution workstack"
+)]
+fn map_term_step(
+    step: MapTermStep,
+    mode: TermSubst<'_>,
+    work: &mut Vec<MapTermStep>,
+    out: &mut Vec<Term3>,
+) {
+    match step {
+        MapTermStep::Visit(node) => match node {
+            Term3::Input(index) => match mode {
+                TermSubst::Interface { inputs, .. } => {
+                    out.push(inputs.get(index).cloned().unwrap_or(node));
+                }
+                TermSubst::Binder { .. } => out.push(node),
+            },
+            Term3::Output(index) => match mode {
+                TermSubst::Interface { outputs, .. } => {
+                    out.push(outputs.get(index).cloned().unwrap_or(node));
+                }
+                TermSubst::Binder { .. } => out.push(node),
+            },
+            Term3::Bound(index) => match mode {
+                TermSubst::Interface { .. } => out.push(node),
+                TermSubst::Binder { level, argument } => {
+                    out.push(map_bound_term(BoundLookup { index, level }, argument));
+                }
+            },
+            Term3::Ghost(..) | Term3::I64(_) | Term3::Bool(_) => out.push(node),
+            Term3::Add(left, right) => {
+                work.push(MapTermStep::Build(BinTermOp::Add));
+                work.push(MapTermStep::Visit(*right));
+                work.push(MapTermStep::Visit(*left));
+            }
+            Term3::Sub(left, right) => {
+                work.push(MapTermStep::Build(BinTermOp::Sub));
+                work.push(MapTermStep::Visit(*right));
+                work.push(MapTermStep::Visit(*left));
+            }
+            Term3::Mul(left, right) => {
+                work.push(MapTermStep::Build(BinTermOp::Mul));
+                work.push(MapTermStep::Visit(*right));
+                work.push(MapTermStep::Visit(*left));
+            }
+            Term3::Equals(left, right) => {
+                work.push(MapTermStep::Build(BinTermOp::Equals));
+                work.push(MapTermStep::Visit(*right));
+                work.push(MapTermStep::Visit(*left));
+            }
+        },
+        MapTermStep::Build(op) => {
+            if let (Some(right), Some(left)) = (out.pop(), out.pop()) {
+                let pair = (Box::new(left), Box::new(right));
+                out.push(match op {
+                    BinTermOp::Add => Term3::Add(pair.0, pair.1),
+                    BinTermOp::Sub => Term3::Sub(pair.0, pair.1),
+                    BinTermOp::Mul => Term3::Mul(pair.0, pair.1),
+                    BinTermOp::Equals => Term3::Equals(pair.0, pair.1),
+                });
+            }
+        }
+    }
+}
+
+fn map_term(term: &Term3, mode: TermSubst<'_>) -> Term3 {
+    let mut work = Vec::new();
+    work.push(MapTermStep::Visit(term.clone()));
+    let mut out: Vec<Term3> = Vec::new();
+    while let Some(step) = work.pop() {
+        map_term_step(step, mode, &mut work, &mut out);
+    }
+    out.pop().unwrap_or(Term3::Bool(false))
+}
+
+fn instantiate_term(term: &Term3, inputs: &[Term3], outputs: &[Term3]) -> Term3 {
+    map_term(term, TermSubst::Interface { inputs, outputs })
+}
+
+#[octet::sealed_enum]
+enum MapPropStep {
+    Visit(Prop3),
+    BuildNot,
+    BuildAnd,
+}
+
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; updates caller workstack and output vector in place"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; advances bounded proposition substitution workstack"
+)]
+fn map_prop_step(
+    step: MapPropStep,
+    mode: TermSubst<'_>,
+    work: &mut Vec<MapPropStep>,
+    out: &mut Vec<Prop3>,
+) {
+    match step {
+        MapPropStep::Visit(node) => match node {
+            Prop3::True | Prop3::False => out.push(node),
+            Prop3::Not(body) => {
+                work.push(MapPropStep::BuildNot);
+                work.push(MapPropStep::Visit(*body));
+            }
+            Prop3::And(left, right) => {
+                work.push(MapPropStep::BuildAnd);
+                work.push(MapPropStep::Visit(*right));
+                work.push(MapPropStep::Visit(*left));
+            }
+            Prop3::Eq(left, right) => {
+                let mapped_left = map_term(&left, mode);
+                let mapped_right = map_term(&right, mode);
+                out.push(Prop3::Eq(mapped_left, mapped_right));
+            }
+            Prop3::Lt(left, right) => {
+                let mapped_left = map_term(&left, mode);
+                let mapped_right = map_term(&right, mode);
+                out.push(Prop3::Lt(mapped_left, mapped_right));
+            }
+            Prop3::Le(left, right) => {
+                let mapped_left = map_term(&left, mode);
+                let mapped_right = map_term(&right, mode);
+                out.push(Prop3::Le(mapped_left, mapped_right));
+            }
+        },
+        MapPropStep::BuildNot => {
+            if let Some(body) = out.pop() {
+                out.push(Prop3::Not(Box::new(body)));
+            }
+        }
+        MapPropStep::BuildAnd => {
+            if let (Some(right), Some(left)) = (out.pop(), out.pop()) {
+                out.push(Prop3::And(Box::new(left), Box::new(right)));
+            }
+        }
+    }
+}
+
+fn map_prop(prop: &Prop3, mode: TermSubst<'_>) -> Prop3 {
+    let mut work = Vec::new();
+    work.push(MapPropStep::Visit(prop.clone()));
+    let mut out: Vec<Prop3> = Vec::new();
+    while let Some(step) = work.pop() {
+        map_prop_step(step, mode, &mut work, &mut out);
+    }
+    out.pop().unwrap_or(Prop3::False)
 }
 
 fn instantiate_prop(prop: &Prop3, inputs: &[Term3], outputs: &[Term3]) -> Prop3 {
-    match prop {
-        Prop3::True | Prop3::False => prop.clone(),
-        Prop3::Not(body) => Prop3::Not(Box::new(instantiate_prop(body, inputs, outputs))),
-        Prop3::And(left, right) => Prop3::And(
-            Box::new(instantiate_prop(left, inputs, outputs)),
-            Box::new(instantiate_prop(right, inputs, outputs)),
-        ),
-        Prop3::Eq(left, right) => Prop3::Eq(
-            instantiate_term(left, inputs, outputs),
-            instantiate_term(right, inputs, outputs),
-        ),
-        Prop3::Lt(left, right) => Prop3::Lt(
-            instantiate_term(left, inputs, outputs),
-            instantiate_term(right, inputs, outputs),
-        ),
-        Prop3::Le(left, right) => Prop3::Le(
-            instantiate_term(left, inputs, outputs),
-            instantiate_term(right, inputs, outputs),
-        ),
-    }
-}
-
-/// Replace one explicit binder by an applied argument and lower the levels
-/// above it. Bound levels are de Bruijn levels, and an argument never mentions
-/// a level, so no capture is possible.
-fn replace_term(term: &Term3, level: usize, argument: &Term3) -> Term3 {
-    match term {
-        Term3::Bound(index) if *index == level => argument.clone(),
-        Term3::Bound(index) if *index > level => Term3::Bound(index.saturating_sub(1)),
-        Term3::Add(left, right) => Term3::Add(
-            Box::new(replace_term(left, level, argument)),
-            Box::new(replace_term(right, level, argument)),
-        ),
-        Term3::Sub(left, right) => Term3::Sub(
-            Box::new(replace_term(left, level, argument)),
-            Box::new(replace_term(right, level, argument)),
-        ),
-        Term3::Mul(left, right) => Term3::Mul(
-            Box::new(replace_term(left, level, argument)),
-            Box::new(replace_term(right, level, argument)),
-        ),
-        Term3::Equals(left, right) => Term3::Equals(
-            Box::new(replace_term(left, level, argument)),
-            Box::new(replace_term(right, level, argument)),
-        ),
-        Term3::Input(_)
-        | Term3::Output(_)
-        | Term3::Bound(_)
-        | Term3::Ghost(..)
-        | Term3::I64(_)
-        | Term3::Bool(_) => term.clone(),
-    }
+    map_prop(prop, TermSubst::Interface { inputs, outputs })
 }
 
 fn replace_prop(prop: &Prop3, level: usize, argument: &Term3) -> Prop3 {
-    match prop {
-        Prop3::True | Prop3::False => prop.clone(),
-        Prop3::Not(body) => Prop3::Not(Box::new(replace_prop(body, level, argument))),
-        Prop3::And(left, right) => Prop3::And(
-            Box::new(replace_prop(left, level, argument)),
-            Box::new(replace_prop(right, level, argument)),
-        ),
-        Prop3::Eq(left, right) => Prop3::Eq(
-            replace_term(left, level, argument),
-            replace_term(right, level, argument),
-        ),
-        Prop3::Lt(left, right) => Prop3::Lt(
-            replace_term(left, level, argument),
-            replace_term(right, level, argument),
-        ),
-        Prop3::Le(left, right) => Prop3::Le(
-            replace_term(left, level, argument),
-            replace_term(right, level, argument),
-        ),
-    }
+    map_prop(prop, TermSubst::Binder { level, argument })
 }
 
-/// Parse one bounded scalar term.
+fn find_binder_index(bindings: &[(String, Sort3)], name: &str) -> Option<usize> {
+    let mut index = 0;
+    while index < bindings.len() {
+        if bindings[index].0 == name {
+            return Some(index);
+        }
+        index += 1;
+    }
+    None
+}
+
+#[octet::sealed_enum]
+enum ParseTermFrame {
+    Visit(Form, u32),
+    Build(BinTermOp),
+}
+
 #[expect(
-    tigerstyle::function_length,
-    reason = "Owner: noble-contracts; the single-pass reader keeps every constructor and refusal together"
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; updates caller parse workstack and output vector"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; advances bounded scalar term parsing worklist and budget"
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; keeps worklist, output stack, budgets, and root span explicit"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid scalar terms return typed Diagnostic"
+)]
+fn parse_term_step(
+    frame: ParseTermFrame,
+    scope: Scope<'_>,
+    work: &mut Vec<ParseTermFrame>,
+    out: &mut Vec<Term3>,
+    remaining: &mut usize,
+    meter: &mut Meter<'_>,
+    root_span: Span,
+) -> Result<(), Diagnostic> {
+    match frame {
+        ParseTermFrame::Visit(node, cur_depth) => {
+            spend!(remaining, meter, cur_depth, node.span);
+            match &node.kind {
+                FormKind::Atom(text) => out.push(parse_term_atom(text, node.span, scope)?),
+                FormKind::List(items) => {
+                    let Some(head) = head_atom(items) else {
+                        return Err(invalid(node.span, "expected bounded scalar term"));
+                    };
+                    if let Some(indexed) = parse_io_binder(head, items, scope)? {
+                        out.push(indexed);
+                    } else {
+                        let op = parse_binary_term_op(head, items, node.span)?;
+                        let Some(next) = cur_depth.checked_add(1) else {
+                            return Err(budget(node.span));
+                        };
+                        work.push(ParseTermFrame::Build(op));
+                        work.push(ParseTermFrame::Visit(items[2].clone(), next));
+                        work.push(ParseTermFrame::Visit(items[1].clone(), next));
+                    }
+                }
+            }
+        }
+        ParseTermFrame::Build(op) => {
+            let (Some(right), Some(left)) = (out.pop(), out.pop()) else {
+                return Err(invalid(root_span, "expected bounded scalar term"));
+            };
+            let pair = (Box::new(left), Box::new(right));
+            out.push(match op {
+                BinTermOp::Add => Term3::Add(pair.0, pair.1),
+                BinTermOp::Sub => Term3::Sub(pair.0, pair.1),
+                BinTermOp::Mul => Term3::Mul(pair.0, pair.1),
+                BinTermOp::Equals => Term3::Equals(pair.0, pair.1),
+            });
+        }
+    }
+    Ok(())
+}
+
+/// Parse one bounded scalar term iteratively, checking `bound` before `inputs`/`outputs`.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; charges bounded term node budget and meter"
 )]
 fn parse_term(
     form: &Form,
-    scope: &Scope<'_>,
+    scope: Scope<'_>,
     depth: u32,
     remaining: &mut usize,
     meter: &mut Meter<'_>,
 ) -> Result<Term3, Diagnostic> {
-    spend!(remaining, meter, depth, form.span);
-    match &form.kind {
-        FormKind::Atom(text) => {
-            if let Some((index, _)) = scope
-                .inputs
-                .iter()
-                .enumerate()
-                .find(|(_, (name, _))| name == text)
-            {
-                return Ok(Term3::Input(index));
-            }
-            if let Some((index, _)) = scope
-                .outputs
-                .iter()
-                .enumerate()
-                .find(|(_, (name, _))| name == text)
-            {
-                return Ok(Term3::Output(index));
-            }
-            if let Some((index, _)) = scope
-                .bound
-                .iter()
-                .enumerate()
-                .find(|(_, (name, _))| name == text)
-            {
-                return Ok(Term3::Bound(index));
-            }
-            if text == "true" {
-                return Ok(Term3::Bool(true));
-            }
-            if text == "false" {
-                return Ok(Term3::Bool(false));
-            }
-            match text.parse::<i64>() {
-                Ok(value) => Ok(Term3::I64(value)),
-                Err(_) => Err(invalid(form.span, "expected bounded scalar term")),
-            }
+    let mut work = Vec::new();
+    work.push(ParseTermFrame::Visit(form.clone(), depth));
+    let mut out: Vec<Term3> = Vec::new();
+    let mut outcome = Ok(());
+    while let Some(frame) = work.pop() {
+        outcome = parse_term_step(
+            frame, scope, &mut work, &mut out, remaining, meter, form.span,
+        );
+        if outcome.is_err() {
+            break;
         }
-        FormKind::List(items) => {
-            let head = head_atom(items)
-                .ok_or_else(|| invalid(form.span, "expected bounded scalar term"))?;
-            if items.len() == 2 && head == "in" && scope.interface {
-                let name = atom(&items[1])?;
-                let index = scope
-                    .inputs
-                    .iter()
-                    .position(|(candidate, _)| candidate == name)
-                    .ok_or_else(|| invalid(items[1].span, "unbound input binder"))?;
-                return Ok(Term3::Input(index));
-            }
-            if items.len() == 2 && head == "out" && scope.interface {
-                let name = atom(&items[1])?;
-                let index = scope
-                    .outputs
-                    .iter()
-                    .position(|(candidate, _)| candidate == name)
-                    .ok_or_else(|| invalid(items[1].span, "unbound output binder"))?;
-                return Ok(Term3::Output(index));
-            }
-            if items.len() != 3 {
-                return Err(invalid(form.span, "expected bounded scalar term"));
-            }
-            let next = depth.checked_add(1).ok_or_else(|| budget(form.span))?;
-            let left = parse_term(&items[1], scope, next, remaining, meter)?;
-            let right = parse_term(&items[2], scope, next, remaining, meter)?;
-            let pair = (Box::new(left), Box::new(right));
-            match head {
-                "add" => Ok(Term3::Add(pair.0, pair.1)),
-                "sub" => Ok(Term3::Sub(pair.0, pair.1)),
-                "mul" => Ok(Term3::Mul(pair.0, pair.1)),
-                "eq" => Ok(Term3::Equals(pair.0, pair.1)),
-                _ => Err(invalid(form.span, "expected bounded scalar term")),
-            }
-        }
+    }
+    outcome?;
+    let Some(res) = out.pop() else {
+        return Err(invalid(form.span, "expected bounded scalar term"));
+    };
+    Ok(res)
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; name comparisons and integer parsing are not const"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; returns typed Diagnostic on unknown scalar atom"
+)]
+fn parse_term_atom(text: &str, span: Span, scope: Scope<'_>) -> Result<Term3, Diagnostic> {
+    if let Some(index) = find_binder_index(scope.bound, text) {
+        return Ok(Term3::Bound(index));
+    }
+    if let Some(index) = find_binder_index(scope.inputs, text) {
+        return Ok(Term3::Input(index));
+    }
+    if let Some(index) = find_binder_index(scope.outputs, text) {
+        return Ok(Term3::Output(index));
+    }
+    if text == "true" {
+        return Ok(Term3::Bool(true));
+    }
+    if text == "false" {
+        return Ok(Term3::Bool(false));
+    }
+    match text.parse::<i64>() {
+        Ok(value) => Ok(Term3::I64(value)),
+        Err(_) => Err(invalid(span, "expected bounded scalar term")),
     }
 }
 
-fn require_i64(term: &Term3, scope: &Scope<'_>, span: Span) -> Result<(), Diagnostic> {
+fn parse_io_binder(
+    head: &str,
+    items: &[Form],
+    scope: Scope<'_>,
+) -> Result<Option<Term3>, Diagnostic> {
+    if items.len() == 2 && head == "in" && scope.interface {
+        let name = atom(&items[1])?;
+        let Some(index) = find_binder_index(scope.inputs, name) else {
+            return Err(invalid(items[1].span, "unbound input binder"));
+        };
+        return Ok(Some(Term3::Input(index)));
+    }
+    if items.len() == 2 && head == "out" && scope.interface {
+        let name = atom(&items[1])?;
+        let Some(index) = find_binder_index(scope.outputs, name) else {
+            return Err(invalid(items[1].span, "unbound output binder"));
+        };
+        return Ok(Some(Term3::Output(index)));
+    }
+    Ok(None)
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; head string comparisons are not const"
+)]
+fn parse_binary_term_op(head: &str, items: &[Form], span: Span) -> Result<BinTermOp, Diagnostic> {
+    if items.len() != 3 {
+        return Err(invalid(span, "expected bounded scalar term"));
+    }
+    match head {
+        "add" => Ok(BinTermOp::Add),
+        "sub" => Ok(BinTermOp::Sub),
+        "mul" => Ok(BinTermOp::Mul),
+        "eq" => Ok(BinTermOp::Equals),
+        _ => Err(invalid(span, "expected bounded scalar term")),
+    }
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; `scope.sort` and `invalid` are not const"
+)]
+fn require_i64(term: &Term3, scope: Scope<'_>, span: Span) -> Result<(), Diagnostic> {
     if scope.sort(term) == Some(Sort3::I64) {
         Ok(())
     } else {
@@ -573,10 +1034,14 @@ fn require_i64(term: &Term3, scope: &Scope<'_>, span: Span) -> Result<(), Diagno
     }
 }
 
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; `scope.sort` and `invalid` are not const"
+)]
 fn require_same_sort(
     left: &Term3,
     right: &Term3,
-    scope: &Scope<'_>,
+    scope: Scope<'_>,
     span: Span,
 ) -> Result<(), Diagnostic> {
     let left_sort = scope.sort(left);
@@ -587,233 +1052,566 @@ fn require_same_sort(
     }
 }
 
-/// Parse one assertion proposition.
+#[octet::sealed_enum]
+enum ParsePropFrame {
+    Visit(Form, u32),
+    BuildNot,
+    BuildAnd,
+}
+
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; updates caller parse workstack and output vector"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; advances bounded proposition parsing worklist and budget"
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; bounded iterative step keeps proposition parsing state explicit"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid propositions are rejected through typed diagnostics"
+)]
 #[expect(
     tigerstyle::function_length,
-    reason = "Owner: noble-contracts; the single-pass reader keeps every connective and refusal together"
+    reason = "Owner: noble-contracts; keeps the connective dispatch in one bounded step"
+)]
+fn parse_prop_step(
+    frame: ParsePropFrame,
+    scope: Scope<'_>,
+    work: &mut Vec<ParsePropFrame>,
+    out: &mut Vec<Prop3>,
+    remaining: &mut usize,
+    meter: &mut Meter<'_>,
+    root_span: Span,
+) -> Result<(), Diagnostic> {
+    match frame {
+        ParsePropFrame::Visit(node, cur_depth) => {
+            spend!(remaining, meter, cur_depth, node.span);
+            if let FormKind::Atom(word) = &node.kind {
+                if word == "true" {
+                    out.push(Prop3::True);
+                    return Ok(());
+                }
+                if word == "false" {
+                    out.push(Prop3::False);
+                    return Ok(());
+                }
+            }
+            let items = list(&node)?;
+            let Some(head) = head_atom(items) else {
+                return Err(invalid(node.span, "expected logical proposition"));
+            };
+            let Some(next) = cur_depth.checked_add(1) else {
+                return Err(budget(node.span));
+            };
+            match head {
+                "true" if items.len() == 1 => out.push(Prop3::True),
+                "false" if items.len() == 1 => out.push(Prop3::False),
+                "not" if items.len() == 2 => {
+                    work.push(ParsePropFrame::BuildNot);
+                    work.push(ParsePropFrame::Visit(items[1].clone(), next));
+                }
+                "and" if items.len() == 3 => {
+                    work.push(ParsePropFrame::BuildAnd);
+                    work.push(ParsePropFrame::Visit(items[2].clone(), next));
+                    work.push(ParsePropFrame::Visit(items[1].clone(), next));
+                }
+                "eq" if items.len() == 3 => {
+                    let left = parse_term(&items[1], scope, next, remaining, meter)?;
+                    let right = parse_term(&items[2], scope, next, remaining, meter)?;
+                    require_same_sort(&left, &right, scope, node.span)?;
+                    out.push(Prop3::Eq(left, right));
+                }
+                "Eq" if scope.allow_typed_eq && items.len() == 4 => {
+                    let Some(expected) = Sort3::from_word(atom(&items[1])?) else {
+                        return Err(unsupported_profile(
+                            items[1].span,
+                            "equality sort is not I64 or Bool",
+                        ));
+                    };
+                    let left = parse_term(&items[2], scope, next, remaining, meter)?;
+                    let right = parse_term(&items[3], scope, next, remaining, meter)?;
+                    if scope.sort(&left) != Some(expected) || scope.sort(&right) != Some(expected) {
+                        return Err(invalid(node.span, "typed equality operand sort mismatch"));
+                    }
+                    out.push(Prop3::Eq(left, right));
+                }
+                "lt" | "le" if items.len() == 3 => {
+                    let left = parse_term(&items[1], scope, next, remaining, meter)?;
+                    let right = parse_term(&items[2], scope, next, remaining, meter)?;
+                    require_i64(&left, scope, items[1].span)?;
+                    require_i64(&right, scope, items[2].span)?;
+                    out.push(if str_eq(head, "lt") {
+                        Prop3::Lt(left, right)
+                    } else {
+                        Prop3::Le(left, right)
+                    });
+                }
+                _ => return Err(invalid(node.span, "expected logical proposition")),
+            }
+        }
+        ParsePropFrame::BuildNot => {
+            let Some(body) = out.pop() else {
+                return Err(invalid(root_span, "expected logical proposition"));
+            };
+            out.push(Prop3::Not(Box::new(body)));
+        }
+        ParsePropFrame::BuildAnd => {
+            let (Some(right), Some(left)) = (out.pop(), out.pop()) else {
+                return Err(invalid(root_span, "expected logical proposition"));
+            };
+            out.push(Prop3::And(Box::new(left), Box::new(right)));
+        }
+    }
+    Ok(())
+}
+
+/// Parse one assertion, motive, or lemma conclusion proposition iteratively.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; charges bounded proposition node budget and meter"
 )]
 fn parse_prop(
     form: &Form,
-    scope: &Scope<'_>,
+    scope: Scope<'_>,
     depth: u32,
     remaining: &mut usize,
     meter: &mut Meter<'_>,
 ) -> Result<Prop3, Diagnostic> {
-    spend!(remaining, meter, depth, form.span);
-    let items = list(form)?;
-    let head = head_atom(items).ok_or_else(|| invalid(form.span, "expected logical proposition"))?;
-    match head {
-        "true" if items.len() == 1 => Ok(Prop3::True),
-        "false" if items.len() == 1 => Ok(Prop3::False),
-        "not" if items.len() == 2 => {
-            let next = depth.checked_add(1).ok_or_else(|| budget(form.span))?;
-            Ok(Prop3::Not(Box::new(parse_prop(
-                &items[1], scope, next, remaining, meter,
-            )?)))
+    let mut work = Vec::new();
+    work.push(ParsePropFrame::Visit(form.clone(), depth));
+    let mut out: Vec<Prop3> = Vec::new();
+    let mut outcome = Ok(());
+    while let Some(frame) = work.pop() {
+        outcome = parse_prop_step(
+            frame, scope, &mut work, &mut out, remaining, meter, form.span,
+        );
+        if outcome.is_err() {
+            break;
         }
-        "and" if items.len() == 3 => {
-            let next = depth.checked_add(1).ok_or_else(|| budget(form.span))?;
-            let left = parse_prop(&items[1], scope, next, remaining, meter)?;
-            let right = parse_prop(&items[2], scope, next, remaining, meter)?;
-            Ok(Prop3::And(Box::new(left), Box::new(right)))
-        }
-        "eq" if items.len() == 3 => {
-            let next = depth.checked_add(1).ok_or_else(|| budget(form.span))?;
-            let left = parse_term(&items[1], scope, next, remaining, meter)?;
-            let right = parse_term(&items[2], scope, next, remaining, meter)?;
-            require_same_sort(&left, &right, scope, form.span)?;
-            Ok(Prop3::Eq(left, right))
-        }
-        "lt" | "le" if items.len() == 3 => {
-            let next = depth.checked_add(1).ok_or_else(|| budget(form.span))?;
-            let left = parse_term(&items[1], scope, next, remaining, meter)?;
-            let right = parse_term(&items[2], scope, next, remaining, meter)?;
-            require_i64(&left, scope, items[1].span)?;
-            require_i64(&right, scope, items[2].span)?;
-            if head == "lt" {
-                Ok(Prop3::Lt(left, right))
-            } else {
-                Ok(Prop3::Le(left, right))
-            }
-        }
-        _ => Err(invalid(form.span, "expected logical proposition")),
     }
+    outcome?;
+    let Some(res) = out.pop() else {
+        return Err(invalid(form.span, "expected logical proposition"));
+    };
+    Ok(res)
 }
 
 /// Parse one source assertion with a fresh profile node budget.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; `meter` charges assertion parsing nodes"
+)]
 fn assertion(
     form: &Form,
     inputs: &[(String, Sort3)],
     outputs: &[(String, Sort3)],
     meter: &mut Meter<'_>,
 ) -> Result<Prop3, Diagnostic> {
-    let scope = make_scope(inputs, outputs, &[], true);
+    let scope = make_scope(inputs, outputs, &[], ScopeMode::Assertion);
     let mut remaining = MAX_ASSERTION_NODES;
-    let prop = parse_prop(form, &scope, 0, &mut remaining, meter)?;
-    Ok(prop)
+    parse_prop(form, scope, 0, &mut remaining, meter)
 }
 
-/// Parse one lemma statement: explicit `I64`/`Bool` binders ending in an
-/// interface-free proposition.
+/// Parse one lemma statement iteratively: explicit `I64`/`Bool` binders
+/// ending in an interface-free proposition (accepting `(Eq Sort l r)`).
 #[expect(
-    tigerstyle::function_length,
-    reason = "Owner: noble-contracts; the single-pass statement reader keeps the Pi grammar and its refusals together"
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; pushes parsed Pi binder into caller vector"
 )]
-fn parse_statement(
-    form: &Form,
-    bound: &mut Vec<(String, Sort3)>,
-    depth: u32,
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; appends Pi binder and charges meter"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid Pi binders return typed Diagnostic"
+)]
+fn parse_statement_pi_step(
+    current: &Form,
+    binders: &mut Vec<(String, Sort3)>,
+    depth: &mut u32,
     remaining: &mut usize,
     meter: &mut Meter<'_>,
-) -> Result<Statement3, Diagnostic> {
-    spend!(remaining, meter, depth, form.span);
-    if let FormKind::List(items) = &form.kind {
-        if head_atom(items) == Some("Pi") && items.len() == 3 {
-            let binder = list(&items[1])?;
-            if binder.len() != 2 {
-                return Err(invalid(items[1].span, "Pi needs one typed binder"));
+) -> Result<Option<Form>, Diagnostic> {
+    spend!(remaining, meter, *depth, current.span);
+    let FormKind::List(items) = &current.kind else {
+        return Ok(None);
+    };
+    if head_atom(items) != Some("Pi") || items.len() != 3 {
+        return Ok(None);
+    }
+    let binder = list(&items[1])?;
+    if binder.len() != 2 {
+        return Err(invalid(items[1].span, "Pi needs one typed binder"));
+    }
+    let name = String::from(atom(&binder[0])?);
+    let Some(code) = Sort3::from_word(atom(&binder[1])?) else {
+        return Err(unsupported_profile(
+            binder[1].span,
+            "lemma binder is not I64 or Bool",
+        ));
+    };
+    if find_binder_index(binders, &name).is_some() {
+        return Err(invalid(binder[0].span, "repeated lemma binder"));
+    }
+    binders.push((name, code));
+    let Some(next_depth) = (*depth).checked_add(1) else {
+        return Err(budget(current.span));
+    };
+    *depth = next_depth;
+    Ok(Some(items[2].clone()))
+}
+
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; `meter` charges lemma statement parsing nodes"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid Pi binders and conclusions return typed diagnostics"
+)]
+fn parse_statement(form: &Form, meter: &mut Meter<'_>) -> Result<Statement3, Diagnostic> {
+    let mut remaining = MAX_ASSERTION_NODES;
+    let mut binders: Vec<(String, Sort3)> = Vec::new();
+    let mut current = form.clone();
+    let mut depth = 0u32;
+    let mut outcome: Result<(), Diagnostic> = Ok(());
+    let mut is_keep_going = true;
+    while is_keep_going {
+        match parse_statement_pi_step(&current, &mut binders, &mut depth, &mut remaining, meter) {
+            Ok(Some(next)) => current = next,
+            Ok(None) => is_keep_going = false,
+            Err(problem) => {
+                outcome = Err(problem);
+                is_keep_going = false;
             }
-            let name = String::from(atom(&binder[0])?);
-            let code = Sort3::from_word(atom(&binder[1])?).ok_or_else(|| {
-                unsupported_profile(binder[1].span, "lemma binder is not I64 or Bool")
-            })?;
-            if bound.iter().any(|(candidate, _)| candidate == &name) {
-                return Err(invalid(binder[0].span, "repeated lemma binder"));
-            }
-            bound.push((name.clone(), code));
-            let next = depth.checked_add(1).ok_or_else(|| budget(form.span))?;
-            let body = parse_statement(&items[2], bound, next, remaining, meter);
-            bound.pop();
-            return Ok(Statement3::Pi {
-                name,
-                code,
-                body: Box::new(body?),
-            });
         }
     }
-    let scope = make_scope(&[], &[], bound, false);
-    Ok(Statement3::Prop(parse_prop(
-        form, &scope, depth, remaining, meter,
-    )?))
+    outcome?;
+    let scope = make_scope(&[], &[], &binders, ScopeMode::Lemma);
+    let conclusion = parse_prop(&current, scope, depth, &mut remaining, meter)?;
+    let mut statement = Statement3::Prop(conclusion);
+    while let Some((name, code)) = binders.pop() {
+        statement = Statement3::Pi {
+            name,
+            code,
+            body: Box::new(statement),
+        };
+    }
+    Ok(statement)
 }
 
 /// One proof value the bidirectional revision-3 checker infers.
+#[octet::sealed_enum]
 enum Value3 {
     Statement(Statement3),
 }
 
 /// One accepted lemma proof and its parsed statement.
+#[derive(Clone)]
 struct Lemma {
-    reference: String,
-    statement: Statement3,
+    pub reference: String,
+    pub statement: Statement3,
 }
 
 /// The logical environment a bridge or join proof may use.
+#[derive(Clone, Copy)]
 struct ProofScope<'a> {
-    facts: &'a [Prop3],
-    lemmas: &'a [Lemma],
-    contracts: &'a [&'a str],
-    assignment: &'a Scope<'a>,
+    pub facts: &'a [Prop3],
+    pub lemmas: &'a [Lemma],
+    pub contracts: &'a [String],
+    pub assignment: Scope<'a>,
 }
 
 /// The index of a `fN` fact name.
 fn fact_index(name: &str) -> Option<usize> {
-    let digits = name.strip_prefix('f')?;
-    if digits.is_empty()
-        || digits.len() > 3
-        || !digits.bytes().all(|byte| byte.is_ascii_digit())
-    {
+    let digits = crate::scan::strip_prefix_str(name, "f")?;
+    if digits.is_empty() || digits.len() > 3 {
+        return None;
+    }
+    let bytes = digits.as_bytes();
+    let mut at = 0;
+    let mut is_all_digits = true;
+    while at < bytes.len() && is_all_digits {
+        is_all_digits = bytes[at].is_ascii_digit();
+        at += 1;
+    }
+    if !is_all_digits {
         return None;
     }
     digits.parse::<usize>().ok()
 }
 
-fn fact_statement(scope: &ProofScope<'_>, name: &str) -> Option<Statement3> {
+fn fact_statement(scope: ProofScope<'_>, name: &str) -> Option<Statement3> {
     let index = fact_index(name)?;
-    scope
-        .facts
-        .get(index)
-        .map(|fact| Statement3::Prop(normalize_prop(fact)))
+    let fact = scope.facts.get(index)?;
+    Some(Statement3::Prop(normalize_prop(fact)))
 }
 
-fn lemma_statement<'a>(scope: &'a ProofScope<'a>, name: &str) -> Option<&'a Statement3> {
-    scope
-        .lemmas
-        .iter()
-        .find(|lemma| lemma.reference == name)
-        .map(|lemma| &lemma.statement)
+fn lemma_has_ref(lemma: &Lemma, name: &str) -> bool {
+    str_eq(&lemma.reference, name)
+}
+
+fn lemma_statement<'a>(lemmas: &'a [Lemma], name: &str) -> Option<&'a Statement3> {
+    let mut found = None;
+    let mut li = 0usize;
+    while found.is_none() && li < lemmas.len() {
+        if lemma_has_ref(&lemmas[li], name) {
+            found = Some(li);
+        }
+        li += 1;
+    }
+    match found {
+        Some(idx) => Some(&lemmas[idx].statement),
+        None => None,
+    }
 }
 
 /// The three reviewed arithmetic rule identities.
 #[derive(Clone, Copy)]
+#[octet::sealed_enum]
 enum Rule3 {
     AddAssoc,
     AddComm,
     MulAdd,
 }
 
-/// Infer the statement of one bridge or join proof term.
+#[octet::sealed_enum]
+enum InferFrame {
+    Eval(Form, u32),
+    Apply {
+        argument: Form,
+        span: Span,
+        depth: u32,
+    },
+    SubstAfterEq {
+        motive_scope: Vec<(String, Sort3)>,
+        body: Prop3,
+        level: usize,
+        eq_span: Span,
+        premise: Form,
+        depth: u32,
+    },
+    SubstAfterPremise {
+        body: Prop3,
+        level: usize,
+        left: Term3,
+        right: Term3,
+        premise_span: Span,
+    },
+}
+
 #[expect(
-    tigerstyle::function_length,
-    reason = "Owner: noble-contracts; the bidirectional inferer keeps every constructor's rule in one reviewable dispatch"
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; pushes proof inference frames and values into caller stacks"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; advances inference stacks and proof meter"
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; keeps inference stacks, scope, and budgets explicit"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid proof steps return typed Diagnostic"
+)]
+fn infer_step(
+    frame: InferFrame,
+    scope: ProofScope<'_>,
+    frames: &mut Vec<InferFrame>,
+    values: &mut Vec<Value3>,
+    remaining: &mut usize,
+    meter: &mut Meter<'_>,
+) -> Result<(), Diagnostic> {
+    match frame {
+        InferFrame::Eval(term, depth) => {
+            spend!(remaining, meter, depth, term.span);
+            if let Some(frame_outcome) =
+                eval_leaf_or_push(&term, depth, scope, frames, remaining, meter)?
+            {
+                values.push(frame_outcome);
+            }
+        }
+        InferFrame::Apply {
+            argument,
+            span,
+            depth,
+        } => {
+            let Some(function) = values.pop() else {
+                return Err(invalid(span, "missing function proof"));
+            };
+            values.push(apply_inferred(
+                function, &argument, scope, depth, remaining, meter, span,
+            )?);
+        }
+        InferFrame::SubstAfterEq {
+            motive_scope,
+            body,
+            level,
+            eq_span,
+            premise,
+            depth,
+        } => {
+            let Some(equality) = values.pop() else {
+                return Err(invalid(eq_span, "subst requires equality evidence"));
+            };
+            let (left, right) = extract_subst_eq(equality, &motive_scope, scope, eq_span)?;
+            frames.push(InferFrame::SubstAfterPremise {
+                body,
+                level,
+                left,
+                right,
+                premise_span: premise.span,
+            });
+            frames.push(InferFrame::Eval(premise, depth));
+        }
+        InferFrame::SubstAfterPremise {
+            body,
+            level,
+            left,
+            right,
+            premise_span,
+        } => {
+            let Some(premise) = values.pop() else {
+                return Err(invalid(premise_span, "subst premise is missing"));
+            };
+            let Value3::Statement(Statement3::Prop(premise_prop)) = premise else {
+                return Err(invalid(premise_span, "subst premise is not a proposition"));
+            };
+            let before = replace_prop(&body, level, &left);
+            if normalize_prop(&premise_prop) != normalize_prop(&before) {
+                return Err(invalid(
+                    premise_span,
+                    "subst premise does not match the motive instance",
+                ));
+            }
+            values.push(Value3::Statement(Statement3::Prop(replace_prop(
+                &body, level, &right,
+            ))));
+        }
+    }
+    Ok(())
+}
+
+/// Infer the statement of one bridge or join proof term iteratively without mutual recursion.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; `remaining` and `meter` advance once per visited proof form"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; malformed proof terms return typed diagnostics"
 )]
 fn infer(
-    term: &Form,
-    scope: &ProofScope<'_>,
-    depth: u32,
+    root: &Form,
+    scope: ProofScope<'_>,
     remaining: &mut usize,
     meter: &mut Meter<'_>,
 ) -> Result<Value3, Diagnostic> {
-    spend!(remaining, meter, depth, term.span);
-    if let Ok(args) = operation(term, "use", 1) {
-        let name = atom(&args[0])?;
-        if let Some(statement) = fact_statement(scope, name) {
-            return Ok(Value3::Statement(statement));
+    let mut frames = Vec::new();
+    frames.push(InferFrame::Eval(root.clone(), 0));
+    let mut values: Vec<Value3> = Vec::new();
+    let mut outcome = Ok(());
+    while let Some(frame) = frames.pop() {
+        outcome = infer_step(frame, scope, &mut frames, &mut values, remaining, meter);
+        if outcome.is_err() {
+            break;
         }
-        if let Some(statement) = lemma_statement(scope, name) {
-            return Ok(Value3::Statement(statement.clone()));
-        }
-        if scope.contracts.iter().any(|reference| *reference == name) {
-            return Err(refined(
-                term.span,
-                "preuse-sort-mismatch",
-                "a contract proof names a program claim, not a lemma",
-            ));
-        }
+    }
+    outcome?;
+    let Some(res) = values.pop() else {
         return Err(invalid(
-            term.span,
-            "unresolved, private, forward or cyclic proof use",
+            root.span,
+            "proof term establishes no revision-3 proposition",
         ));
+    };
+    Ok(res)
+}
+
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; pushes pending proof frames onto caller vector"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; schedules proof frames and charges meter"
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; keeps term, scope, frame worklist, and budgets explicit"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; unknown forms return explicit typed diagnostics"
+)]
+fn eval_leaf_or_push(
+    term: &Form,
+    depth: u32,
+    scope: ProofScope<'_>,
+    frames: &mut Vec<InferFrame>,
+    remaining: &mut usize,
+    meter: &mut Meter<'_>,
+) -> Result<Option<Value3>, Diagnostic> {
+    if let Ok(args) = operation(term, "use", 1) {
+        return infer_use(atom(&args[0])?, scope, term.span).map(Some);
     }
     if let Ok(args) = operation(term, "apply", 2) {
-        let next = depth.checked_add(1).ok_or_else(|| budget(term.span))?;
-        let function = infer(&args[0], scope, next, remaining, meter)?;
-        return apply_inferred(function, &args[1], scope, term.span, next, remaining, meter);
+        let Some(next) = depth.checked_add(1) else {
+            return Err(budget(term.span));
+        };
+        frames.push(InferFrame::Apply {
+            argument: args[1].clone(),
+            span: term.span,
+            depth: next,
+        });
+        frames.push(InferFrame::Eval(args[0].clone(), next));
+        return Ok(None);
     }
     if let Ok(args) = operation(term, "refl", 1) {
         let scalar = parse_term(&args[0], scope.assignment, depth, remaining, meter)?;
         if scope.assignment.sort(&scalar).is_none() {
             return Err(invalid(args[0].span, "refl operand has no admitted sort"));
         }
-        return Ok(Value3::Statement(Statement3::Prop(Prop3::Eq(
+        return Ok(Some(Value3::Statement(Statement3::Prop(Prop3::Eq(
             scalar.clone(),
             scalar,
-        ))));
+        )))));
     }
     if let Ok(args) = operation(term, "subst", 3) {
-        return subst_inferred(args, scope, depth, remaining, meter);
+        let Some(next) = depth.checked_add(1) else {
+            return Err(budget(term.span));
+        };
+        let (motive_scope, body, level) =
+            parse_subst_motive(&args[0], scope, next, remaining, meter)?;
+        frames.push(InferFrame::SubstAfterEq {
+            motive_scope,
+            body,
+            level,
+            eq_span: args[1].span,
+            premise: args[2].clone(),
+            depth: next,
+        });
+        frames.push(InferFrame::Eval(args[1].clone(), next));
+        return Ok(None);
     }
     if let Ok(args) = operation(term, "bv-add-assoc", 3) {
-        return rule_inferred(Rule3::AddAssoc, args, scope, depth, remaining, meter);
+        return rule_inferred(Rule3::AddAssoc, args, scope, depth, remaining, meter).map(Some);
     }
     if let Ok(args) = operation(term, "bv-add-comm", 2) {
-        return rule_inferred(Rule3::AddComm, args, scope, depth, remaining, meter);
+        return rule_inferred(Rule3::AddComm, args, scope, depth, remaining, meter).map(Some);
     }
     if let Ok(args) = operation(term, "bv-mul-add", 3) {
-        return rule_inferred(Rule3::MulAdd, args, scope, depth, remaining, meter);
+        return rule_inferred(Rule3::MulAdd, args, scope, depth, remaining, meter).map(Some);
     }
     if operation(term, "by-true", 0).is_ok() {
-        return Ok(Value3::Statement(Statement3::Prop(Prop3::True)));
+        return Ok(Some(Value3::Statement(Statement3::Prop(Prop3::True))));
     }
     Err(invalid(
         term.span,
@@ -821,15 +1619,48 @@ fn infer(
     ))
 }
 
-/// Infer one `apply`: consume the outermost explicit Pi binder.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; unresolved or non-lemma uses return explicit typed diagnostics"
+)]
+fn infer_use(name: &str, scope: ProofScope<'_>, span: Span) -> Result<Value3, Diagnostic> {
+    if let Some(statement) = fact_statement(scope, name) {
+        return Ok(Value3::Statement(statement));
+    }
+    if let Some(statement) = lemma_statement(scope.lemmas, name) {
+        return Ok(Value3::Statement(statement.clone()));
+    }
+    if replay_seen(scope.contracts, name) {
+        return Err(refined(
+            span,
+            Reason {
+                code: "preuse-sort-mismatch",
+                detail: "a contract proof names a program claim, not a lemma",
+            },
+        ));
+    }
+    Err(invalid(
+        span,
+        "unresolved, private, forward or cyclic proof use",
+    ))
+}
+
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; charges argument parsing against the proof budget"
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; carries the apply argument, scope, depth, budgets, and source span without extra struct boilerplate"
+)]
 fn apply_inferred(
     function: Value3,
     argument: &Form,
-    scope: &ProofScope<'_>,
-    span: Span,
+    scope: ProofScope<'_>,
     depth: u32,
     remaining: &mut usize,
     meter: &mut Meter<'_>,
+    span: Span,
 ) -> Result<Value3, Diagnostic> {
     let Value3::Statement(function) = function;
     let Statement3::Pi { body, code, .. } = function else {
@@ -842,89 +1673,165 @@ fn apply_inferred(
     Ok(Value3::Statement(replace_statement(&body, &scalar)))
 }
 
-/// Replace the outermost explicit binder of one statement.
-fn replace_statement(statement: &Statement3, argument: &Term3) -> Statement3 {
-    match statement {
-        Statement3::Prop(prop) => Statement3::Prop(replace_prop(prop, 0, argument)),
-        Statement3::Pi { name, code, body } => Statement3::Pi {
-            name: name.clone(),
-            code: *code,
-            body: Box::new(replace_statement(body, argument)),
-        },
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-contracts; binder stack bounded by MAX_ASSERTION_NODES"
+)]
+fn peel_statement_pi(statement: &Statement3) -> (Vec<(String, Sort3)>, &Statement3) {
+    let mut binders: Vec<(String, Sort3)> = Vec::new();
+    let mut current = statement;
+    while let Statement3::Pi { name, code, body } = current {
+        binders.push((name.clone(), *code));
+        current = body;
     }
+    (binders, current)
 }
 
-/// Infer one `subst` over a bounded scalar equality: `M(A)` and `A = B` give
-/// `M(B)`.
-fn subst_inferred(
-    args: &[Form],
-    scope: &ProofScope<'_>,
+/// Replace the outermost explicit binder of one statement iteratively.
+fn replace_statement(statement: &Statement3, argument: &Term3) -> Statement3 {
+    let (mut binders, current) = peel_statement_pi(statement);
+    let prop = match current {
+        Statement3::Prop(prop) => replace_prop(prop, 0, argument),
+        Statement3::Pi { .. } => Prop3::False,
+    };
+    let mut result = Statement3::Prop(prop);
+    while let Some((name, code)) = binders.pop() {
+        result = Statement3::Pi {
+            name,
+            code,
+            body: Box::new(result),
+        };
+    }
+    result
+}
+
+type SubstMotive = (Vec<(String, Sort3)>, Prop3, usize);
+
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; charges motive parsing against shared meter"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid motives return typed Diagnostic"
+)]
+fn parse_subst_motive(
+    motive_form: &Form,
+    scope: ProofScope<'_>,
     depth: u32,
     remaining: &mut usize,
     meter: &mut Meter<'_>,
-) -> Result<Value3, Diagnostic> {
-    let motive = list(&args[0])?;
+) -> Result<SubstMotive, Diagnostic> {
+    let motive = list(motive_form)?;
     if motive.len() != 3 || head_atom(motive) != Some("motive") {
-        return Err(invalid(args[0].span, "subst requires an explicit motive"));
+        return Err(invalid(
+            motive_form.span,
+            "subst requires an explicit motive",
+        ));
     }
     let binder = list(&motive[1])?;
     if binder.len() != 2 {
         return Err(invalid(motive[1].span, "motive needs one typed binder"));
     }
     let name = String::from(atom(&binder[0])?);
-    let code = Sort3::from_word(atom(&binder[1])?)
-        .ok_or_else(|| unsupported_profile(binder[1].span, "motive binder is not I64 or Bool"))?;
+    let Some(code) = Sort3::from_word(atom(&binder[1])?) else {
+        return Err(unsupported_profile(
+            binder[1].span,
+            "motive binder is not I64 or Bool",
+        ));
+    };
     let level = scope.assignment.bound.len();
     let mut bound: Vec<(String, Sort3)> = scope.assignment.bound.to_vec();
     bound.push((name, code));
-    let motive_scope = make_scope(scope.assignment.inputs, scope.assignment.outputs, &bound, scope.assignment.interface);
-    let next = depth.checked_add(1).ok_or_else(|| budget(args[0].span))?;
-    let body = parse_prop(&motive[2], &motive_scope, next, remaining, meter)?;
-    let equality = infer(&args[2], scope, next, remaining, meter)?;
-    let Value3::Statement(Statement3::Prop(equality)) = equality else {
-        return Err(invalid(args[2].span, "subst requires equality evidence"));
+    let motive_scope = Scope {
+        inputs: scope.assignment.inputs,
+        outputs: scope.assignment.outputs,
+        bound: &bound,
+        interface: scope.assignment.interface,
+        allow_typed_eq: true,
     };
-    let Prop3::Eq(left, right) = normalize_prop(&equality) else {
-        return Err(invalid(args[2].span, "subst requires equality evidence"));
+    let body = parse_prop(&motive[2], motive_scope, depth, remaining, meter)?;
+    Ok((bound, body, level))
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; `normalize_prop` and `sort` are not const"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid equality proof returns typed Diagnostic"
+)]
+fn extract_subst_eq(
+    equality: Value3,
+    bound: &[(String, Sort3)],
+    scope: ProofScope<'_>,
+    eq_span: Span,
+) -> Result<(Term3, Term3), Diagnostic> {
+    let Value3::Statement(Statement3::Prop(equality_prop)) = equality else {
+        return Err(invalid(eq_span, "subst requires equality evidence"));
     };
-    let left_sort = motive_scope.sort(&left);
-    if left_sort != Some(code) || motive_scope.sort(&right) != Some(code) {
-        return Err(invalid(
-            args[2].span,
-            "subst equality has the wrong code",
-        ));
+    let Prop3::Eq(left, right) = normalize_prop(&equality_prop) else {
+        return Err(invalid(eq_span, "subst requires equality evidence"));
+    };
+    let Some((_, code)) = bound.last() else {
+        return Err(invalid(eq_span, "subst motive binder missing"));
+    };
+    let motive_scope = Scope {
+        inputs: scope.assignment.inputs,
+        outputs: scope.assignment.outputs,
+        bound,
+        interface: scope.assignment.interface,
+        allow_typed_eq: true,
+    };
+    if motive_scope.sort(&left) != Some(*code) || motive_scope.sort(&right) != Some(*code) {
+        return Err(invalid(eq_span, "subst equality has the wrong code"));
     }
-    let premise = infer(&args[1], scope, next, remaining, meter)?;
-    let Value3::Statement(Statement3::Prop(premise)) = premise else {
-        return Err(invalid(args[1].span, "subst premise is not a proposition"));
-    };
-    let before = replace_prop(&body, level, &left);
-    if normalize_prop(&premise) != normalize_prop(&before) {
-        return Err(invalid(
-            args[1].span,
-            "subst premise does not match the motive instance",
-        ));
-    }
-    Ok(Value3::Statement(Statement3::Prop(replace_prop(
-        &body, level, &right,
-    ))))
+    Ok((left, right))
 }
 
 /// Infer one reviewed arithmetic rule instance.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; charges rule operand parsing against the proof budget"
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; passes the rule kind, operand slice, scope, depth, and proof budgets together"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid operand sorts return typed Diagnostic"
+)]
 fn rule_inferred(
     rule: Rule3,
     args: &[Form],
-    scope: &ProofScope<'_>,
+    scope: ProofScope<'_>,
     depth: u32,
     remaining: &mut usize,
     meter: &mut Meter<'_>,
 ) -> Result<Value3, Diagnostic> {
     let mut scalars = Vec::with_capacity(args.len());
-    for argument in args {
-        let scalar = parse_term(argument, scope.assignment, depth, remaining, meter)?;
-        require_i64(&scalar, scope.assignment, argument.span)?;
-        scalars.push(scalar);
+    let mut index = 0usize;
+    let mut outcome = Ok(());
+    while index < args.len() {
+        let argument = &args[index];
+        outcome = match parse_term(argument, scope.assignment, depth, remaining, meter) {
+            Ok(scalar) => match require_i64(&scalar, scope.assignment, argument.span) {
+                Ok(()) => {
+                    scalars.push(scalar);
+                    Ok(())
+                }
+                Err(problem) => Err(problem),
+            },
+            Err(problem) => Err(problem),
+        };
+        if outcome.is_err() {
+            break;
+        }
+        index += 1;
     }
+    outcome?;
     let statement = match rule {
         Rule3::AddAssoc => {
             let (a, b, c) = (&scalars[0], &scalars[1], &scalars[2]);
@@ -964,14 +1871,18 @@ fn rule_inferred(
 }
 
 /// Check that `proof` establishes exactly `expected` up to literal folding.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; charges proof inference against `meter`"
+)]
 fn check_proof(
     proof: &Form,
     expected: &Prop3,
-    scope: &ProofScope<'_>,
+    scope: ProofScope<'_>,
     meter: &mut Meter<'_>,
 ) -> Result<(), Diagnostic> {
     let mut remaining = MAX_ASSERTION_NODES;
-    let value = infer(proof, scope, 0, &mut remaining, meter)?;
+    let value = infer(proof, scope, &mut remaining, meter)?;
     let Value3::Statement(statement) = value;
     let Statement3::Prop(established) = statement else {
         return Err(invalid(proof.span, "proof is not a proposition instance"));
@@ -987,22 +1898,32 @@ fn check_proof(
 }
 
 /// The ordered `name Type` interface of a contract, or a refusal.
-fn interface(bindings: &[(String, String)], span: Span) -> Result<Vec<(String, Sort3)>, Diagnostic> {
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid interfaces return typed diagnostics"
+)]
+fn interface(
+    bindings: &[(String, String)],
+    span: Span,
+) -> Result<Vec<(String, Sort3)>, Diagnostic> {
     if bindings.len() > MAX_INTERFACE {
         return Err(unsupported_profile(
             span,
             "revision-3 interface exceeds four values",
         ));
     }
-    let mut result = Vec::with_capacity(bindings.len());
+    let mut result: Vec<(String, Sort3)> = Vec::with_capacity(bindings.len());
     for (name, ty) in bindings {
-        let code = Sort3::from_word(ty).ok_or_else(|| {
-            unsupported_profile(span, "revision-3 interface is not I64/Bool only")
-        })?;
+        let Some(code) = Sort3::from_word(ty) else {
+            return Err(unsupported_profile(
+                span,
+                "revision-3 interface is not I64/Bool only",
+            ));
+        };
         if name.is_empty() {
             return Err(invalid(span, "empty interface binder"));
         }
-        if result.iter().any(|(candidate, _)| candidate == name) {
+        if find_binder_index(&result, name).is_some() {
             return Err(invalid(span, "repeated interface binder"));
         }
         result.push((name.clone(), code));
@@ -1010,9 +1931,9 @@ fn interface(bindings: &[(String, String)], span: Span) -> Result<Vec<(String, S
     Ok(result)
 }
 
-fn interface_codes(interface: &[(String, Sort3)]) -> Vec<Sort3> {
-    let mut codes = Vec::with_capacity(interface.len());
-    for (_, code) in interface {
+fn interface_codes(entries: &[(String, Sort3)]) -> Vec<Sort3> {
+    let mut codes = Vec::with_capacity(entries.len());
+    for (_, code) in entries {
         codes.push(*code);
     }
     codes
@@ -1028,49 +1949,86 @@ fn claim_text(goal: &ContractGoal) -> String {
     text.push('.');
     text.push_str(&goal.contract_name);
     text.push_str("\nrequires ");
-    write_form(&mut text, &goal.requires, 0);
+    text = write_form(text, &goal.requires);
     text.push_str("\nensures ");
-    write_form(&mut text, &goal.ensures, 0);
+    text = write_form(text, &goal.ensures);
     text
 }
 
-fn write_form(text: &mut String, form: &Form, depth: u32) {
-    if depth > 64 {
-        text.push_str("...");
-        return;
+#[octet::sealed_enum]
+enum FormWrite {
+    Form(Form, u32),
+    Space,
+    Close,
+}
+
+fn push_form_list(mut work: Vec<FormWrite>, items: &[Form], next: u32) -> Vec<FormWrite> {
+    let mut index = items.len();
+    while index > 0 {
+        let prev = index.saturating_sub(1);
+        work.push(FormWrite::Form(items[prev].clone(), next));
+        if prev > 0 {
+            work.push(FormWrite::Space);
+        }
+        index = prev;
     }
-    match &form.kind {
-        FormKind::Atom(word) => text.push_str(word),
-        FormKind::List(items) => {
-            text.push('(');
-            let mut first = true;
-            for item in items {
-                if !first {
-                    text.push(' ');
+    work
+}
+
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; appends formatted token and pending forms into caller buffers"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; updates caller formatting buffer and worklist in place"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; String::push and Vec::push are not const"
+)]
+fn write_form_step(step: FormWrite, text: &mut String, work: &mut Vec<FormWrite>) {
+    match step {
+        FormWrite::Space => text.push(' '),
+        FormWrite::Close => text.push(')'),
+        FormWrite::Form(form, depth) => {
+            if depth > 64 {
+                text.push_str("...");
+            } else {
+                match &form.kind {
+                    FormKind::Atom(word) => text.push_str(word),
+                    FormKind::List(items) => {
+                        text.push('(');
+                        work.push(FormWrite::Close);
+                        let next = depth.saturating_add(1);
+                        let mut prev_work = core::mem::take(work);
+                        prev_work = push_form_list(prev_work, items, next);
+                        *work = prev_work;
+                    }
                 }
-                first = false;
-                write_form(text, item, depth.saturating_add(1));
             }
-            text.push(')');
         }
     }
 }
 
-/// Authenticate every traced occurrence against the immutable caller and
-/// callee source and the frozen import snapshot: the full-token span, the
-/// spelled scope, the callee's exported original definition and its body.
+fn write_form(mut text: String, root: &Form) -> String {
+    let mut work = Vec::new();
+    work.push(FormWrite::Form(root.clone(), 0));
+    while let Some(step) = work.pop() {
+        write_form_step(step, &mut text, &mut work);
+    }
+    text
+}
+
+/// Verify the caller subject's own source module and retained `named_imports`.
 #[expect(
     tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the revision-3 contract suite."
+    reason = "Owner: noble-contracts; invalid sources return typed diagnostics"
 )]
-fn authenticate_occurrences(
-    goal: &ContractGoal,
-    occurrences: &[&NamedUseOrigin],
-    limits: Limits,
-) -> Result<(), Diagnostic> {
+fn check_retained_dependencies(goal: &ContractGoal, limits: Limits) -> Result<Span, Diagnostic> {
     let subject = &goal.subject;
     let span = subject.source_span;
-    let caller = || crate::source::DefinitionOrigin {
+    let caller = crate::source::DefinitionOrigin {
         module_source: &subject.module_source,
         module: &subject.module,
         version: subject.version,
@@ -1078,156 +2036,274 @@ fn authenticate_occurrences(
         ordinal: subject.definition_ordinal,
         span,
     };
-    let subject_body = crate::source::verify_definition_origin(
-        caller(),
-        &subject.definition_source,
-        limits,
-    )?;
-    // The subject's own original module must be one retained dependency, and
-    // no module owner may repeat.
+    let subject_body =
+        crate::source::verify_definition_origin(caller, &subject.definition_source, limits)?;
     let mut owners = Vec::with_capacity(subject.source_dependencies.len());
-    for module in &subject.source_dependencies {
-        if owners.iter().any(|owner| *owner == module.owner) {
-            return Err(invalid(span, "duplicate named source module"));
+    let mut has_duplicate_owner = false;
+    let mut dep_at = 0usize;
+    while dep_at < subject.source_dependencies.len() && !has_duplicate_owner {
+        let owner = subject.source_dependencies[dep_at].owner;
+        if owners.contains(&owner) {
+            has_duplicate_owner = true;
+        } else {
+            owners.push(owner);
         }
-        owners.push(module.owner);
+        dep_at += 1;
     }
-    if !subject.source_dependencies.iter().any(|module| {
+    if has_duplicate_owner {
+        return Err(invalid(span, "duplicate named source module"));
+    }
+    let has_own_module = crate::scan::find_first(&subject.source_dependencies, |module| {
         module.owner == subject.definition_owner
             && module.module == subject.module
             && module.version == subject.version
             && module.full_source == subject.module_source
-    }) {
+    })
+    .is_some();
+    if !has_own_module {
         return Err(invalid(span, "subject module is not a retained source"));
     }
-    for binding in &subject.named_imports {
-        match subject.source_dependencies.get(binding.module_index) {
-            Some(module) if module.owner == binding.owner => {}
-            _ => {
-                return Err(invalid(
-                    span,
-                    "retained import alias lacks its frozen original module",
-                ))
-            }
+    check_retained_import_aliases(subject, span)?;
+    Ok(subject_body)
+}
+
+fn import_has_alias(binding: &super::NamedImportBinding, alias: &str) -> bool {
+    str_eq(&binding.alias, alias)
+}
+
+fn count_import_alias(imports: &[super::NamedImportBinding], alias: &str) -> usize {
+    let mut count = 0usize;
+    let mut other_at = 0usize;
+    while other_at < imports.len() {
+        if import_has_alias(&imports[other_at], alias) {
+            count = count.saturating_add(1);
         }
-        if subject
-            .named_imports
-            .iter()
-            .filter(|other| other.alias == binding.alias)
-            .count()
-            != 1
-        {
-            return Err(invalid(span, "repeated retained import alias"));
-        }
+        other_at += 1;
     }
-    for occurrence in occurrences {
-        let Some(source_node) = occurrence.source_node else {
-            return Err(invalid(span, "call occurrence has no source node"));
-        };
-        let Some(source_span) = occurrence.source_span else {
-            return Err(invalid(span, "call occurrence has no source span"));
-        };
-        let module = subject
-            .source_dependencies
-            .get(occurrence.module_index)
-            .ok_or_else(|| invalid(span, "callee module is not retained"))?;
-        if occurrence.body_span != subject_body {
-            return Err(invalid(
-                occurrence.definition_span,
-                "call occurrence is outside the caller's original body",
-            ));
-        }
-        let callee_body = crate::source::verify_definition_origin(
-            crate::source::DefinitionOrigin {
-                module_source: &module.full_source,
-                module: &module.module,
-                version: module.version,
-                definition: &occurrence.definition_name,
-                ordinal: occurrence.definition_ordinal,
-                span: occurrence.definition_span,
-            },
-            source_bytes(
-                &module.full_source,
-                occurrence.definition_span,
-                occurrence.definition_span,
-            )?,
-            limits,
-        )?;
-        if callee_body != occurrence.body_span {
-            return Err(invalid(
-                occurrence.definition_span,
-                "callee body span differs from its original definition",
-            ));
-        }
-        if module.owner != subject.definition_owner {
-            crate::source::verify_named_export(
-                &module.full_source,
-                &module.module,
-                module.version,
-                &occurrence.definition_name,
-                occurrence.definition_ordinal,
-                occurrence.definition_span,
-                limits,
-            )?;
-        }
-        let original = crate::source::verify_named_call_origin(
-            caller(),
-            source_node,
-            source_span,
-            limits,
-        )?;
-        let (scope, word) = match crate::scan::rsplit_once_byte(original, b'.') {
-            Some((scope, word)) => (Some(scope), word),
-            None => (None, original),
-        };
-        if word != occurrence.definition_name {
-            return Err(invalid(
-                source_span,
-                "original named word differs from the frozen callee",
-            ));
-        }
-        match scope {
-            Some(scope) => {
-                if !names_module(scope, module) && !snapshot_alias(subject, scope, module) {
-                    return Err(invalid(
-                        source_span,
-                        "original named scope is not the frozen callee module",
-                    ));
-                }
+    count
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; inspects runtime Vec slice fields in SubjectBinding"
+)]
+fn check_one_import_alias(
+    subject: &super::SubjectBinding,
+    binding: &super::NamedImportBinding,
+) -> u8 {
+    match subject.source_dependencies.get(binding.module_index) {
+        Some(module) => {
+            if module.owner != binding.owner {
+                2
+            } else if count_import_alias(&subject.named_imports, &binding.alias) != 1 {
+                1
+            } else {
+                0
             }
-            None => {
-                if module.owner != subject.definition_owner
-                    || occurrence.module_index != subject.named_uses[0].module_index
-                {
-                    return Err(invalid(
-                        source_span,
-                        "unqualified named word has another original owner",
-                    ));
-                }
+        }
+        None => 2,
+    }
+}
+
+fn check_retained_import_aliases(
+    subject: &super::SubjectBinding,
+    span: Span,
+) -> Result<(), Diagnostic> {
+    let mut failure_code = 0u8;
+    let mut binding_at = 0usize;
+    while binding_at < subject.named_imports.len() && failure_code == 0 {
+        failure_code = check_one_import_alias(subject, &subject.named_imports[binding_at]);
+        binding_at += 1;
+    }
+    match failure_code {
+        0 => Ok(()),
+        1 => Err(invalid(span, "repeated retained import alias")),
+        _ => Err(invalid(
+            span,
+            "retained import alias lacks its frozen original module",
+        )),
+    }
+}
+
+/// Authenticate every traced occurrence against immutable caller and callee
+/// source and the frozen import snapshot.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid occurrence tokens return typed Diagnostic"
+)]
+fn authenticate_occurrences(
+    goal: &ContractGoal,
+    occurrences: &[usize],
+    limits: Limits,
+) -> Result<(), Diagnostic> {
+    let subject_body = check_retained_dependencies(goal, limits)?;
+    let subject = &goal.subject;
+    let span = subject.source_span;
+    let caller = crate::source::DefinitionOrigin {
+        module_source: &subject.module_source,
+        module: &subject.module,
+        version: subject.version,
+        definition: &subject.definition,
+        ordinal: subject.definition_ordinal,
+        span,
+    };
+    let mut index = 0usize;
+    let mut outcome = Ok(());
+    while index < occurrences.len() {
+        let occ = &subject.named_uses[occurrences[index]];
+        outcome = authenticate_one_occurrence(subject, caller, subject_body, occ, limits);
+        if outcome.is_err() {
+            break;
+        }
+        index += 1;
+    }
+    outcome
+}
+
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid call occurrence sources return typed diagnostics"
+)]
+fn authenticate_one_occurrence(
+    subject: &super::SubjectBinding,
+    caller: crate::source::DefinitionOrigin<'_>,
+    subject_body: Span,
+    occurrence: &NamedUseOrigin,
+    limits: Limits,
+) -> Result<(), Diagnostic> {
+    let span = subject.source_span;
+    let Some(source_node) = occurrence.source_node else {
+        return Err(invalid(span, "call occurrence has no source node"));
+    };
+    let Some(source_span) = occurrence.source_span else {
+        return Err(invalid(span, "call occurrence has no source span"));
+    };
+    let Some(module) = subject.source_dependencies.get(occurrence.module_index) else {
+        return Err(invalid(span, "callee module is not retained"));
+    };
+    if source_span.start < subject_body.start
+        || source_span.end > subject_body.end
+        || source_span.start >= source_span.end
+    {
+        return Err(invalid(
+            occurrence.definition_span,
+            "call occurrence is outside the caller's original body",
+        ));
+    }
+    let callee_body = crate::source::verify_definition_origin(
+        crate::source::DefinitionOrigin {
+            module_source: &module.full_source,
+            module: &module.module,
+            version: module.version,
+            definition: &occurrence.definition_name,
+            ordinal: occurrence.definition_ordinal,
+            span: occurrence.definition_span,
+        },
+        source_bytes(
+            &module.full_source,
+            occurrence.definition_span,
+            occurrence.definition_span,
+        )?,
+        limits,
+    )?;
+    if callee_body != occurrence.body_span {
+        return Err(invalid(
+            occurrence.definition_span,
+            "callee body span differs from its original definition",
+        ));
+    }
+    if module.owner != subject.definition_owner {
+        crate::source::verify_named_export(
+            &module.full_source,
+            &module.module,
+            module.version,
+            &occurrence.definition_name,
+            occurrence.definition_ordinal,
+            occurrence.definition_span,
+            limits,
+        )?;
+    }
+    verify_occurrence_spelling(
+        subject,
+        caller,
+        occurrence,
+        module,
+        source_node,
+        source_span,
+        limits,
+    )
+}
+
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; verifies one authenticated occurrence's token spelling against the frozen import table"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid occurrence tokens return typed Diagnostic"
+)]
+fn verify_occurrence_spelling(
+    subject: &super::SubjectBinding,
+    caller: crate::source::DefinitionOrigin<'_>,
+    occurrence: &NamedUseOrigin,
+    module: &super::ResolvedSourceModule,
+    source_node: u32,
+    source_span: Span,
+    limits: Limits,
+) -> Result<(), Diagnostic> {
+    let original =
+        crate::source::verify_named_call_origin(caller, source_node, source_span, limits)?;
+    match crate::scan::rsplit_once_byte(original, b'.') {
+        Some((scope, word)) => {
+            if word != occurrence.definition_name {
+                return Err(invalid(
+                    source_span,
+                    "original named word differs from the frozen callee",
+                ));
+            }
+            if !names_module(scope, module) && !snapshot_alias(subject, scope, module) {
+                return Err(invalid(
+                    source_span,
+                    "original named scope is not the frozen callee module",
+                ));
+            }
+        }
+        None => {
+            if original != occurrence.definition_name {
+                return Err(invalid(
+                    source_span,
+                    "original named word differs from the frozen callee",
+                ));
+            }
+            if module.owner != subject.definition_owner
+                || occurrence.module_index != subject.named_uses[0].module_index
+            {
+                return Err(invalid(
+                    source_span,
+                    "unqualified named word has another original owner",
+                ));
             }
         }
     }
     Ok(())
 }
 
-/// The retained bytes `span` names, or an empty slice when they are absent.
-fn source_bytes<'a>(
-    source: &'a [u8],
-    span: Span,
-    at: Span,
-) -> Result<&'a [u8], Diagnostic> {
-    let (Ok(start), Ok(end)) = (
-        usize::try_from(span.start),
-        usize::try_from(span.end),
-    ) else {
+/// The retained bytes `span` names.
+fn source_bytes(source: &[u8], span: Span, at: Span) -> Result<&[u8], Diagnostic> {
+    let (Ok(start), Ok(end)) = (usize::try_from(span.start), usize::try_from(span.end)) else {
         return Err(invalid(span, "source span exceeds the address space"));
     };
-    source
-        .get(start..end)
-        .ok_or_else(|| invalid(at, "source span is outside the retained module"))
+    let Some(bytes) = source.get(start..end) else {
+        return Err(invalid(at, "source span is outside the retained module"));
+    };
+    Ok(bytes)
 }
 
 /// Whether `qualified` is exactly `name@version` naming `module`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; `rsplit_once_byte` and `parse` are not const"
+)]
 fn names_module(qualified: &str, module: &super::ResolvedSourceModule) -> bool {
     match crate::scan::rsplit_once_byte(qualified, b'@') {
         Some((name, version)) => {
@@ -1237,19 +2313,40 @@ fn names_module(qualified: &str, module: &super::ResolvedSourceModule) -> bool {
     }
 }
 
-/// Whether the frozen snapshot binds `scope` to exactly `module`.
+/// Whether the frozen snapshot binds `scope` to `module`.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; String dereference is not const on the pinned compiler"
+)]
+fn is_bound_import(
+    binding: &super::NamedImportBinding,
+    scope: &str,
+    owner: u64,
+    expected_index: usize,
+) -> bool {
+    str_eq(&binding.alias, scope)
+        && binding.owner == owner
+        && binding.module_index == expected_index
+}
+
 fn snapshot_alias(
     subject: &super::SubjectBinding,
     scope: &str,
     module: &super::ResolvedSourceModule,
 ) -> bool {
+    let Some(expected_index) = dependency_position(&subject.source_dependencies, module.owner)
+    else {
+        return false;
+    };
     let mut position = 0;
     let mut is_bound = false;
     while !is_bound && position < subject.named_imports.len() {
-        let binding = &subject.named_imports[position];
-        is_bound = binding.alias == scope
-            && binding.owner == module.owner
-            && binding.module_index == dependency_position(&subject.source_dependencies, module.owner).unwrap_or(usize::MAX);
+        is_bound = is_bound_import(
+            &subject.named_imports[position],
+            scope,
+            module.owner,
+            expected_index,
+        );
         position += 1;
     }
     is_bound
@@ -1299,8 +2396,11 @@ pub struct Envelope {
 }
 
 /// A checked revision-3 caller proof: its regenerated canonical claim and its
-/// envelope. No Lean lowering is produced by this profile yet, so the consumer
-/// refuses publication rather than claiming an unproved theorem.
+/// envelope.
+#[expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-contracts; matches public revision-3 API naming in the specification"
+)]
 pub struct PreparedV3 {
     pub claim: String,
     pub envelope: Envelope,
@@ -1315,10 +2415,7 @@ fn replay_identity(dependency: &ProofDependency) -> String {
     identity
 }
 
-fn callee_identity(
-    occurrence: &NamedUseOrigin,
-    module: &super::ResolvedSourceModule,
-) -> String {
+fn callee_identity(occurrence: &NamedUseOrigin, module: &super::ResolvedSourceModule) -> String {
     let mut identity = module.module.clone();
     identity.push('@');
     crate::rendering::number(&mut identity, u64::from(module.version));
@@ -1328,68 +2425,141 @@ fn callee_identity(
 }
 
 /// One resolved callee contract and its source-side proof record.
-struct Callee<'a> {
-    contract: &'a ContractGoal,
-    dependency: Option<&'a ProofDependency>,
-    reference: &'a str,
+#[derive(Clone, Copy)]
+#[octet::sealed_enum]
+enum CalleeSource {
+    Dep(usize),
+    Local(usize),
+}
+
+struct Callee {
+    reference: String,
+    source: CalleeSource,
+}
+
+const fn callee_contract<'a>(
+    source: CalleeSource,
+    dependencies: &'a [ProofDependency],
+    local: &'a [ProofObligation],
+) -> Option<&'a ContractGoal> {
+    match source {
+        CalleeSource::Dep(idx) => match &dependencies[idx].declaration.goal {
+            PendingGoal::Contract { contract } => Some(contract),
+            PendingGoal::Pure { .. } => None,
+        },
+        CalleeSource::Local(idx) => match &local[idx].goal {
+            PendingGoal::Contract { contract } => Some(contract),
+            PendingGoal::Pure { .. } => None,
+        },
+    }
+}
+
+const fn callee_dependency(
+    source: CalleeSource,
+    dependencies: &[ProofDependency],
+) -> Option<&ProofDependency> {
+    match source {
+        CalleeSource::Dep(idx) => Some(&dependencies[idx]),
+        CalleeSource::Local(_) => None,
+    }
+}
+
+fn dependency_has_name(dep: &ProofDependency, name: &str) -> bool {
+    str_eq(&dep.name, name)
+}
+
+fn obligation_has_name(obligation: &ProofObligation, name: &str) -> bool {
+    str_eq(&obligation.name, name)
 }
 
 /// Resolve one `pc-call` reference among the imported dependency snapshot and
 /// the caller module's earlier proofs.
-fn resolve_callee<'a>(
-    reference: &'a str,
-    dependencies: &'a [ProofDependency],
-    local: &'a [ProofObligation],
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; missing or non-contract references return typed diagnostics"
+)]
+fn resolve_callee(
+    reference: &str,
+    dependencies: &[ProofDependency],
+    local: &[ProofObligation],
     span: Span,
-) -> Result<Callee<'a>, Diagnostic> {
-    for dependency in dependencies {
-        if dependency.name == reference {
-            if !dependency.exported {
-                return Err(refined(
-                    span,
-                    "preuse-dependency-missing",
-                    "the imported proof is private",
-                ));
-            }
-            let PendingGoal::Contract { contract } = &dependency.declaration.goal else {
-                return Err(refined(
-                    span,
-                    "preuse-sort-mismatch",
-                    "a lemma proof is not a program claim",
-                ));
-            };
-            return Ok(Callee {
-                contract,
-                dependency: Some(dependency),
-                reference,
-            });
+) -> Result<Callee, Diagnostic> {
+    let mut dep_idx = dependencies.len();
+    let mut di = 0usize;
+    while dep_idx == dependencies.len() && di < dependencies.len() {
+        if dependency_has_name(&dependencies[di], reference) {
+            dep_idx = di;
         }
+        di += 1;
     }
-    for obligation in local {
-        if obligation.name == reference {
-            let PendingGoal::Contract { contract } = &obligation.goal else {
-                return Err(refined(
-                    span,
-                    "preuse-sort-mismatch",
-                    "a lemma proof is not a program claim",
-                ));
-            };
-            return Ok(Callee {
-                contract,
-                dependency: None,
-                reference,
-            });
+    if dep_idx < dependencies.len() {
+        let idx = dep_idx;
+        let dependency = &dependencies[idx];
+        if !dependency.exported {
+            return Err(refined(
+                span,
+                Reason {
+                    code: "preuse-dependency-missing",
+                    detail: "the imported proof is private",
+                },
+            ));
         }
+        let PendingGoal::Contract { .. } = &dependency.declaration.goal else {
+            return Err(refined(
+                span,
+                Reason {
+                    code: "preuse-sort-mismatch",
+                    detail: "a lemma proof is not a program claim",
+                },
+            ));
+        };
+        return Ok(Callee {
+            reference: String::from(reference),
+            source: CalleeSource::Dep(idx),
+        });
+    }
+    let mut loc_idx = local.len();
+    let mut li = 0usize;
+    while loc_idx == local.len() && li < local.len() {
+        if obligation_has_name(&local[li], reference) {
+            loc_idx = li;
+        }
+        li += 1;
+    }
+    if loc_idx < local.len() {
+        let idx = loc_idx;
+        let PendingGoal::Contract { .. } = &local[idx].goal else {
+            return Err(refined(
+                span,
+                Reason {
+                    code: "preuse-sort-mismatch",
+                    detail: "a lemma proof is not a program claim",
+                },
+            ));
+        };
+        return Ok(Callee {
+            reference: String::from(reference),
+            source: CalleeSource::Local(idx),
+        });
     }
     Err(refined(
         span,
-        "preuse-dependency-missing",
-        "no exported contract proof has this reference",
+        Reason {
+            code: "preuse-dependency-missing",
+            detail: "no exported contract proof has this reference",
+        },
     ))
 }
 
-/// The fields of one occurrence that the callee contract must reproduce
-/// exactly. The first differing field names the refusal.
+/// The fields of one occurrence that the callee contract must reproduce.
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; slice comparisons are not const"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; returns mismatch label when metadata diverges"
+)]
 fn callee_differs(
     occurrence: &NamedUseOrigin,
     contract: &ContractGoal,
@@ -1404,13 +2574,8 @@ fn callee_differs(
     {
         return Some("module identity");
     }
-    if contract.subject.definition != occurrence.definition_name
-        || contract.subject.definition_ordinal != occurrence.definition_ordinal
-        || contract.subject.source_span != occurrence.definition_span
-        || contract.subject.definition_identity != occurrence.definition_identity
-        || contract.subject.definition_owner != occurrence.definition_owner
-    {
-        return Some("callee subject");
+    if let Some(mismatch) = callee_subject_differs(occurrence, contract) {
+        return Some(mismatch);
     }
     let (Ok(start), Ok(end)) = (
         usize::try_from(contract.subject.source_span.start),
@@ -1420,68 +2585,129 @@ fn callee_differs(
     };
     match contract.subject.module_source.get(start..end) {
         Some(body) if body == contract.subject.definition_source => {}
-        _ => return Some("callee definition source"),
+        Some(_) | None => return Some("callee definition source"),
     }
+    callee_interface_differs(contract)
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; String equality checks are not const"
+)]
+fn callee_subject_differs(
+    occurrence: &NamedUseOrigin,
+    contract: &ContractGoal,
+) -> Option<&'static str> {
+    if contract.subject.definition != occurrence.definition_name
+        || contract.subject.definition_ordinal != occurrence.definition_ordinal
+    {
+        return Some("callee subject");
+    }
+    if contract.subject.source_span != occurrence.definition_span
+        || contract.subject.definition_identity != occurrence.definition_identity
+        || contract.subject.definition_owner != occurrence.definition_owner
+    {
+        return Some("callee subject");
+    }
+    None
+}
+
+const fn sort_matches_word(ty: &noble_kernel::types::Ty, word: &str) -> bool {
+    match (Sort3::from_ty(ty), Sort3::from_word(word)) {
+        (Some(a), Some(b)) => a as u8 == b as u8,
+        _ => false,
+    }
+}
+
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; returns mismatch label on invalid interface"
+)]
+fn callee_interface_differs(contract: &ContractGoal) -> Option<&'static str> {
     if !contract.subject.effects.is_empty() {
         return Some("effects");
     }
     if contract.subject.input_types.len() > MAX_INTERFACE
         || contract.subject.output_types.len() > MAX_INTERFACE
-        || contract.inputs.len() != contract.subject.input_types.len()
+    {
+        return Some("interface");
+    }
+    if contract.inputs.len() != contract.subject.input_types.len()
         || contract.outputs.len() != contract.subject.output_types.len()
     {
         return Some("interface");
     }
+    let mut mismatch_code = 0u8;
     let mut index = 0;
-    let mut differs = None;
-    while differs.is_none() && index < contract.inputs.len() {
-        differs = match Sort3::from_ty(&contract.subject.input_types[index]) {
-            Some(code) if Sort3::from_word(&contract.inputs[index].1) == Some(code) => None,
-            _ => Some("input interface"),
-        };
+    while index < contract.inputs.len() && mismatch_code == 0 {
+        if !sort_matches_word(
+            &contract.subject.input_types[index],
+            &contract.inputs[index].1,
+        ) {
+            mismatch_code = 1;
+        }
         index += 1;
     }
     let mut index = 0;
-    while differs.is_none() && index < contract.outputs.len() {
-        differs = match Sort3::from_ty(&contract.subject.output_types[index]) {
-            Some(code) if Sort3::from_word(&contract.outputs[index].1) == Some(code) => None,
-            _ => Some("output interface"),
-        };
+    while index < contract.outputs.len() && mismatch_code == 0 {
+        if !sort_matches_word(
+            &contract.subject.output_types[index],
+            &contract.outputs[index].1,
+        ) {
+            mismatch_code = 2;
+        }
         index += 1;
     }
-    differs
+    match mismatch_code {
+        0 => None,
+        1 => Some("input interface"),
+        _ => Some("output interface"),
+    }
 }
 
 /// One caller-body step the symbolic walk supports.
+#[octet::sealed_enum]
 enum Step {
     Literal(noble_kernel::untrusted::Lit),
     Builtin(u32),
     Call(usize),
 }
 
-fn classify(
-    node: &noble_kernel::untrusted::Node,
-    occurrence: Option<usize>,
-) -> Option<Step> {
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; `Option::map` with enum constructor is not const"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; returns `None` outside the pure profile"
+)]
+fn classify(node: &noble_kernel::untrusted::Node, occurrence: Option<usize>) -> Option<Step> {
+    if let Some(index) = occurrence {
+        return match node {
+            noble_kernel::untrusted::Node::Invocation { .. } => Some(Step::Call(index)),
+            noble_kernel::untrusted::Node::Literal { .. }
+            | noble_kernel::untrusted::Node::SignedSelf { .. }
+            | noble_kernel::untrusted::Node::Quotation { .. }
+            | noble_kernel::untrusted::Node::SlotInvoke { .. } => None,
+        };
+    }
     match node {
-        noble_kernel::untrusted::Node::Literal { lit, inst } if inst.bindings.is_empty() => {
-            Some(Step::Literal(lit.clone()))
-        }
-        noble_kernel::untrusted::Node::Invocation { def, inst } if inst.bindings.is_empty() => {
-            match def.0 {
-                0 | 1 | 2 | 4 | 5 | 6 | 7 => Some(Step::Builtin(def.0)),
-                _ => occurrence.map(Step::Call),
-            }
-        }
-        _ => None,
+        noble_kernel::untrusted::Node::Literal { lit, .. } => Some(Step::Literal(*lit)),
+        noble_kernel::untrusted::Node::Invocation { def, .. } => match def.0 {
+            0 | 1 | 2 | 4..=7 => Some(Step::Builtin(def.0)),
+            _ => None,
+        },
+        noble_kernel::untrusted::Node::SignedSelf { .. }
+        | noble_kernel::untrusted::Node::Quotation { .. }
+        | noble_kernel::untrusted::Node::SlotInvoke { .. } => None,
     }
 }
 
 fn call_slice(slice: &Form) -> Result<(usize, &str, &Form), Diagnostic> {
     let call = operation(slice, "pc-call", 3)?;
-    let ordinal = atom(&call[0])?
-        .parse::<usize>()
-        .map_err(|_| invalid(call[0].span, "call slice ordinal is not a number"))?;
+    let Ok(ordinal) = atom(&call[0])?.parse::<usize>() else {
+        return Err(invalid(call[0].span, "call slice ordinal is not a number"));
+    };
     let reference = atom(&call[1])?;
     Ok((ordinal, reference, &call[2]))
 }
@@ -1513,108 +2739,221 @@ fn slices(term: &Form) -> Result<&[Form], Diagnostic> {
 }
 
 fn replay_seen(seen: &[String], identity: &str) -> bool {
-    seen.iter().any(|item| item == identity)
+    let mut index = 0;
+    let mut is_found = false;
+    while !is_found && index < seen.len() {
+        if str_eq(&seen[index], identity) {
+            is_found = true;
+        }
+        index += 1;
+    }
+    is_found
 }
 
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; `facts` is the symbolic state's owned fact vector"
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; appends normalized conjuncts to the caller's fact vector"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; enforces MAX_FACTS via typed Diagnostic"
+)]
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-contracts; bounded by MAX_FACTS check before push"
+)]
 fn add_fact(facts: &mut Vec<Prop3>, prop: &Prop3) -> Result<(), Diagnostic> {
-    match prop {
-        Prop3::And(left, right) => {
-            add_fact(facts, left)?;
-            add_fact(facts, right)
-        }
-        _ => {
-            if facts.len() >= MAX_FACTS {
-                return Err(budget(Span { start: 0, end: 0 }));
+    let mut pending = Vec::new();
+    pending.push(prop.clone());
+    while let Some(node) = pending.pop() {
+        match node {
+            Prop3::And(left, right) => {
+                pending.push(*right);
+                pending.push(*left);
             }
-            facts.push(normalize_prop(prop));
-            Ok(())
+            Prop3::True
+            | Prop3::False
+            | Prop3::Not(_)
+            | Prop3::Eq(..)
+            | Prop3::Lt(..)
+            | Prop3::Le(..) => {
+                if facts.len() >= MAX_FACTS {
+                    return Err(budget(Span { start: 0, end: 0 }));
+                }
+                facts.push(normalize_prop(&node));
+            }
         }
     }
+    Ok(())
 }
 
-fn collect_conjuncts<'a>(prop: &'a Prop3, out: &mut Vec<&'a Prop3>) {
-    match prop {
-        Prop3::And(left, right) => {
-            collect_conjuncts(left, out);
-            collect_conjuncts(right, out);
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; appends flattened conjuncts into caller vector"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; collects top-level conjuncts into caller buffer"
+)]
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-contracts; bounded by validated proposition AST node count"
+)]
+fn collect_conjuncts_owned(prop: &Prop3, out: &mut Vec<Prop3>) {
+    let mut pending = Vec::new();
+    pending.push(prop.clone());
+    while let Some(node) = pending.pop() {
+        match node {
+            Prop3::And(left, right) => {
+                pending.push(*right);
+                pending.push(*left);
+            }
+            Prop3::True
+            | Prop3::False
+            | Prop3::Not(_)
+            | Prop3::Eq(..)
+            | Prop3::Lt(..)
+            | Prop3::Le(..) => out.push(node),
         }
-        _ => out.push(prop),
     }
 }
 
 /// The direct output term `U[in ↦ arguments]` of a top-level
 /// `(eq (out j) U)` conjunct that mentions no output.
-fn direct_output(ensures: &Prop3, index: usize, arguments: &[Term3]) -> Option<Term3> {
-    let mut conjuncts: Vec<&Prop3> = Vec::new();
-    collect_conjuncts(ensures, &mut conjuncts);
-    for conjunct in conjuncts {
-        let Prop3::Eq(left, right) = conjunct else {
-            continue;
-        };
-        if matches!(left, Term3::Output(found) if *found == index) && !mentions_output(right) {
-            return Some(normalize_term(&instantiate_term(right, arguments, &[])));
-        }
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; calls Vec-backed mentions_output traversal"
+)]
+fn is_direct_output_eq(prop: &Prop3, index: usize) -> bool {
+    match prop {
+        Prop3::Eq(Term3::Output(out_i), right) => *out_i == index && !mentions_output(right),
+        _ => false,
     }
-    None
 }
 
-/// Scan every `(use NAME)` of a proof term, in form order.
+fn direct_output(ensures: &Prop3, index: usize, arguments: &[Term3]) -> Option<Term3> {
+    let mut conjuncts: Vec<Prop3> = Vec::new();
+    collect_conjuncts_owned(ensures, &mut conjuncts);
+    let mut pos = 0;
+    let mut found: Option<usize> = None;
+    while pos < conjuncts.len() && found.is_none() {
+        if is_direct_output_eq(&conjuncts[pos], index) {
+            found = Some(pos);
+        }
+        pos += 1;
+    }
+    match found {
+        Some(idx) => match &conjuncts[idx] {
+            Prop3::Eq(_, right) => Some(normalize_term(&instantiate_term(right, arguments, &[]))),
+            _ => None,
+        },
+        None => None,
+    }
+}
+
+/// Scan every `(use NAME)` of a proof term in form order, iteratively.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; appends distinct lemma names into the caller's list"
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; pushes resolved lemma names into `names`"
+)]
+fn record_lemma_name(name: &str, span: Span, names: &mut Vec<String>) -> Result<(), Diagnostic> {
+    let is_fact = fact_index(name).is_some();
+    if is_fact || replay_seen(names, name) {
+        return Ok(());
+    }
+    if names.len() >= MAX_LEMMA_USES {
+        return Err(budget(span));
+    }
+    names.push(String::from(name));
+    Ok(())
+}
+
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; pushes pending AST items in reverse order"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; updates lemma traversal worklist"
+)]
+fn push_pending_forms_rev(items: &[Form], pending: &mut Vec<Form>) {
+    let mut idx = items.len();
+    while idx > 0 {
+        let prev = idx.saturating_sub(1);
+        pending.push(items[prev].clone());
+        idx = prev;
+    }
+}
+
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; pushes pending AST nodes and lemma names into caller vectors"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; updates lemma traversal worklist and name list"
+)]
+fn lemma_names_step(
+    node: Form,
+    pending: &mut Vec<Form>,
+    names: &mut Vec<String>,
+) -> Result<(), Diagnostic> {
+    if let FormKind::List(items) = &node.kind {
+        if head_atom(items) == Some("use") && items.len() == 2 {
+            let name = atom(&items[1])?;
+            record_lemma_name(name, node.span, names)?;
+        }
+        push_pending_forms_rev(items, pending);
+    }
+    Ok(())
+}
+
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; appends distinct lemma names into caller's preallocated vector"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; appends distinct lemma names in form traversal order"
+)]
 fn lemma_names(form: &Form, names: &mut Vec<String>) -> Result<(), Diagnostic> {
-    match &form.kind {
-        FormKind::Atom(_) => Ok(()),
-        FormKind::List(items) => {
-            if head_atom(items) == Some("use") && items.len() == 2 {
-                let name = atom(&items[1])?;
-                let is_fact = fact_index(name).is_some();
-                if !is_fact && !names.iter().any(|item| item == name) {
-                    if names.len() >= MAX_LEMMA_USES {
-                        return Err(budget(form.span));
-                    }
-                    names.push(String::from(name));
-                }
-            }
-            for item in items {
-                lemma_names(item, names)?;
-            }
-            Ok(())
+    let mut pending = Vec::new();
+    pending.push(form.clone());
+    let mut outcome = Ok(());
+    while let Some(node) = pending.pop() {
+        outcome = lemma_names_step(node, &mut pending, names);
+        if outcome.is_err() {
+            break;
         }
     }
+    outcome
 }
 
 /// Resolve every distinct lemma use against the imported dependency snapshot
-/// and parse its statement.
+/// or earlier local pure obligations, and parse its statement.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; `meter` charges statement parsing against the proof budget"
+)]
 fn resolved_lemmas(
     names: &[String],
     dependencies: &[ProofDependency],
+    local: &[ProofObligation],
     span: Span,
     meter: &mut Meter<'_>,
 ) -> Result<Vec<Lemma>, Diagnostic> {
     let mut lemmas = Vec::with_capacity(names.len());
     for name in names {
-        let Some(dependency) = dependencies.iter().find(|item| item.name == *name) else {
-            return Err(refined(
-                span,
-                "preuse-dependency-missing",
-                "no exported lemma proof has this reference",
-            ));
-        };
-        if !dependency.exported {
-            return Err(refined(
-                span,
-                "preuse-dependency-missing",
-                "the imported lemma is private",
-            ));
-        }
-        let PendingGoal::Pure { proposition } = &dependency.declaration.goal else {
-            return Err(refined(
-                span,
-                "preuse-sort-mismatch",
-                "a program contract is not a logical lemma",
-            ));
-        };
-        let mut bound: Vec<(String, Sort3)> = Vec::new();
-        let mut remaining = MAX_ASSERTION_NODES;
-        let statement = parse_statement(proposition, &mut bound, 0, &mut remaining, meter)?;
+        let proposition = find_lemma_proposition(name, dependencies, local, span)?;
+        let statement = parse_statement(proposition, meter)?;
         lemmas.push(Lemma {
             reference: name.clone(),
             statement,
@@ -1623,18 +2962,117 @@ fn resolved_lemmas(
     Ok(lemmas)
 }
 
-fn caller_occurrences<'a>(
-    goal: &'a ContractGoal,
-    selected: &'a noble_kernel::execution::Definition,
-) -> Vec<&'a NamedUseOrigin> {
-    let mut result: Vec<&NamedUseOrigin> = goal
-        .subject
-        .named_uses
-        .iter()
-        .skip(1)
-        .filter(|origin| origin.caller_definition == Some(selected.definition))
-        .collect();
-    result.sort_by_key(|origin| origin.source_span.map_or(0, |span| span.start));
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; missing or mismatched lemma targets return typed diagnostics"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; lemma lookup via closure is not const"
+)]
+fn find_lemma_proposition<'a>(
+    name: &str,
+    dependencies: &'a [ProofDependency],
+    local: &'a [ProofObligation],
+    span: Span,
+) -> Result<&'a Form, Diagnostic> {
+    if let Some(dependency) = crate::scan::find_first(dependencies, |item| item.name == name) {
+        if !dependency.exported {
+            return Err(refined(
+                span,
+                Reason {
+                    code: "preuse-dependency-missing",
+                    detail: "the imported lemma is private",
+                },
+            ));
+        }
+        let PendingGoal::Pure { proposition } = &dependency.declaration.goal else {
+            return Err(refined(
+                span,
+                Reason {
+                    code: "preuse-sort-mismatch",
+                    detail: "a program contract is not a logical lemma",
+                },
+            ));
+        };
+        return Ok(proposition);
+    }
+    if let Some(obligation) = crate::scan::find_first(local, |item| item.name == name) {
+        let PendingGoal::Pure { proposition } = &obligation.goal else {
+            return Err(refined(
+                span,
+                Reason {
+                    code: "preuse-sort-mismatch",
+                    detail: "a program contract is not a logical lemma",
+                },
+            ));
+        };
+        return Ok(proposition);
+    }
+    Err(refined(
+        span,
+        Reason {
+            code: "preuse-dependency-missing",
+            detail: "no exported lemma proof has this reference",
+        },
+    ))
+}
+
+const fn is_caller_def(
+    caller: Option<noble_kernel::contracts::Definition>,
+    target: noble_kernel::contracts::Definition,
+) -> bool {
+    match caller {
+        Some(d) => d.0 == target.0,
+        None => false,
+    }
+}
+
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; filters and deterministically sorts caller occurrences"
+)]
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-contracts; bounded by `goal.subject.named_uses.len()`"
+)]
+fn caller_occurrences(
+    goal: &ContractGoal,
+    selected: &noble_kernel::execution::Definition,
+) -> Vec<usize> {
+    let mut result: Vec<usize> = Vec::new();
+    let mut index = 1usize;
+    while index < goal.subject.named_uses.len() {
+        if is_caller_def(
+            goal.subject.named_uses[index].caller_definition,
+            selected.definition,
+        ) {
+            result.push(index);
+        }
+        index += 1;
+    }
+    // Insertion sort preserves deterministic source span order without `slice::sort_by_key`.
+    let mut i = 1usize;
+    while i < result.len() {
+        let mut j = i;
+        while j > 0 {
+            let prev_idx = j.saturating_sub(1);
+            let prev_start = match goal.subject.named_uses[result[prev_idx]].source_span {
+                Some(s) => s.start,
+                None => 0,
+            };
+            let cur_start = match goal.subject.named_uses[result[j]].source_span {
+                Some(s) => s.start,
+                None => 0,
+            };
+            if prev_start <= cur_start {
+                break;
+            }
+            result.swap(prev_idx, j);
+            j = prev_idx;
+        }
+        i += 1;
+    }
     result
 }
 
@@ -1646,6 +3084,14 @@ struct State {
 }
 
 /// Push one value, refusing a stack over the profile bound.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; pushes one symbolic term onto the owned execution stack"
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; requires growable stack buffer to push checked values"
+)]
 fn push(stack: &mut Vec<Term3>, term: Term3, span: Span) -> Result<(), Diagnostic> {
     if stack.len() >= MAX_STACK {
         return Err(budget(span));
@@ -1655,6 +3101,18 @@ fn push(stack: &mut Vec<Term3>, term: Term3, span: Span) -> Result<(), Diagnosti
 }
 
 /// Apply one pure builtin step.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; updates the owned symbolic stack"
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; pops and pushes on the owned symbolic stack vector"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; stack underflow returns typed Diagnostic"
+)]
 fn builtin_step(stack: &mut Vec<Term3>, word: u32, span: Span) -> Result<(), Diagnostic> {
     match word {
         0 => {
@@ -1675,7 +3133,7 @@ fn builtin_step(stack: &mut Vec<Term3>, word: u32, span: Span) -> Result<(), Dia
             let top = stack.len().saturating_sub(1);
             stack.swap(top, top.saturating_sub(1));
         }
-        4 | 5 | 6 => {
+        4..=6 => {
             let Some(right) = stack.pop() else {
                 return Err(invalid(span, "arithmetic below a two-value stack"));
             };
@@ -1710,29 +3168,46 @@ fn builtin_step(stack: &mut Vec<Term3>, word: u32, span: Span) -> Result<(), Dia
 }
 
 /// Allocate one fresh ghost name for a call output.
-fn ghost(state: &mut State, index: u32, code: Sort3) -> Term3 {
-    let name = Term3::Ghost(state.ghosts, index, code);
-    name
+const fn ghost(state: &State, index: u32, code: Sort3) -> Term3 {
+    Term3::Ghost(state.ghosts, index, code)
 }
 
 /// Apply one callee contract step: exact argument sorting, explicit bridge,
 /// contract outputs and the carried postcondition.
+#[derive(Clone, Copy)]
+struct CallSite<'a> {
+    callee: &'a Callee,
+    bridge: &'a Form,
+    context: WalkContext<'a>,
+    span: Span,
+}
+
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; updates symbolic state and meter for this call site"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; mismatched arguments or unproved bridges return typed diagnostics"
+)]
 #[expect(
     tigerstyle::function_length,
-    reason = "Owner: noble-contracts; the call rule keeps argument sorting, the bridge, the output terms and the fact addition in one reviewable sequence"
+    reason = "Owner: noble-contracts; validates callee interface, checks bridge, updates stack and facts atomically"
 )]
 fn call_step(
     state: &mut State,
-    callee: &Callee<'_>,
-    bridge: &Form,
-    contracts: &[&str],
-    lemmas: &[Lemma],
-    inputs: &[(String, Sort3)],
-    outputs: &[(String, Sort3)],
-    span: Span,
+    site: CallSite<'_>,
     meter: &mut Meter<'_>,
-) -> Result<(), Diagnostic> {
-    let contract = callee.contract;
+) -> Result<CallStepInfo, Diagnostic> {
+    let CallSite {
+        callee,
+        bridge,
+        context,
+        span,
+    } = site;
+    let Some(contract) = callee_contract(callee.source, context.dependencies, context.local) else {
+        return Err(invalid(span, "missing callee contract goal"));
+    };
     let callee_inputs = interface(&contract.inputs, contract.contract_span)?;
     let callee_outputs = interface(&contract.outputs, contract.contract_span)?;
     let arity = callee_inputs.len();
@@ -1744,17 +3219,21 @@ fn call_step(
     }
     let split = state.stack.len().saturating_sub(arity);
     let arguments: Vec<Term3> = state.stack[split..].to_vec();
-    for (argument, (_, code)) in arguments.iter().zip(&callee_inputs) {
-        if sort_of(argument, inputs, outputs, &[]) != Some(*code) {
-            return Err(invalid(span, "call argument has the wrong ordered sort"));
+    let mut is_bad_arg = false;
+    let mut arg_at = 0;
+    while arg_at < arguments.len() {
+        let is_mismatch = sort_of(&arguments[arg_at], context.inputs, context.outputs, &[])
+            != Some(callee_inputs[arg_at].1);
+        if is_mismatch {
+            is_bad_arg = true;
+            break;
         }
+        arg_at += 1;
     }
-    let requires = assertion(
-        &contract.requires,
-        &callee_inputs,
-        &callee_outputs,
-        meter,
-    )?;
+    if is_bad_arg {
+        return Err(invalid(span, "call argument has the wrong ordered sort"));
+    }
+    let requires = assertion(&contract.requires, &callee_inputs, &callee_outputs, meter)?;
     if prop_mentions_output(&requires) {
         return Err(unsupported_profile(
             contract.requires.span,
@@ -1762,146 +3241,358 @@ fn call_step(
         ));
     }
     let bridge_goal = normalize_prop(&instantiate_prop(&requires, &arguments, &[]));
-    let assignment = make_scope(inputs, outputs, &[], true);
+    let assignment = make_scope(context.inputs, context.outputs, &[], ScopeMode::Motive);
     let proof_scope = ProofScope {
         facts: &state.facts,
-        lemmas,
-        contracts,
-        assignment: &assignment,
+        lemmas: context.lemmas,
+        contracts: context.contracts,
+        assignment,
     };
-    check_proof(bridge, &bridge_goal, &proof_scope, meter)
-        .map_err(|problem| refined(bridge.span, "preuse-bridge-unproved", &problem.message))?;
-    let ensures = assertion(
-        &contract.ensures,
-        &callee_inputs,
-        &callee_outputs,
-        meter,
-    )?;
-    let mut results: Vec<Term3> = Vec::with_capacity(callee_outputs.len());
-    for (index, (_, code)) in callee_outputs.iter().enumerate() {
-        match direct_output(&ensures, index, &arguments) {
-            Some(term) => results.push(term),
-            None => {
-                let fresh = ghost(
-                    state,
-                    u32::try_from(index).unwrap_or(u32::MAX),
-                    *code,
-                );
-                results.push(fresh);
-            }
-        }
+    if let Err(problem) = check_proof(bridge, &bridge_goal, proof_scope, meter) {
+        return Err(refined(
+            bridge.span,
+            Reason {
+                code: "preuse-bridge-unproved",
+                detail: &problem.message,
+            },
+        ));
     }
+    let ensures = assertion(&contract.ensures, &callee_inputs, &callee_outputs, meter)?;
+    let (results, direct_outputs) =
+        collect_callee_outputs(state, &ensures, &callee_outputs, &arguments, span)?;
     state.stack.truncate(split);
     let instance = normalize_prop(&instantiate_prop(&ensures, &arguments, &results));
     add_fact(&mut state.facts, &instance)?;
-    for term in results {
-        push(&mut state.stack, term, span)?;
+    let mut outcome = Ok(());
+    let mut ri = 0usize;
+    while ri < results.len() {
+        outcome = push(&mut state.stack, results[ri].clone(), span);
+        if outcome.is_err() {
+            break;
+        }
+        ri += 1;
     }
+    outcome?;
     state.ghosts = state.ghosts.saturating_add(1);
-    Ok(())
+    Ok(CallStepInfo {
+        callee_inputs,
+        callee_outputs,
+        callee_requires: requires,
+        callee_ensures: ensures,
+        direct_outputs,
+    })
 }
 
-/// Replay every distinct closure member once. Contract members are replayed by
-/// their revision's own checker; a revision-3 member re-enters this module at
-/// the next depth.
-fn replay(
-    local: &[ProofObligation],
-    plan: &[&ProofDependency],
-    local_plan: &[&ProofObligation],
-    replayed: &mut Vec<String>,
-    closure: &mut Vec<String>,
-    depth: u32,
-    meter: &mut Meter<'_>,
-) -> Result<(), Diagnostic> {
-    if closure.len().saturating_add(plan.len()).saturating_add(local_plan.len()) > MAX_CLOSURE {
-        return Err(budget(Span { start: 0, end: 0 }));
-    }
-    for dependency in plan {
-        let identity = replay_identity(dependency);
-        if replay_seen(replayed, &identity) {
-            continue;
-        }
-        match dependency.declaration.revision {
-            1 => {
-                let (next, outcome) = super::check_dependency(dependency, false, *meter);
-                *meter = next;
-                outcome?;
+struct CallStepInfo {
+    callee_inputs: Vec<(String, Sort3)>,
+    callee_outputs: Vec<(String, Sort3)>,
+    callee_requires: Prop3,
+    callee_ensures: Prop3,
+    direct_outputs: Vec<Option<Term3>>,
+}
+
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; output count bounded by MAX_INTERFACE"
+)]
+fn collect_callee_outputs(
+    state: &State,
+    ensures: &Prop3,
+    callee_outputs: &[(String, Sort3)],
+    arguments: &[Term3],
+    span: Span,
+) -> Result<(Vec<Term3>, Vec<Option<Term3>>), Diagnostic> {
+    let mut results: Vec<Term3> = Vec::with_capacity(callee_outputs.len());
+    let mut direct: Vec<Option<Term3>> = Vec::with_capacity(callee_outputs.len());
+    let mut index = 0;
+    while index < callee_outputs.len() {
+        let code = callee_outputs[index].1;
+        match direct_output(ensures, index, arguments) {
+            Some(term) => {
+                direct.push(Some(term.clone()));
+                results.push(term);
             }
-            3 => {
-                let PendingGoal::Contract { contract } = &dependency.declaration.goal else {
-                    return Err(invalid(
-                        dependency.declaration.span,
-                        "revision-3 dependency is not a contract",
-                    ));
+            None => {
+                let Ok(out_u32) = u32::try_from(index) else {
+                    return Err(budget(span));
                 };
-                verify(contract, &dependency.dependencies, &[], &dependency.declaration.term, depth, meter)?;
-            }
-            _ => {
-                return Err(unsupported_profile(
-                    dependency.declaration.span,
-                    "closure member has an unsupported revision",
-                ));
+                let fresh = ghost(state, out_u32, code);
+                direct.push(None);
+                results.push(fresh);
             }
         }
-        replayed.push(identity.clone());
-        closure.push(identity);
+        index += 1;
     }
-    for obligation in local_plan {
-        let mut identity = String::from("local/");
-        identity.push_str(&obligation.name);
-        if replay_seen(replayed, &identity) {
-            continue;
+    Ok((results, direct))
+}
+
+/// The subject and occurrence view reconstructed by both contract staging and
+/// proof checking.
+struct SubjectView {
+    pub inputs: Vec<(String, Sort3)>,
+    pub outputs: Vec<(String, Sort3)>,
+    pub input_codes: Vec<Sort3>,
+    pub output_codes: Vec<Sort3>,
+    pub selected_idx: usize,
+    pub checked: noble_kernel::untrusted::Checked,
+    pub occurrences: Vec<usize>,
+}
+
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; non-I64/Bool interface types return typed Diagnostic"
+)]
+fn collect_interface_codes(
+    subject: &super::SubjectBinding,
+    span: Span,
+) -> Result<(Vec<Sort3>, Vec<Sort3>), Diagnostic> {
+    let mut subject_inputs = Vec::with_capacity(subject.input_types.len());
+    let mut is_bad_interface = false;
+    let mut in_at = 0usize;
+    while in_at < subject.input_types.len() && !is_bad_interface {
+        if let Some(code) = Sort3::from_ty(&subject.input_types[in_at]) {
+            subject_inputs.push(code);
+        } else {
+            is_bad_interface = true;
         }
-        match &obligation.goal {
-            PendingGoal::Pure { .. } => {
-                return Err(unsupported_profile(
-                    obligation.span,
-                    "local closure member is not a contract",
-                ))
-            }
-            PendingGoal::Contract { contract } => match contract.revision {
-                1 => {
-                    let (next, outcome) = super::check_contract(obligation, contract, *meter);
-                    *meter = next;
-                    outcome?;
-                }
-                3 => {
-                    verify(contract, &[], local, &obligation.term, depth, meter)?;
-                }
-                _ => {
-                    return Err(unsupported_profile(
-                        obligation.span,
-                        "local closure member has an unsupported revision",
-                    ))
-                }
-            },
+        in_at += 1;
+    }
+    let mut subject_outputs = Vec::with_capacity(subject.output_types.len());
+    let mut out_at = 0usize;
+    while out_at < subject.output_types.len() && !is_bad_interface {
+        if let Some(code) = Sort3::from_ty(&subject.output_types[out_at]) {
+            subject_outputs.push(code);
+        } else {
+            is_bad_interface = true;
         }
-        replayed.push(identity.clone());
-        closure.push(identity);
+        out_at += 1;
+    }
+    if is_bad_interface {
+        return Err(unsupported_profile(
+            span,
+            "revision-3 subject interface is not I64/Bool only",
+        ));
+    }
+    Ok((subject_inputs, subject_outputs))
+}
+
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid root metadata returns typed Diagnostic"
+)]
+fn validate_root_origin(
+    subject: &super::SubjectBinding,
+    span: Span,
+) -> Result<(&NamedUseOrigin, usize), Diagnostic> {
+    let Some(root) = subject.named_uses.first() else {
+        return Err(invalid(span, "revision-3 subject has no origin"));
+    };
+    let defs = &subject.accepted_submission.definitions;
+    let mut selected_idx = None;
+    let mut di = 0usize;
+    while selected_idx.is_none() && di < defs.len() {
+        if defs[di].definition.0 == root.definition.0 {
+            selected_idx = Some(di);
+        }
+        di += 1;
+    }
+    let Some(selected_idx) = selected_idx else {
+        return Err(invalid(
+            span,
+            "unique selected revision-3 subject is absent",
+        ));
+    };
+    let selected = &defs[selected_idx];
+    if selected.identity != subject.definition_identity || root.definition_span != span {
+        return Err(invalid(
+            span,
+            "revision-3 subject root is not the selected definition",
+        ));
+    }
+    if root.caller_definition.is_some() || root.source_span.is_some() || root.source_node.is_some()
+    {
+        return Err(invalid(
+            span,
+            "revision-3 subject root is not the selected definition",
+        ));
+    }
+    if root.definition_name != subject.definition
+        || root.definition_ordinal != subject.definition_ordinal
+        || root.definition_owner != subject.definition_owner
+    {
+        return Err(invalid(
+            span,
+            "revision-3 subject root is not the selected definition",
+        ));
+    }
+    Ok((root, selected_idx))
+}
+
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; records seen slot ids and distinct callee identities into caller buffers"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; updates caller last-node cursor and seen/distinct accumulators"
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; keeps subject, body, occurrence, cursor, and seen sets explicit"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; out-of-order or duplicate occurrences return typed Diagnostic"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; Vec mutation and identity formatting are not const"
+)]
+fn check_one_occurrence_order(
+    subject: &super::SubjectBinding,
+    body: &[noble_kernel::untrusted::NodeId],
+    occurrence: &NamedUseOrigin,
+    span: Span,
+    last_node: &mut Option<usize>,
+    slot_seen: &mut Vec<u32>,
+    distinct: &mut Vec<String>,
+) -> Result<(), Diagnostic> {
+    let Some(source_span) = occurrence.source_span else {
+        return Err(invalid(span, "call occurrence has no source span"));
+    };
+    let Some(source_node) = occurrence.source_node else {
+        return Err(invalid(span, "call occurrence has no source node"));
+    };
+    let Ok(node_idx) = usize::try_from(source_node) else {
+        return Err(invalid(
+            source_span,
+            "call occurrence is outside the ordered source body",
+        ));
+    };
+    let Some(&body_node) = body.get(node_idx) else {
+        return Err(invalid(
+            source_span,
+            "call occurrence is outside the ordered source body",
+        ));
+    };
+    let is_out_of_order = match *last_node {
+        Some(prev) => prev >= node_idx,
+        None => false,
+    };
+    if body_node != occurrence.candidate_node || is_out_of_order {
+        return Err(invalid(
+            source_span,
+            "call occurrence is outside the ordered source body",
+        ));
+    }
+    if source_span.start < span.start
+        || source_span.end > span.end
+        || source_span.start >= source_span.end
+    {
+        return Err(invalid(
+            source_span,
+            "call occurrence is outside the ordered source body",
+        ));
+    }
+    *last_node = Some(node_idx);
+    if slot_seen.contains(&occurrence.definition.0) {
+        return Err(invalid(
+            occurrence.definition_span,
+            "two call occurrences share one specialization slot",
+        ));
+    }
+    slot_seen.push(occurrence.definition.0);
+    let Some(module) = subject.source_dependencies.get(occurrence.module_index) else {
+        return Err(invalid(
+            occurrence.definition_span,
+            "callee module is not retained",
+        ));
+    };
+    let identity = callee_identity(occurrence, module);
+    if !replay_seen(distinct, &identity) {
+        if distinct.len() >= MAX_DISTINCT_CALLEES {
+            return Err(budget(occurrence.definition_span));
+        }
+        distinct.push(identity);
     }
     Ok(())
 }
 
-/// Check one revision-3 caller proof. `depth` is its contract-call depth in the
-/// replayed closure; it never exceeds `MAX_CLOSURE_DEPTH`.
-/// The subject and occurrence view both contract staging and proof checking
-/// reconstruct: the declared interface, the selected subject, its independent
-/// kernel acceptance, and the authenticated ordered call occurrences.
-struct SubjectView<'a> {
-    inputs: Vec<(String, Sort3)>,
-    outputs: Vec<(String, Sort3)>,
-    input_codes: Vec<Sort3>,
-    output_codes: Vec<Sort3>,
-    selected: &'a noble_kernel::execution::Definition,
-    checked: noble_kernel::untrusted::Checked,
-    occurrences: Vec<&'a NamedUseOrigin>,
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; out-of-order occurrences return typed Diagnostic"
+)]
+fn check_occurrences_order(
+    subject: &super::SubjectBinding,
+    body: &[noble_kernel::untrusted::NodeId],
+    occurrences: &[usize],
+    span: Span,
+) -> Result<(), Diagnostic> {
+    let mut slot_seen: Vec<u32> = Vec::with_capacity(occurrences.len());
+    let mut distinct: Vec<String> = Vec::with_capacity(MAX_DISTINCT_CALLEES);
+    let mut last_node: Option<usize> = None;
+    let mut index = 0usize;
+    let mut outcome = Ok(());
+    while index < occurrences.len() {
+        let occurrence = &subject.named_uses[occurrences[index]];
+        outcome = check_one_occurrence_order(
+            subject,
+            body,
+            occurrence,
+            span,
+            &mut last_node,
+            &mut slot_seen,
+            &mut distinct,
+        );
+        if outcome.is_err() {
+            break;
+        }
+        index += 1;
+    }
+    outcome
 }
 
-fn subject_view<'a>(
-    goal: &'a ContractGoal,
-    meter: &mut Meter<'_>,
-) -> Result<SubjectView<'a>, Diagnostic> {
-    let _ = meter;
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; rejects duplicate or untraced kernel specializations with typed diagnostics"
+)]
+fn check_accepted_definitions_traced(
+    accepted: &noble_kernel::execution::Submission,
+    selected_def: noble_kernel::contracts::Definition,
+    named_uses: &[NamedUseOrigin],
+    span: Span,
+) -> Result<(), Diagnostic> {
+    let mut seen: Vec<u32> = Vec::with_capacity(accepted.definitions.len());
+    let mut declaration_at = 0;
+    while declaration_at < accepted.definitions.len() {
+        let definition = accepted.definitions[declaration_at].definition;
+        if seen.contains(&definition.0)
+            || (definition != selected_def
+                && crate::scan::find_first(&named_uses[1..], |origin| {
+                    origin.definition == definition
+                })
+                .is_none())
+        {
+            return Err(invalid(
+                span,
+                "accepted revision-3 graph holds an untraced specialization",
+            ));
+        }
+        seen.push(definition.0);
+        declaration_at += 1;
+    }
+    Ok(())
+}
+
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; malformed contracts return typed diagnostics"
+)]
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; validates profile, kernel acceptance, occurrence ordering, and untraced defs sequentially"
+)]
+fn subject_view(goal: &ContractGoal, limits: Limits) -> Result<SubjectView, Diagnostic> {
     if goal.revision != 3 {
         return Err(invalid(
             goal.contract_span,
@@ -1914,18 +3605,7 @@ fn subject_view<'a>(
     let outputs = interface(&goal.outputs, goal.contract_span)?;
     let input_codes = interface_codes(&inputs);
     let output_codes = interface_codes(&outputs);
-    let mut subject_inputs = Vec::with_capacity(subject.input_types.len());
-    for ty in &subject.input_types {
-        subject_inputs.push(Sort3::from_ty(ty).ok_or_else(|| {
-            unsupported_profile(span, "revision-3 subject interface is not I64/Bool only")
-        })?);
-    }
-    let mut subject_outputs = Vec::with_capacity(subject.output_types.len());
-    for ty in &subject.output_types {
-        subject_outputs.push(Sort3::from_ty(ty).ok_or_else(|| {
-            unsupported_profile(span, "revision-3 subject interface is not I64/Bool only")
-        })?);
-    }
+    let (subject_inputs, subject_outputs) = collect_interface_codes(subject, span)?;
     if subject_inputs != input_codes || subject_outputs != output_codes {
         return Err(invalid(
             span,
@@ -1935,31 +3615,8 @@ fn subject_view<'a>(
     if !subject.effects.is_empty() {
         return Err(unsupported_profile(span, "revision-3 subjects are pure"));
     }
-    let Some(root) = subject.named_uses.first() else {
-        return Err(invalid(span, "revision-3 subject has no origin"));
-    };
-    let Some(selected) = crate::scan::find_first(&subject.accepted_submission.definitions, |item| {
-        item.definition == root.definition
-    }) else {
-        return Err(invalid(
-            span,
-            "unique selected revision-3 subject is absent",
-        ));
-    };
-    if selected.identity != subject.definition_identity
-        || root.caller_definition.is_some()
-        || root.source_span.is_some()
-        || root.source_node.is_some()
-        || root.definition_span != span
-        || root.definition_name != subject.definition
-        || root.definition_ordinal != subject.definition_ordinal
-        || root.definition_owner != subject.definition_owner
-    {
-        return Err(invalid(
-            span,
-            "revision-3 subject root is not the selected definition",
-        ));
-    }
+    let (root, selected_idx) = validate_root_origin(subject, span)?;
+    let selected = &subject.accepted_submission.definitions[selected_idx];
     let accepted = &subject.accepted_submission;
     if accepted.body.candidate.body != [root.candidate_node] {
         return Err(invalid(
@@ -1967,9 +3624,21 @@ fn subject_view<'a>(
             "accepted submission root is not the exact subject invocation",
         ));
     }
-    let checked = super::checked_flat(
+    let _accepted_check = super::checked_flat(
         &accepted.body,
         &accepted.request,
+        &accepted.environment,
+        span,
+        MAX_ASSERTION_NODES,
+    )?;
+    let selected_request = noble_kernel::untrusted::Request {
+        input_bytes: accepted.request.input_bytes,
+        expected: selected.expected.clone(),
+        limits: accepted.request.limits,
+    };
+    let checked = super::checked_flat(
+        &selected.body,
+        &selected_request,
         &accepted.environment,
         span,
         MAX_ASSERTION_NODES,
@@ -1988,82 +3657,728 @@ fn subject_view<'a>(
             "revision-3 caller body is not flat",
         ));
     }
-    let mut slot_seen: Vec<u32> = Vec::with_capacity(occurrences.len());
-    let mut distinct: Vec<String> = Vec::with_capacity(MAX_DISTINCT_CALLEES);
-    for (index, occurrence) in occurrences.iter().enumerate() {
-        let Some(source_span) = occurrence.source_span else {
-            return Err(invalid(span, "call occurrence has no source span"));
-        };
-        let Some(source_node) = occurrence.source_node else {
-            return Err(invalid(span, "call occurrence has no source node"));
-        };
-        if usize::try_from(source_node).ok() != Some(index)
-            || source_span.start < span.start
-            || source_span.end > span.end
-            || source_span.start >= source_span.end
-        {
-            return Err(invalid(
-                source_span,
-                "call occurrence is outside the ordered source body",
-            ));
-        }
-        if slot_seen.iter().any(|slot| *slot == occurrence.definition.0) {
-            return Err(invalid(
-                occurrence.definition_span,
-                "two call occurrences share one specialization slot",
-            ));
-        }
-        slot_seen.push(occurrence.definition.0);
-        let module = subject
-            .source_dependencies
-            .get(occurrence.module_index)
-            .ok_or_else(|| invalid(occurrence.definition_span, "callee module is not retained"))?;
-        let identity = callee_identity(occurrence, module);
-        if !distinct.iter().any(|item| item == &identity) {
-            if distinct.len() >= MAX_DISTINCT_CALLEES {
-                return Err(budget(occurrence.definition_span));
-            }
-            distinct.push(identity);
-        }
-    }
-    authenticate_occurrences(goal, &occurrences, meter.limits)?;
-    // Every accepted definition is the caller or one traced occurrence.
-    let mut declaration_at = 0;
-    while declaration_at < accepted.definitions.len() {
-        let definition = accepted.definitions[declaration_at].definition;
-        if definition != selected.definition
-            && !occurrences
-                .iter()
-                .any(|occurrence| occurrence.definition == definition)
-        {
-            return Err(invalid(
-                span,
-                "accepted revision-3 graph holds an untraced specialization",
-            ));
-        }
-        declaration_at += 1;
-    }
-    // The caller's own derivation of each occurrence must have exactly the
-    // callee contract's complete ordered interface; a suffix or reordering is
-    // not accepted (Decision 3, call step 1).
+    check_occurrences_order(subject, body, &occurrences, span)?;
+    authenticate_occurrences(goal, &occurrences, limits)?;
+    check_accepted_definitions_traced(accepted, selected.definition, &subject.named_uses, span)?;
     Ok(SubjectView {
         inputs,
         outputs,
         input_codes,
         output_codes,
-        selected,
+        selected_idx,
         checked,
         occurrences,
     })
 }
 
+#[octet::sealed_enum]
+enum ReplayAction {
+    Dep(ProofDependency, u32),
+    Local(ProofObligation, u32),
+    Finish(String),
+}
+
+/// Replay the entire transitive call closure iteratively in topological post-order.
+struct ReplayLocalSpec<'a> {
+    obligation: &'a ProofObligation,
+    contract: &'a ContractGoal,
+    local: &'a [ProofObligation],
+    identity: String,
+    depth: u32,
+}
+
+fn collect_input_terms(count: usize) -> Vec<Term3> {
+    let mut terms = Vec::with_capacity(count);
+    let mut idx = 0usize;
+    while idx < count {
+        terms.push(Term3::Input(idx));
+        idx = idx.saturating_add(1);
+    }
+    terms
+}
+
 #[expect(
-    tigerstyle::function_length,
-    reason = "Owner: noble-contracts; the checker's stages are kept in one linear dispatcher so the design's stage order stays reviewable"
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; pushes local replay actions onto caller workstack"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; pushes local replay actions onto caller workstack"
+)]
+fn push_replay_local_plan(work: &mut Vec<ReplayAction>, plan: &[ProofObligation], next_depth: u32) {
+    let mut li = plan.len();
+    while li > 0 {
+        let prev = li.saturating_sub(1);
+        work.push(ReplayAction::Local(plan[prev].clone(), next_depth));
+        li = prev;
+    }
+}
+
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; pushes dependency replay actions onto caller workstack"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; pushes dependency replay actions onto caller workstack"
+)]
+fn push_replay_dep_plan(work: &mut Vec<ReplayAction>, plan: &[ProofDependency], next_depth: u32) {
+    let mut di = plan.len();
+    while di > 0 {
+        let prev = di.saturating_sub(1);
+        work.push(ReplayAction::Dep(plan[prev].clone(), next_depth));
+        di = prev;
+    }
+}
+
+fn collect_used_lemmas(names: &[String]) -> Vec<String> {
+    let mut used = Vec::with_capacity(names.len());
+    let mut ni = 0usize;
+    while ni < names.len() {
+        if !replay_seen(&used, &names[ni]) {
+            used.push(names[ni].clone());
+        }
+        ni += 1;
+    }
+    used
+}
+
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; pushes new local/dep replay frames onto caller workstack"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; queues verified dependency closure actions onto `work` and charges `meter`"
+)]
+fn replay_local_rev3(
+    spec: ReplayLocalSpec<'_>,
+    work: &mut Vec<ReplayAction>,
+    meter: &mut Meter<'_>,
+) -> Result<(), Diagnostic> {
+    if spec.depth > MAX_CLOSURE_DEPTH {
+        return Err(budget(spec.obligation.span));
+    }
+    let outcome = verify_single(spec.contract, &[], spec.local, &spec.obligation.term, meter)?;
+    let Some(next_depth) = spec.depth.checked_add(1) else {
+        return Err(budget(spec.obligation.span));
+    };
+    work.push(ReplayAction::Finish(spec.identity));
+    push_replay_local_plan(work, &outcome.local_plan, next_depth);
+    push_replay_dep_plan(work, &outcome.plan, next_depth);
+    Ok(())
+}
+
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; pushes replayed identities, closure receipts, and pending actions onto caller vectors"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; updates replay tracking sets, workstack, and meter"
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; keeps action, local obligations, replay/closure sets, workstack, and meter explicit"
 )]
 #[expect(
     tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the revision-3 contract suite"
+    reason = "Owner: noble-contracts; unsupported or cyclic replay dependencies return typed Diagnostic"
+)]
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; handles dependency and local replay frames atomically"
+)]
+fn replay_step(
+    action: ReplayAction,
+    local: &[ProofObligation],
+    replayed: &mut Vec<String>,
+    closure: &mut Vec<String>,
+    work: &mut Vec<ReplayAction>,
+    meter: &mut Meter<'_>,
+) -> Result<(), Diagnostic> {
+    match action {
+        ReplayAction::Finish(identity) => {
+            if !replay_seen(closure, &identity) {
+                closure.push(identity);
+            }
+        }
+        ReplayAction::Dep(dependency, depth) => {
+            let identity = replay_identity(&dependency);
+            if replay_seen(replayed, &identity) {
+                return Ok(());
+            }
+            if replayed.len() >= MAX_CLOSURE {
+                return Err(budget(dependency.declaration.span));
+            }
+            replayed.push(identity.clone());
+            match dependency.declaration.revision {
+                1 => {
+                    #[expect(
+                        tigerstyle::fragile_exhaustive_enum_match,
+                        reason = "Owner: noble-contracts; PendingGoal only has Pure and Contract variants in rev-1 replay"
+                    )]
+                    let has_contracts = match dependency.declaration.goal {
+                        PendingGoal::Contract { .. } => true,
+                        PendingGoal::Pure { .. } => false,
+                    };
+                    let (next, outcome) =
+                        super::check_dependency(&dependency, has_contracts, *meter);
+                    *meter = next;
+                    outcome?;
+                    closure.push(identity);
+                }
+                3 => {
+                    if depth > MAX_CLOSURE_DEPTH {
+                        return Err(budget(dependency.declaration.span));
+                    }
+                    let PendingGoal::Contract { contract } = &dependency.declaration.goal else {
+                        return Err(invalid(
+                            dependency.declaration.span,
+                            "revision-3 dependency is not a contract",
+                        ));
+                    };
+                    let outcome = verify_single(
+                        contract,
+                        &dependency.dependencies,
+                        &[],
+                        &dependency.declaration.term,
+                        meter,
+                    )?;
+                    let Some(next_depth) = depth.checked_add(1) else {
+                        return Err(budget(contract.contract_span));
+                    };
+                    work.push(ReplayAction::Finish(identity));
+                    push_replay_local_plan(work, &outcome.local_plan, next_depth);
+                    push_replay_dep_plan(work, &outcome.plan, next_depth);
+                }
+                _ => {
+                    return Err(unsupported_profile(
+                        dependency.declaration.span,
+                        "closure member has an unsupported revision",
+                    ));
+                }
+            }
+        }
+        ReplayAction::Local(obligation, depth) => {
+            let mut identity = String::from("local/");
+            identity.push_str(&obligation.name);
+            if replay_seen(replayed, &identity) {
+                return Ok(());
+            }
+            if replayed.len() >= MAX_CLOSURE {
+                return Err(budget(obligation.span));
+            }
+            replayed.push(identity.clone());
+            match &obligation.goal {
+                PendingGoal::Pure { .. } => {
+                    return Err(unsupported_profile(
+                        obligation.span,
+                        "local closure member is not a contract",
+                    ))
+                }
+                PendingGoal::Contract { contract } => match contract.revision {
+                    1 => {
+                        let (next, outcome) = super::check_contract(&obligation, contract, *meter);
+                        *meter = next;
+                        outcome?;
+                        closure.push(identity);
+                    }
+                    3 => replay_local_rev3(
+                        ReplayLocalSpec {
+                            obligation: &obligation,
+                            contract,
+                            local,
+                            identity,
+                            depth,
+                        },
+                        work,
+                        meter,
+                    )?,
+                    _ => {
+                        return Err(unsupported_profile(
+                            obligation.span,
+                            "local closure member has an unsupported revision",
+                        ))
+                    }
+                },
+            }
+        }
+    }
+    Ok(())
+}
+
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; drives replay checks over the closure workstack and shared meter"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; enforces MAX_CLOSURE and MAX_CLOSURE_DEPTH with typed diagnostics"
+)]
+#[expect(
+    tigerstyle::unbounded_collection_growth,
+    reason = "Owner: noble-contracts; `replayed`, `closure`, and `work` are bounded by MAX_CLOSURE and MAX_CLOSURE_DEPTH"
+)]
+fn replay_closure(
+    root_plan: Vec<ProofDependency>,
+    root_local_plan: Vec<ProofObligation>,
+    local: &[ProofObligation],
+    start_depth: u32,
+    meter: &mut Meter<'_>,
+) -> Result<Vec<String>, Diagnostic> {
+    let mut replayed: Vec<String> = Vec::with_capacity(MAX_CLOSURE);
+    let mut closure: Vec<String> = Vec::with_capacity(MAX_CLOSURE);
+    let mut work: Vec<ReplayAction> = Vec::new();
+    let mut idx = root_local_plan.len();
+    while idx > 0 {
+        let prev = idx.saturating_sub(1);
+        work.push(ReplayAction::Local(
+            root_local_plan[prev].clone(),
+            start_depth,
+        ));
+        idx = prev;
+    }
+    let mut idx = root_plan.len();
+    while idx > 0 {
+        let prev = idx.saturating_sub(1);
+        work.push(ReplayAction::Dep(root_plan[prev].clone(), start_depth));
+        idx = prev;
+    }
+    let mut outcome = Ok(());
+    while let Some(action) = work.pop() {
+        outcome = replay_step(action, local, &mut replayed, &mut closure, &mut work, meter);
+        if outcome.is_err() {
+            break;
+        }
+    }
+    outcome?;
+    Ok(closure)
+}
+
+struct SingleOutcome {
+    envelope_base: Envelope,
+    plan: Vec<ProofDependency>,
+    local_plan: Vec<ProofObligation>,
+    trace: LowerTrace,
+}
+
+/// Trace of one verified revision-3 proof used for Lean lowering.
+struct CallTrace {
+    pub occ_idx: usize,
+    pub occ_slot: u32,
+    pub callee_index: usize,
+    pub callee_inputs: Vec<(String, Sort3)>,
+    pub callee_outputs: Vec<(String, Sort3)>,
+    pub pre_stack: Vec<Term3>,
+    pub pre_facts: Vec<Prop3>,
+    pub bridge_form: Form,
+    pub callee_requires: Prop3,
+    pub callee_ensures: Prop3,
+    pub direct_outputs: Vec<Option<Term3>>,
+    pub post_stack: Vec<Term3>,
+    pub post_facts: Vec<Prop3>,
+}
+
+#[octet::sealed_enum]
+enum TraceStep {
+    Literal(noble_kernel::untrusted::Lit),
+    Builtin(u32),
+    Call(usize),
+}
+
+struct LowerTrace {
+    pub view: SubjectView,
+    pub requires: Prop3,
+    pub ensures: Prop3,
+    pub initial_facts: Vec<Prop3>,
+    pub steps: Vec<TraceStep>,
+    pub calls: Vec<CallTrace>,
+    pub distinct_callees: Vec<ContractGoal>,
+    pub lemmas: Vec<Lemma>,
+    pub join_form: Form,
+    pub final_stack: Vec<Term3>,
+}
+
+/// Verify one revision-3 contract proof body without recursive closure replay.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; charges verification work on `meter`"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid proof terms return typed diagnostics"
+)]
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; validates slices, resolves lemmas/callees, executes body symbolically, checks join, and records trace"
+)]
+fn verify_single(
+    goal: &ContractGoal,
+    dependencies: &[ProofDependency],
+    local: &[ProofObligation],
+    term: &Form,
+    meter: &mut Meter<'_>,
+) -> Result<SingleOutcome, Diagnostic> {
+    let view = subject_view(goal, meter.limits)?;
+    let subject = &goal.subject;
+    let span = subject.source_span;
+    let (slice_bridge, slice_reference) = match_slices(term, &view.occurrences, span)?;
+    let callees = verify_callees(
+        subject,
+        &view.occurrences,
+        &slice_reference,
+        &view.checked,
+        dependencies,
+        local,
+        span,
+    )?;
+    let mut names: Vec<String> = Vec::with_capacity(MAX_LEMMA_USES);
+    lemma_names(term, &mut names)?;
+    if names.len() > MAX_LEMMA_USES {
+        return Err(budget(term.span));
+    }
+    let lemmas = resolved_lemmas(&names, dependencies, local, span, meter)?;
+    let mut contracts: Vec<String> = Vec::with_capacity(callees.len());
+    let mut ci = 0usize;
+    while ci < callees.len() {
+        contracts.push(callees[ci].reference.clone());
+        ci += 1;
+    }
+    let mut initial_stack = Vec::with_capacity(view.input_codes.len());
+    let mut in_idx = 0usize;
+    while in_idx < view.input_codes.len() {
+        initial_stack.push(Term3::Input(in_idx));
+        in_idx += 1;
+    }
+    let mut state = State {
+        stack: initial_stack,
+        facts: Vec::with_capacity(MAX_FACTS),
+        ghosts: 0,
+    };
+    let requires = assertion(&goal.requires, &view.inputs, &view.outputs, meter)?;
+    if prop_mentions_output(&requires) {
+        return Err(unsupported_profile(
+            goal.requires.span,
+            "caller precondition mentions an output",
+        ));
+    }
+    add_fact(&mut state.facts, &requires)?;
+    let initial_facts = state.facts.clone();
+    let selected_def = &subject.accepted_submission.definitions[view.selected_idx];
+    let context = WalkContext {
+        nodes: &selected_def.body.candidate.nodes,
+        named_uses: &subject.named_uses,
+        occurrences: &view.occurrences,
+        modules: &subject.source_dependencies,
+        callees: &callees,
+        bridges: &slice_bridge,
+        contracts: &contracts,
+        lemmas: &lemmas,
+        dependencies,
+        local,
+        inputs: &view.inputs,
+        outputs: &view.outputs,
+        span,
+    };
+    let body = &selected_def.body.candidate.body;
+    let mut accum = WalkAccum {
+        records: Vec::with_capacity(view.occurrences.len()),
+        plan: Vec::with_capacity(callees.len()),
+        local_plan: Vec::with_capacity(callees.len()),
+        distinct_callees: Vec::with_capacity(callees.len()),
+        distinct_refs: Vec::with_capacity(callees.len()),
+        steps: Vec::with_capacity(body.len()),
+        calls: Vec::with_capacity(view.occurrences.len()),
+    };
+    let mut body_at = 0usize;
+    let mut walk_outcome = Ok(());
+    while body_at < body.len() {
+        walk_outcome = walk_node(&mut state, context, body[body_at], &mut accum, meter);
+        if walk_outcome.is_err() {
+            break;
+        }
+        body_at += 1;
+    }
+    walk_outcome?;
+    verify_final_outputs(
+        &state.stack,
+        &view.inputs,
+        &view.outputs,
+        &view.output_codes,
+        span,
+    )?;
+    let ensures = assertion(&goal.ensures, &view.inputs, &view.outputs, meter)?;
+    let final_inputs = collect_input_terms(view.input_codes.len());
+    let _join_goal = normalize_prop(&instantiate_prop(&ensures, &final_inputs, &state.stack));
+    let assignment = make_scope(&view.inputs, &view.outputs, &[], ScopeMode::Motive);
+    let proof_scope = ProofScope {
+        facts: &state.facts,
+        lemmas: &lemmas,
+        contracts: &contracts,
+        assignment,
+    };
+    let join_form = join_target(term)?;
+    if let Err(problem) = check_proof(join_form, &_join_goal, proof_scope, meter) {
+        return Err(refined(
+            join_form.span,
+            Reason {
+                code: "preuse-join-unproved",
+                detail: &problem.message,
+            },
+        ));
+    }
+    let used_lemmas = collect_used_lemmas(&names);
+    let final_stack = state.stack;
+    let trace = LowerTrace {
+        view,
+        requires,
+        ensures,
+        initial_facts,
+        steps: accum.steps,
+        calls: accum.calls,
+        distinct_callees: accum.distinct_callees,
+        lemmas,
+        join_form: join_form.clone(),
+        final_stack,
+    };
+    Ok(SingleOutcome {
+        envelope_base: Envelope {
+            module: subject.module.clone(),
+            version: subject.version,
+            definition: subject.definition.clone(),
+            contract: goal.contract_name.clone(),
+            occurrences: accum.records,
+            closure: Vec::new(),
+            lemmas: used_lemmas,
+        },
+        plan: accum.plan,
+        local_plan: accum.local_plan,
+        trace,
+    })
+}
+
+type CallSliceForms = (Vec<Option<Form>>, Vec<Option<String>>);
+
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; fills caller slice-indexed bridge and reference slots"
+)]
+fn match_one_slice(
+    slice: &Form,
+    slice_bridge: &mut [Option<Form>],
+    slice_reference: &mut [Option<String>],
+) -> Result<(), Diagnostic> {
+    let (ordinal, reference, bridge) = call_slice(slice)?;
+    if ordinal >= slice_bridge.len() {
+        return Err(invalid(
+            slice.span,
+            "call slice does not match source order",
+        ));
+    }
+    if slice_bridge[ordinal].is_some() {
+        return Err(invalid(slice.span, "repeated call slice"));
+    }
+    slice_bridge[ordinal] = Some(bridge.clone());
+    slice_reference[ordinal] = Some(String::from(reference));
+    Ok(())
+}
+
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; duplicate or out-of-range slices return typed Diagnostic"
+)]
+fn match_slices(
+    term: &Form,
+    occurrences: &[usize],
+    _span: Span,
+) -> Result<CallSliceForms, Diagnostic> {
+    let mut slice_bridge: Vec<Option<Form>> = Vec::with_capacity(occurrences.len());
+    let mut slice_reference: Vec<Option<String>> = Vec::with_capacity(occurrences.len());
+    let mut init = 0;
+    while init < occurrences.len() {
+        slice_bridge.push(None);
+        slice_reference.push(None);
+        init += 1;
+    }
+    let slice_list = slices(term)?;
+    let mut slice_at = 0usize;
+    let mut outcome = Ok(());
+    while slice_at < slice_list.len() {
+        outcome = match_one_slice(
+            &slice_list[slice_at],
+            &mut slice_bridge,
+            &mut slice_reference,
+        );
+        if outcome.is_err() {
+            break;
+        }
+        slice_at += 1;
+    }
+    outcome?;
+    Ok((slice_bridge, slice_reference))
+}
+
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; validates one call occurrence against frozen callee metadata"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; occurrence/callee mismatches return typed Diagnostic"
+)]
+fn verify_one_callee(
+    subject: &super::SubjectBinding,
+    occurrence: &NamedUseOrigin,
+    reference: Option<&str>,
+    checked: &noble_kernel::untrusted::Checked,
+    dependencies: &[ProofDependency],
+    local: &[ProofObligation],
+    span: Span,
+) -> Result<Callee, Diagnostic> {
+    let Some(reference) = reference else {
+        return Err(invalid(span, "missing call slice"));
+    };
+    let callee = resolve_callee(reference, dependencies, local, span)?;
+    let Some(callee_goal) = callee_contract(callee.source, dependencies, local) else {
+        return Err(invalid(span, "missing callee contract goal"));
+    };
+    if callee_goal.revision == 2 {
+        return Err(unsupported_profile(
+            occurrence.definition_span,
+            "preuse-unsupported-callee: a revision-2 claim is not reusable here",
+        ));
+    }
+    let module = &subject.source_dependencies[occurrence.module_index];
+    if let Some(field) = callee_differs(occurrence, callee_goal, module) {
+        let mut detail = String::from(field);
+        detail.push_str(" differs from the frozen occurrence");
+        return Err(refined(
+            occurrence.definition_span,
+            Reason {
+                code: "preuse-callee-mismatch",
+                detail: &detail,
+            },
+        ));
+    }
+    let Some(source_node) = occurrence.source_node else {
+        return Err(invalid(span, "call occurrence has no derivation"));
+    };
+    let Ok(derivation_index) = usize::try_from(source_node) else {
+        return Err(invalid(span, "call occurrence has no derivation"));
+    };
+    let Some(derivation) = checked.derivations.get(derivation_index) else {
+        return Err(invalid(span, "call occurrence has no derivation"));
+    };
+    if derivation.interface.stack_in != callee_goal.subject.input_types
+        || derivation.interface.stack_out != callee_goal.subject.output_types
+        || derivation.interface.effects != noble_kernel::types::EffSet::empty()
+    {
+        return Err(refined(
+            occurrence.definition_span,
+            Reason {
+                code: "preuse-callee-mismatch",
+                detail:
+                    "the caller derivation does not have the callee's complete ordered interface",
+            },
+        ));
+    }
+    if let Some(dependency) = callee_dependency(callee.source, dependencies) {
+        if dependency.source != module.full_source {
+            return Err(refined(
+                occurrence.definition_span,
+                Reason {
+                    code: "preuse-callee-mismatch",
+                    detail: "the proof module source differs from the retained callee module",
+                },
+            ));
+        }
+    }
+    Ok(callee)
+}
+
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; resolves and validates every occurrence callee against frozen metadata"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; occurrence/callee mismatches return typed Diagnostic"
+)]
+fn verify_callees(
+    subject: &super::SubjectBinding,
+    occurrences: &[usize],
+    slice_reference: &[Option<String>],
+    checked: &noble_kernel::untrusted::Checked,
+    dependencies: &[ProofDependency],
+    local: &[ProofObligation],
+    span: Span,
+) -> Result<Vec<Callee>, Diagnostic> {
+    let mut callees: Vec<Callee> = Vec::with_capacity(occurrences.len());
+    let mut outcome = Ok(());
+    let mut ordinal = 0usize;
+    while ordinal < occurrences.len() {
+        let occ = &subject.named_uses[occurrences[ordinal]];
+        let ref_opt = slice_reference[ordinal].as_deref();
+        outcome = match verify_one_callee(subject, occ, ref_opt, checked, dependencies, local, span)
+        {
+            Ok(callee) => {
+                callees.push(callee);
+                Ok(())
+            }
+            Err(problem) => Err(problem),
+        };
+        if outcome.is_err() {
+            break;
+        }
+        ordinal += 1;
+    }
+    outcome?;
+    Ok(callees)
+}
+
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; mismatched final output arity or sort returns typed Diagnostic"
+)]
+fn verify_final_outputs(
+    stack: &[Term3],
+    inputs: &[(String, Sort3)],
+    outputs: &[(String, Sort3)],
+    output_codes: &[Sort3],
+    span: Span,
+) -> Result<(), Diagnostic> {
+    if stack.len() != output_codes.len() {
+        return Err(invalid(
+            span,
+            "final symbolic stack differs from the caller outputs",
+        ));
+    }
+    let mut is_mismatch = false;
+    let mut index = 0;
+    while index < stack.len() && !is_mismatch {
+        if sort_of(&stack[index], inputs, outputs, &[]) != Some(output_codes[index]) {
+            is_mismatch = true;
+        }
+        index += 1;
+    }
+    if is_mismatch {
+        return Err(invalid(
+            span,
+            "final symbolic stack differs from the caller outputs",
+        ));
+    }
+    Ok(())
+}
+
+/// Verify one revision-3 caller proof and its complete transitive closure.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; advances the shared verification meter"
+)]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; preserves the original public verifier signature cleanly"
 )]
 pub fn verify(
     goal: &ContractGoal,
@@ -2073,277 +4388,140 @@ pub fn verify(
     depth: u32,
     meter: &mut Meter<'_>,
 ) -> Result<Envelope, Diagnostic> {
-    if goal.revision != 3 {
-        return Err(invalid(
-            goal.contract_span,
-            "revision-3 checker received another revision",
-        ));
-    }
     if depth > MAX_CLOSURE_DEPTH {
         return Err(budget(goal.contract_span));
     }
-    let view = subject_view(goal, meter)?;
-    let subject = &goal.subject;
-    let span = subject.source_span;
-    let inputs = view.inputs;
-    let outputs = view.outputs;
-    let input_codes = view.input_codes;
-    let output_codes = view.output_codes;
-    let selected = view.selected;
-    let checked = view.checked;
-    let occurrences = view.occurrences;
-    let body = &selected.body.candidate.body;
-    // Match proof slices to occurrences.
-    let mut slice_bridge: Vec<Option<&Form>> = Vec::with_capacity(occurrences.len());
-    let mut slice_reference: Vec<Option<&str>> = Vec::with_capacity(occurrences.len());
-    for _ in &occurrences {
-        slice_bridge.push(None);
-        slice_reference.push(None);
-    }
-    for slice in slices(term)? {
-        let (ordinal, reference, bridge) = call_slice(slice)?;
-        let Some(slot) = slice_bridge.get_mut(ordinal) else {
-            return Err(invalid(
-                slice.span,
-                "call slice does not match source order",
-            ));
-        };
-        if slot.is_some() {
-            return Err(invalid(slice.span, "repeated call slice"));
-        }
-        *slot = Some(bridge);
-        if let Some(reference_slot) = slice_reference.get_mut(ordinal) {
-            *reference_slot = Some(reference);
-        }
-    }
-    // Resolve every callee and compare the frozen identities.
-    let mut callees: Vec<Callee<'_>> = Vec::with_capacity(occurrences.len());
-    for (ordinal, occurrence) in occurrences.iter().enumerate() {
-        let Some(reference) = slice_reference[ordinal] else {
-            return Err(invalid(span, "missing call slice"));
-        };
-        let Some(bridge) = slice_bridge[ordinal] else {
-            return Err(invalid(span, "missing call slice"));
-        };
-        let callee = resolve_callee(reference, dependencies, local, span)?;
-        if callee.contract.revision == 2 {
-            return Err(unsupported_profile(
-                occurrence.definition_span,
-                "preuse-unsupported-callee: a revision-2 claim is not reusable here",
-            ));
-        }
-        let module = &subject.source_dependencies[occurrence.module_index];
-        if let Some(field) = callee_differs(occurrence, callee.contract, module) {
-            let mut detail = String::from(field);
-            detail.push_str(" differs from the frozen occurrence");
-            return Err(refined(
-                occurrence.definition_span,
-                "preuse-callee-mismatch",
-                &detail,
-            ));
-        }
-        let source_node = occurrence.source_node.unwrap_or(u32::MAX);
-        let derivation_index = usize::try_from(source_node).unwrap_or(usize::MAX);
-        let derivation = checked
-            .derivations
-            .get(derivation_index)
-            .ok_or_else(|| invalid(span, "call occurrence has no derivation"))?;
-        if derivation.interface.stack_in != callee.contract.subject.input_types
-            || derivation.interface.stack_out != callee.contract.subject.output_types
-            || derivation.interface.effects != noble_kernel::types::EffSet::empty()
-        {
-            return Err(refined(
-                occurrence.definition_span,
-                "preuse-callee-mismatch",
-                "the caller derivation does not have the callee's complete ordered interface",
-            ));
-        }
-        if let Some(dependency) = callee.dependency {
-            if dependency.source != module.full_source {
-                return Err(refined(
-                    occurrence.definition_span,
-                    "preuse-callee-mismatch",
-                    "the proof module source differs from the retained callee module",
-                ));
-            }
-        }
-        let _ = bridge;
-        callees.push(callee);
-    }
-    // Scan the proof for lemma uses before the symbolic walk, so every bridge
-    // sees the same frozen lemma set.
-    let mut names: Vec<String> = Vec::with_capacity(MAX_LEMMA_USES);
-    lemma_names(term, &mut names)?;
-    if names.len() > MAX_LEMMA_USES {
-        return Err(budget(term.span));
-    }
-    let lemmas = resolved_lemmas(&names, dependencies, span, meter)?;
-    let mut contracts: Vec<&str> = Vec::with_capacity(callees.len());
-    for callee in &callees {
-        contracts.push(callee.reference);
-    }
-    // The symbolic execution over the caller's complete ordered body.
-    let mut state = State {
-        stack: input_codes
-            .iter()
-            .enumerate()
-            .map(|(index, _)| Term3::Input(index))
-            .collect(),
-        facts: Vec::with_capacity(MAX_FACTS),
-        ghosts: 0,
+    let outcome = verify_single(goal, dependencies, local, term, meter)?;
+    let Some(start_depth) = depth.checked_add(1) else {
+        return Err(budget(goal.subject.source_span));
     };
-    let requires = assertion(&goal.requires, &inputs, &outputs, meter)?;
-    if prop_mentions_output(&requires) {
-        return Err(unsupported_profile(
-            goal.requires.span,
-            "caller precondition mentions an output",
-        ));
-    }
-    add_fact(&mut state.facts, &requires)?;
-    let mut records: Vec<CallRecord> = Vec::with_capacity(occurrences.len());
-    let mut plan: Vec<&ProofDependency> = Vec::with_capacity(callees.len());
-    let mut local_plan: Vec<&ProofObligation> = Vec::with_capacity(callees.len());
-    let context = WalkContext {
-        nodes: &selected.body.candidate.nodes,
-        occurrences: &occurrences,
-        modules: &subject.source_dependencies,
-        callees: &callees,
-        bridges: &slice_bridge,
-        contracts: &contracts,
-        lemmas: &lemmas,
-        local,
-        inputs: &inputs,
-        outputs: &outputs,
-        span,
-    };
-    let mut failure = Ok(());
-    let mut body_at = 0;
-    while failure.is_ok() && body_at < body.len() {
-        failure = walk_node(
-            &mut state,
-            &context,
-            body,
-            body_at,
-            &mut records,
-            &mut plan,
-            &mut local_plan,
-            meter,
-        );
-        body_at += 1;
-    }
-    failure?;
-    if state.stack.len() != output_codes.len()
-        || state
-            .stack
-            .iter()
-            .zip(&output_codes)
-            .any(|(term, code)| sort_of(term, &inputs, &outputs, &[]) != Some(*code))
-    {
-        return Err(invalid(
-            span,
-            "final symbolic stack differs from the caller outputs",
-        ));
-    }
-    let ensures = assertion(&goal.ensures, &inputs, &outputs, meter)?;
-    let final_inputs: Vec<Term3> = input_codes
-        .iter()
-        .enumerate()
-        .map(|(index, _)| Term3::Input(index))
-        .collect();
-    let join_goal = normalize_prop(&instantiate_prop(&ensures, &final_inputs, &state.stack));
-    let assignment = make_scope(&inputs, &outputs, &[], true);
-    let proof_scope = ProofScope {
-        facts: &state.facts,
-        lemmas: &lemmas,
-        contracts: &contracts,
-        assignment: &assignment,
-    };
-    let join = join_target(term)?;
-    check_proof(join, &join_goal, &proof_scope, meter)
-        .map_err(|problem| refined(join.span, "preuse-join-unproved", &problem.message))?;
-    // Isolated replay of the complete finite closure.
-    let mut replayed: Vec<String> = Vec::with_capacity(MAX_CLOSURE);
-    let mut closure: Vec<String> = Vec::with_capacity(MAX_CLOSURE);
-    let next_depth = depth.checked_add(1).ok_or_else(|| budget(span))?;
-    replay(
-        local,
-        &plan,
-        &local_plan,
-        &mut replayed,
-        &mut closure,
-        next_depth,
-        meter,
-    )?;
-    let mut used_lemmas: Vec<String> = Vec::with_capacity(names.len());
-    for name in &names {
-        if !used_lemmas.iter().any(|item| item == name) {
-            used_lemmas.push(name.clone());
-        }
-    }
-    Ok(Envelope {
-        module: subject.module.clone(),
-        version: subject.version,
-        definition: subject.definition.clone(),
-        contract: goal.contract_name.clone(),
-        occurrences: records,
-        closure,
-        lemmas: used_lemmas,
-    })
+    let closure = replay_closure(outcome.plan, outcome.local_plan, local, start_depth, meter)?;
+    let mut envelope = outcome.envelope_base;
+    envelope.closure = closure;
+    Ok(envelope)
 }
 
 /// The fixed inputs of one caller body walk.
+#[derive(Clone, Copy)]
 struct WalkContext<'a> {
     nodes: &'a [noble_kernel::untrusted::Node],
-    occurrences: &'a [&'a NamedUseOrigin],
+    named_uses: &'a [NamedUseOrigin],
+    occurrences: &'a [usize],
     modules: &'a [super::ResolvedSourceModule],
-    callees: &'a [Callee<'a>],
-    bridges: &'a [Option<&'a Form>],
-    contracts: &'a [&'a str],
+    callees: &'a [Callee],
+    bridges: &'a [Option<Form>],
+    contracts: &'a [String],
     lemmas: &'a [Lemma],
+    dependencies: &'a [ProofDependency],
     local: &'a [ProofObligation],
     inputs: &'a [(String, Sort3)],
     outputs: &'a [(String, Sort3)],
     span: Span,
 }
 
+struct WalkAccum {
+    records: Vec<CallRecord>,
+    plan: Vec<ProofDependency>,
+    local_plan: Vec<ProofObligation>,
+    distinct_callees: Vec<ContractGoal>,
+    distinct_refs: Vec<String>,
+    steps: Vec<TraceStep>,
+    calls: Vec<CallTrace>,
+}
+
+fn find_occurrence_pos(
+    named_uses: &[NamedUseOrigin],
+    occurrences: &[usize],
+    node_id: noble_kernel::untrusted::NodeId,
+) -> Option<usize> {
+    let mut occurrence_index = None;
+    let mut occ_at = 0usize;
+    while occurrence_index.is_none() && occ_at < occurrences.len() {
+        if named_uses[occurrences[occ_at]].candidate_node.0 == node_id.0 {
+            occurrence_index = Some(occ_at);
+        }
+        occ_at += 1;
+    }
+    occurrence_index
+}
+
+fn find_local_obligation<'a>(
+    local: &'a [ProofObligation],
+    name: &str,
+) -> Option<&'a ProofObligation> {
+    let mut idx = 0usize;
+    let mut found = local.len();
+    while found == local.len() && idx < local.len() {
+        if obligation_has_name(&local[idx], name) {
+            found = idx;
+        }
+        idx += 1;
+    }
+    if found < local.len() {
+        Some(&local[found])
+    } else {
+        None
+    }
+}
+
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; records distinct callees in accumulated vector"
+)]
+fn find_or_insert_distinct_callee(
+    accum: &mut WalkAccum,
+    reference: &str,
+    contract: &ContractGoal,
+) -> usize {
+    let mut callee_index = accum.distinct_refs.len();
+    let mut ref_idx = 0;
+    while callee_index == accum.distinct_refs.len() && ref_idx < accum.distinct_refs.len() {
+        let is_matched = str_eq(&accum.distinct_refs[ref_idx], reference);
+        callee_index = if is_matched { ref_idx } else { callee_index };
+        ref_idx += 1;
+    }
+    if callee_index < accum.distinct_refs.len() {
+        callee_index
+    } else {
+        let next = accum.distinct_callees.len();
+        accum.distinct_refs.push(String::from(reference));
+        accum.distinct_callees.push(contract.clone());
+        next
+    }
+}
+
 /// Walk one caller body position over the symbolic state.
 #[expect(
     tigerstyle::function_length,
-    reason = "Owner: noble-contracts; one body step keeps the literal/builtin/call dispatch and its record bookkeeping together"
-)]
-#[expect(
-    tigerstyle::ambiguous_params,
-    reason = "Owner: noble-contracts; the record and replay-plan lists are positional by role at the single call site"
+    reason = "Owner: noble-contracts; keeps literal, builtin, and call record bookkeeping together"
 )]
 #[expect(
     tigerstyle::mutating_input_in_pure,
-    reason = "Owner: noble-contracts; the symbolic state, records and replay plans are the checker's own state, advanced one node per step"
+    reason = "Owner: noble-contracts; advances the symbolic state, accumulated records/traces, and shared meter"
 )]
-fn walk_node<'a>(
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid body steps return typed diagnostics"
+)]
+fn walk_node(
     state: &mut State,
-    context: &WalkContext<'a>,
-    body: &[noble_kernel::untrusted::NodeId],
-    at: usize,
-    records: &mut Vec<CallRecord>,
-    plan: &mut Vec<&'a ProofDependency>,
-    local_plan: &mut Vec<&'a ProofObligation>,
+    context: WalkContext<'_>,
+    node_id: noble_kernel::untrusted::NodeId,
+    accum: &mut WalkAccum,
     meter: &mut Meter<'_>,
 ) -> Result<(), Diagnostic> {
     let span = context.span;
-    let node_id = *body
-        .get(at)
-        .ok_or_else(|| invalid(span, "revision-3 body position is absent"))?;
-    let index = usize::try_from(node_id.0)
-        .map_err(|_| invalid(span, "revision-3 node id exceeds the address space"))?;
-    let node = context
-        .nodes
-        .get(index)
-        .ok_or_else(|| invalid(span, "revision-3 body node is absent"))?;
-    let occurrence = context
-        .occurrences
-        .iter()
-        .position(|origin| origin.candidate_node == node_id);
-    let Some(step) = classify(node, occurrence) else {
+    let Ok(index) = usize::try_from(node_id.0) else {
+        return Err(invalid(
+            span,
+            "revision-3 node id exceeds the address space",
+        ));
+    };
+    let Some(node) = context.nodes.get(index) else {
+        return Err(invalid(span, "revision-3 body node is absent"));
+    };
+    let occurrence_index = find_occurrence_pos(context.named_uses, context.occurrences, node_id);
+    let Some(step) = classify(node, occurrence_index) else {
         return Err(unsupported_profile(
             span,
             "revision-3 body node is outside the pure vocabulary",
@@ -2352,97 +4530,205 @@ fn walk_node<'a>(
     match step {
         Step::Literal(noble_kernel::untrusted::Lit::I64(value)) => {
             push(&mut state.stack, Term3::I64(value), span)?;
+            accum
+                .steps
+                .push(TraceStep::Literal(noble_kernel::untrusted::Lit::I64(value)));
         }
         Step::Literal(noble_kernel::untrusted::Lit::Bool(value)) => {
             push(&mut state.stack, Term3::Bool(value), span)?;
+            accum
+                .steps
+                .push(TraceStep::Literal(noble_kernel::untrusted::Lit::Bool(
+                    value,
+                )));
         }
-        Step::Literal(_) => {
+        Step::Literal(noble_kernel::untrusted::Lit::Text)
+        | Step::Literal(noble_kernel::untrusted::Lit::Unit) => {
             return Err(unsupported_profile(
                 span,
                 "revision-3 literal is not I64 or Bool",
             ));
         }
-        Step::Builtin(word) => builtin_step(&mut state.stack, word, span)?,
-        Step::Call(index) => {
-            let occurrence = *context
-                .occurrences
-                .get(index)
-                .ok_or_else(|| invalid(span, "call occurrence has no resolved callee"))?;
-            let callee = context
-                .callees
-                .get(index)
-                .ok_or_else(|| invalid(span, "call occurrence has no resolved contract"))?;
-            let bridge = context
-                .bridges
-                .get(index)
-                .and_then(|bridge| *bridge)
-                .ok_or_else(|| invalid(span, "call occurrence has no bridge"))?;
-            call_step(
+        Step::Builtin(word) => {
+            builtin_step(&mut state.stack, word, span)?;
+            accum.steps.push(TraceStep::Builtin(word));
+        }
+        Step::Call(occ_pos) => {
+            let Some(&occ_idx) = context.occurrences.get(occ_pos) else {
+                return Err(invalid(span, "call occurrence has no resolved callee"));
+            };
+            let Some(callee) = context.callees.get(occ_pos) else {
+                return Err(invalid(span, "call occurrence has no resolved contract"));
+            };
+            let Some(Some(bridge_ref)) = context.bridges.get(occ_pos) else {
+                return Err(invalid(span, "call occurrence has no bridge"));
+            };
+            let pre_stack = state.stack.clone();
+            let pre_facts = state.facts.clone();
+            let info = call_step(
                 state,
-                callee,
-                bridge,
-                context.contracts,
-                context.lemmas,
-                context.inputs,
-                context.outputs,
-                span,
+                CallSite {
+                    callee,
+                    bridge: bridge_ref,
+                    context,
+                    span,
+                },
                 meter,
             )?;
-            let callee_inputs =
-                interface(&callee.contract.inputs, callee.contract.contract_span)?;
-            let callee_outputs =
-                interface(&callee.contract.outputs, callee.contract.contract_span)?;
-            let mut inputs = Vec::with_capacity(callee_inputs.len());
-            for (name, code) in &callee_inputs {
-                inputs.push((name.clone(), code.word()));
-            }
-            let mut outputs = Vec::with_capacity(callee_outputs.len());
-            for (name, code) in &callee_outputs {
-                outputs.push((name.clone(), code.word()));
-            }
-            let modules = match context.modules.get(occurrence.module_index) {
-                Some(module) => module,
-                None => return Err(invalid(span, "callee module is not retained")),
-            };
-            records.push(CallRecord {
-                ordinal: u32::try_from(index).unwrap_or(u32::MAX),
-                source_span: occurrence.source_span.unwrap_or(span),
-                callee_module: modules.module.clone(),
-                callee_version: modules.version,
-                callee_definition: occurrence.definition_name.clone(),
-                callee_ordinal: occurrence.definition_ordinal,
-                callee_span: occurrence.definition_span,
-                specialization: occurrence.definition.0,
-                proof: String::from(callee.reference),
-                inputs,
-                outputs,
-            });
-            if let Some(dependency) = callee.dependency {
-                let identity = replay_identity(dependency);
-                if !plan
-                    .iter()
-                    .any(|item| replay_identity(item) == identity)
-                {
-                    plan.push(dependency);
-                }
-            } else {
-                let local = context
-                    .local
-                    .iter()
-                    .find(|item| item.name == callee.reference)
-                    .ok_or_else(|| {
-                        invalid(span, "local callee proof is no longer staged")
-                    })?;
-                if !local_plan.iter().any(|item| item.name == local.name) {
-                    local_plan.push(local);
-                }
-            }
+            record_call_step(
+                CallStepMeta {
+                    occ_idx,
+                    occ_pos,
+                    callee,
+                    bridge: bridge_ref.clone(),
+                    info,
+                    pre_stack,
+                    pre_facts,
+                },
+                state,
+                context,
+                accum,
+                span,
+            )?;
         }
     }
     Ok(())
 }
 
+struct CallStepMeta<'a> {
+    occ_idx: usize,
+    occ_pos: usize,
+    callee: &'a Callee,
+    bridge: Form,
+    info: CallStepInfo,
+    pre_stack: Vec<Term3>,
+    pre_facts: Vec<Prop3>,
+}
+
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; pushes call record, replay plan entry, and lowering trace"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; missing retained module returns typed Diagnostic"
+)]
+#[expect(
+    tigerstyle::function_length,
+    reason = "Owner: noble-contracts; updates call record, replay plan, and lower trace atomically"
+)]
+fn record_call_step(
+    meta: CallStepMeta<'_>,
+    state: &State,
+    context: WalkContext<'_>,
+    accum: &mut WalkAccum,
+    span: Span,
+) -> Result<(), Diagnostic> {
+    let CallStepMeta {
+        occ_idx,
+        occ_pos,
+        callee,
+        bridge,
+        info,
+        pre_stack,
+        pre_facts,
+    } = meta;
+    let occurrence = &context.named_uses[occ_idx];
+    let Some(contract) = callee_contract(callee.source, context.dependencies, context.local) else {
+        return Err(invalid(span, "missing callee contract goal"));
+    };
+    let mut inputs = Vec::with_capacity(info.callee_inputs.len());
+    let mut ii = 0usize;
+    while ii < info.callee_inputs.len() {
+        inputs.push((
+            info.callee_inputs[ii].0.clone(),
+            info.callee_inputs[ii].1.word(),
+        ));
+        ii += 1;
+    }
+    let mut outputs = Vec::with_capacity(info.callee_outputs.len());
+    let mut oi = 0usize;
+    while oi < info.callee_outputs.len() {
+        outputs.push((
+            info.callee_outputs[oi].0.clone(),
+            info.callee_outputs[oi].1.word(),
+        ));
+        oi += 1;
+    }
+    let Some(module) = context.modules.get(occurrence.module_index) else {
+        return Err(invalid(span, "callee module is not retained"));
+    };
+    let Ok(ordinal) = u32::try_from(occ_pos) else {
+        return Err(budget(span));
+    };
+    accum.records.push(CallRecord {
+        ordinal,
+        source_span: occurrence.source_span.unwrap_or(span),
+        callee_module: module.module.clone(),
+        callee_version: module.version,
+        callee_definition: occurrence.definition_name.clone(),
+        callee_ordinal: occurrence.definition_ordinal,
+        callee_span: occurrence.definition_span,
+        specialization: occurrence.definition.0,
+        proof: callee.reference.clone(),
+        inputs,
+        outputs,
+    });
+    if let Some(dependency) = callee_dependency(callee.source, context.dependencies) {
+        let identity = replay_identity(dependency);
+        let mut is_seen = false;
+        let mut idx = 0;
+        while !is_seen && idx < accum.plan.len() {
+            is_seen = str_eq(&replay_identity(&accum.plan[idx]), &identity);
+            idx += 1;
+        }
+        if !is_seen {
+            accum.plan.push(dependency.clone());
+        }
+    } else {
+        let Some(local_item) = find_local_obligation(context.local, &callee.reference) else {
+            return Err(invalid(span, "local callee proof is no longer staged"));
+        };
+        let mut is_seen = false;
+        let mut idx = 0;
+        while !is_seen && idx < accum.local_plan.len() {
+            is_seen = str_eq(&accum.local_plan[idx].name, &local_item.name);
+            idx += 1;
+        }
+        if !is_seen {
+            accum.local_plan.push(local_item.clone());
+        }
+    }
+    let callee_index = find_or_insert_distinct_callee(accum, &callee.reference, contract);
+    let call_trace_index = accum.calls.len();
+    accum.calls.push(CallTrace {
+        occ_idx,
+        occ_slot: occurrence.definition.0,
+        callee_index,
+        callee_inputs: info.callee_inputs,
+        callee_outputs: info.callee_outputs,
+        pre_stack,
+        pre_facts,
+        bridge_form: bridge,
+        callee_requires: info.callee_requires,
+        callee_ensures: info.callee_ensures,
+        direct_outputs: info.direct_outputs,
+        post_stack: state.stack.clone(),
+        post_facts: state.facts.clone(),
+    });
+    accum.steps.push(TraceStep::Call(call_trace_index));
+    Ok(())
+}
+
 /// Build the complete revision-3 preparation of one contract.
+#[expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-contracts; matches public revision-3 API naming in the specification"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; verifies bounds and returns typed Diagnostic on invalid proof"
+)]
 pub fn prepare_named_v3(
     goal: &ContractGoal,
     dependencies: &[ProofDependency],
@@ -2450,13 +4736,13 @@ pub fn prepare_named_v3(
     term: &Form,
     limits: Limits,
 ) -> Result<PreparedV3, Diagnostic> {
-    let tree_bounds = TreeBounds::new(limits).ok_or_else(|| {
-        Diagnostic::new(
+    let Some(tree_bounds) = TreeBounds::new(limits) else {
+        return Err(Diagnostic::new(
             DiagnosticKind::Exhausted,
             goal.contract_span,
             "revision-3 bounds exceed the host",
-        )
-    })?;
+        ));
+    };
     let config = MeterConfig {
         budgets: ProofBudgets::from_limits(limits),
         limits,
@@ -2476,18 +4762,27 @@ pub fn prepare_named_v3(
     })
 }
 
-/// The contract-time check: the subject, its independent kernel acceptance and
-/// its authenticated ordered occurrences. The proof's bridges, join and
-/// closure are checked only with its proof term, so a contract alone is never
-/// reported proved.
-pub fn claim_shape(goal: &ContractGoal, limits: Limits) -> Result<String, Diagnostic> {
-    let tree_bounds = TreeBounds::new(limits).ok_or_else(|| {
-        Diagnostic::new(
+/// Build the host-authenticated `NamedV3Obligation.lean` specification module for
+/// one revision-3 contract goal without reading any proof term.
+#[expect(
+    tigerstyle::path_segment_repetition,
+    reason = "Owner: noble-contracts; matches public revision-3 API naming in the specification"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; verifies bounds and returns typed Diagnostic on invalid goal"
+)]
+pub fn prepare_named_v3_contract(
+    goal: &ContractGoal,
+    limits: Limits,
+) -> Result<String, Diagnostic> {
+    let Some(tree_bounds) = TreeBounds::new(limits) else {
+        return Err(Diagnostic::new(
             DiagnosticKind::Exhausted,
             goal.contract_span,
             "revision-3 bounds exceed the host",
-        )
-    })?;
+        ));
+    };
     let config = MeterConfig {
         budgets: ProofBudgets::from_limits(limits),
         limits,
@@ -2500,7 +4795,22 @@ pub fn claim_shape(goal: &ContractGoal, limits: Limits) -> Result<String, Diagno
         substitution: 0,
         config: &config,
     };
-    subject_view(goal, &mut meter)?;
+    let view = subject_view(goal, limits)?;
+    let requires = assertion(&goal.requires, &view.inputs, &view.outputs, &mut meter)?;
+    if prop_mentions_output(&requires) {
+        return Err(unsupported_profile(
+            goal.requires.span,
+            "caller precondition mentions an output",
+        ));
+    }
+    let ensures = assertion(&goal.ensures, &view.inputs, &view.outputs, &mut meter)?;
+    lower::obligation(goal, &view, &requires, &ensures, limits)
+}
+
+/// The contract-time check: the subject, its independent kernel acceptance and
+/// its authenticated ordered occurrences.
+pub fn claim_shape(goal: &ContractGoal, limits: Limits) -> Result<String, Diagnostic> {
+    subject_view(goal, limits)?;
     Ok(claim_text(goal))
 }
 
@@ -2515,6 +4825,10 @@ pub(super) fn check_contract<'m>(
     (meter, result)
 }
 
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; verifies the obligation, replays its closure, and lowers its proof term"
+)]
 fn checked(
     obligation: &ProofObligation,
     goal: &ContractGoal,
@@ -2522,14 +4836,10 @@ fn checked(
     local: &[ProofObligation],
     meter: &mut Meter<'_>,
 ) -> Result<CheckedProof, Diagnostic> {
-    let envelope = verify(goal, dependencies, local, &obligation.term, 0, meter)?;
-    let mut term = String::from("revision-3 envelope\n");
-    term.push_str(&claim_text(goal));
-    term.push_str("\noccurrences ");
-    crate::rendering::number(
-        &mut term,
-        u64::try_from(envelope.occurrences.len()).unwrap_or(u64::MAX),
-    );
+    let outcome = verify_single(goal, dependencies, local, &obligation.term, meter)?;
+    let start_depth = 1u32;
+    let _closure = replay_closure(outcome.plan, outcome.local_plan, local, start_depth, meter)?;
+    let term = lower::proof(goal, &outcome.trace, meter)?;
     Ok(CheckedProof {
         name: obligation.name.clone(),
         kind: ProofKind::NamedV3Contract,

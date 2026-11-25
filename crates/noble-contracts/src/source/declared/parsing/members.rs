@@ -139,7 +139,10 @@ fn revision(mut cursor: super::Cursor<'_>) -> Result<(super::Cursor<'_>, u32), c
         ));
     };
     let version = attempt!(super::logical_revision(token).ok_or_else(|| {
-        super::parse_diagnostic(token.span, "expected logical declaration revision 1, 2 or 3")
+        super::parse_diagnostic(
+            token.span,
+            "expected logical declaration revision 1, 2 or 3",
+        )
     }));
     cursor.at += 1;
     Ok((cursor, version))

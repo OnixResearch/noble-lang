@@ -171,6 +171,52 @@ The no-tracing claim is scoped to the guest-cell algorithm only. The host's vers
 
 The layers are separated as follows. (i) An *abstract-model* proof (for example in Lean) of OWN-PO-1..3 says nothing about the actual checker, emitted Wasm or host. (ii) *Checker refinement* (PO-11-style) is required for OWN-PO-2/3. (iii) *Rust lowering correspondence* and (iv) *Wasm runtime correspondence* are required for OWN-PO-4/5. (v) *Host-ledger correspondence* is required for OWN-PO-6/7.
 
+### Extracted host-ledger route (owner decision 57, 2026-11-23)
+
+Decision 57 selects moving the host accounting core to extractable Rust. It
+does not accept a Lean model plus comparative tests in place of correspondence.
+Current-source anchors at `95626e2b`:
+
+| State / transition | Production owner now | What moves to the accounting core |
+|---|---|---|
+| Current and pinned maps, CAS, generations/incarnations, staged versions | [SlotRegistry](../../../crates/noble-cli/src/core/runtime/slot-registry.mjs): `bootstrap`, `publish`, `delete`, `#reachable`, `#retire` | Bounded maps, nonwrapping references, projected retained-version quota, and the exact unreachable retirement set; preserve refusal before commit and the committed-failure distinction |
+| Root, frame and frozen map owners | `pinRoot`, `enterFrame`, `leaveFrame`, `freezeRoot`, `releaseFrozen`, `finishRoot`, `abortRoot` in `SlotRegistry` | Root/frame token lifetimes, active frame stack, exact LIFO release of remaining pins, invalidation of associated borrows and final map release |
+| Saved Program and composite dependencies | `saveProgramGraph`, `releaseProgram` in `SlotRegistry`; `savedOwnerReaches` in [SlotEngine](../../../crates/noble-cli/src/core/runtime/slot-engine.mjs) | Count each logical version once per saved graph, pin its physical root once, retain code-donor and module-global dependencies, consume each token at most once |
+| Backend retirement | `retireTarget`, `sweepRetirement`, `retireCode` in `SlotEngine` | Ledger transition and exact `(start, length, generation)` eligibility; the actual `release_target`, `release_module_roots`, `code_owners` and table clear stay runtime operations |
+
+Use an effect-free extraction root in the existing `noble-kernel` subject, sliced
+into small typed transition functions. The JS host continues to own genuine
+module/instance/token identities, checked target selection, policy/evidence and
+effect adapters. It translates only its own authenticated identity bindings to
+opaque ledger keys; a guest integer or a public JSONL field is not a ledger token.
+Rust must become authoritative for the moved transitions, not maintain a shadow
+proof state over authoritative JS state. Use the existing CLI/worker boundary for
+the embedding design; settle the synchronous import-to-ledger/acknowledgement
+path and measure its overhead before cutting over. Do not add an alternate
+authority path, trust guest-reported counts, or increase the workspace unit cap.
+
+The pure transition computes a checked next state and any required backend
+actions. The adapter serializes events and observes actual acknowledgements,
+with no guest re-entry between planning, execution and acknowledgement. A
+retirement failure after publication is not a refused CAS: the logical epoch
+is committed and the instance must poison. Normal release, duplicate/foreign
+token refusal, wrong generation, partial retirement and backend failure need
+separate controls. A saved owner has one backend retain/release and possibly
+multiple version edges. A successful host-only abort release does **not** prove
+backend cleanup: `SlotEngine` continues only when the guest has settled, operand
+roots are released, no unmatched frame/backend references remain, and retirement
+succeeds. Otherwise it terminates the session; completed effects are not undone.
+
+First prove a scoped refinement of the extracted transition that releases a
+root and its ordered frames. Then extend across CAS/retained maps, saved owners
+and code retirement, and show the selected worker actually calls those decisions
+with exact inputs. OWN-PO-6 requires proof of the abnormal transition and its
+adapter correspondence; OWN-PO-7 additionally requires a relation to runtime
+counters/acks and verification that the reached backend operations preserve it.
+Finite replays (including OWN-CASE-03/05/06 and LREF-CASE-01/02/03) are controls,
+not those theorems. OWN-PO-4/5 remain on the separate
+[Wasm correspondence route](../bounded-wasm-correspondence/design.md).
+
 Every layer assumes the following:
 
 - **Roots**: the root set is exactly operands, continuations, frames, held claims, saved tokens, module roots and map pins.

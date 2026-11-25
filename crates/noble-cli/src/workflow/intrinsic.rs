@@ -284,11 +284,19 @@ pub(crate) fn named_checker_revision(base: &str) -> std::string::String {
     digest.update(
         include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
+            "/../noble-contracts/src/intrinsic/named_v3/lower.rs"
+        ))
+        .as_bytes(),
+    );
+    digest.update(
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
             "/../noble-contracts/src/source/declared/state/register/logical/origin.rs"
         ))
         .as_bytes(),
     );
     digest.update(include_str!("verification/named_v2.rs").as_bytes());
+    digest.update(include_str!("verification/named_v3.rs").as_bytes());
     digest.update(include_str!("verification/compilation.rs").as_bytes());
     digest.update(include_str!("rules.rs").as_bytes());
     digest.update(include_str!("artifacts.rs").as_bytes());
@@ -300,8 +308,7 @@ pub(crate) fn named_checker_revision(base: &str) -> std::string::String {
     digest.finish()
 }
 fn has_named_dependency(dependency: &noble_contracts::intrinsic::ProofDependency) -> bool {
-    dependency.declaration.revision >= 2
-        || dependency.dependencies.iter().any(has_named_dependency)
+    dependency.declaration.revision >= 2 || dependency.dependencies.iter().any(has_named_dependency)
 }
 fn validate_dependency_revision(
     dependency: &noble_contracts::intrinsic::ProofDependency,
@@ -601,8 +608,17 @@ pub(crate) fn session_proof_report(
                             ("strict_lean_tools", proof_evidence.acceptance.tools.clone()),
                             ("subject", proof_evidence.subject.clone()),
                         ]);
-                        if proof.kind == ProofKind::NamedContract {
-                            fields.push(("wire_mode", encoding::string("named-v2-strict-kernel")));
+                        if proof.kind == ProofKind::NamedContract
+                            || proof.kind == ProofKind::NamedV3Contract
+                        {
+                            fields.push((
+                                "wire_mode",
+                                encoding::string(if proof.kind == ProofKind::NamedV3Contract {
+                                    "named-v3-strict-kernel"
+                                } else {
+                                    "named-v2-strict-kernel"
+                                }),
+                            ));
                             fields
                                 .push(("model_revision", encoding::string(&proof.model_revision)));
                             fields.push((
@@ -686,13 +702,9 @@ pub(crate) fn verify_with_evidence(
     pinned_library(&library)?;
     let model = model_revision();
     let checker = checker_revision();
-    let named = checked
-        .iter()
-        .any(|proof| {
-            proof.kind == ProofKind::NamedContract
-                || proof.kind == ProofKind::NamedV3Contract
-        })
-        || batch.dependencies.iter().any(has_named_dependency);
+    let named = checked.iter().any(|proof| {
+        proof.kind == ProofKind::NamedContract || proof.kind == ProofKind::NamedV3Contract
+    }) || batch.dependencies.iter().any(has_named_dependency);
     let named_model = if named {
         named_model_revision()
     } else {
@@ -758,21 +770,36 @@ pub(crate) fn verify_with_evidence(
                 )
             }
             (PendingGoal::Contract { contract }, ProofKind::NamedV3Contract) => {
-                if contract.revision != 3 || obligation.revision != 3 {
+                if contract.revision != 3
+                    || obligation.revision != 3
+                    || proof.claim != "NamedV3Obligation.claim"
+                {
                     return Err(output::Failure::error(
                         "intrinsic-kind-mismatch",
-                        "revision-3 contract rule mismatch".into(),
+                        "revision-3 contract rule or claim mismatch".into(),
                     ));
                 }
-                // The source checker reconstructs and checks the envelope before
-                // this point. No reviewed Lean lowering of a revision-3 chain
-                // exists yet, so the strict consumer refuses instead of
-                // publishing an unproved theorem (Decision 5 step 8 is open).
-                return Err(output::Failure::unsupported(
-                    "named-v3-lowering-unavailable",
-                    "revision-3 source proof is checked; no reviewed Lean lowering exists yet"
-                        .into(),
-                ));
+                pinned_named_library(&library)?;
+                let obligation_source =
+                    noble_contracts::intrinsic::prepare_named_v3_contract(contract, limits)
+                        .map_err(|problem| {
+                            output::Failure::error("intrinsic-contract-invalid", problem.message)
+                        })?;
+                let acceptance =
+                    verification::named_v3::verify(&verification::named_v3::CallerVerification {
+                        obligation,
+                        contract,
+                        proof,
+                        batch,
+                        obligation_source: &obligation_source,
+                        library: &library,
+                        limits,
+                        timeout_ms,
+                    })?;
+                (
+                    acceptance,
+                    named_subject_evidence(contract, &obligation_source)?,
+                )
             }
             (PendingGoal::Contract { contract }, ProofKind::NamedContract) => {
                 if contract.revision != 2
@@ -815,20 +842,14 @@ pub(crate) fn verify_with_evidence(
         });
     }
     for proof in &mut checked {
+        let is_named =
+            proof.kind == ProofKind::NamedContract || proof.kind == ProofKind::NamedV3Contract;
         proof
             .model_revision
-            .clone_from(if proof.kind == ProofKind::NamedContract {
-                &named_model
-            } else {
-                &model
-            });
+            .clone_from(if is_named { &named_model } else { &model });
         proof
             .checker_revision
-            .clone_from(if proof.kind == ProofKind::NamedContract {
-                &named_checker
-            } else {
-                &checker
-            });
+            .clone_from(if is_named { &named_checker } else { &checker });
     }
     Ok((checked, evidence, work))
 }
@@ -873,14 +894,19 @@ fn accepted_report(
     submitted: &str,
     schema: super::diagnostics::Schema,
 ) -> encoding::Json {
-    let named = proofs
+    let has_v3 = proofs
         .iter()
-        .any(|proof| proof.kind == ProofKind::NamedContract || proof.kind == ProofKind::NamedV3Contract);
+        .any(|proof| proof.kind == ProofKind::NamedV3Contract);
+    let named = proofs.iter().any(|proof| {
+        proof.kind == ProofKind::NamedContract || proof.kind == ProofKind::NamedV3Contract
+    });
     let mut fields = std::vec::Vec::from([
         ("schema", encoding::string(schema.module_schema(named))),
         (
             "profile",
-            encoding::string(if named {
+            encoding::string(if has_v3 {
+                "Named-Contract-Calls-v3"
+            } else if named {
                 "Named-Contracts-v2"
             } else {
                 "Intrinsic-Proofs-Draft"
@@ -1120,7 +1146,15 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
         }
     };
     let mut submitted_sha256 = None;
-    let result = execute(arguments, schema, &mut submitted_sha256);
+    let mut emit_dir: Option<std::path::PathBuf> = None;
+    let mut record: Option<super::evidence::Record> = None;
+    let result = execute(
+        arguments,
+        schema,
+        &mut submitted_sha256,
+        &mut emit_dir,
+        &mut record,
+    );
     let exit = match (&result, schema) {
         // The published v1 report never changes meaning: a module without a
         // proof obligation has always reported `unproved` with a success exit.
@@ -1149,6 +1183,19 @@ pub(crate) fn run(arguments: &[std::ffi::OsString]) -> std::process::ExitCode {
             &error,
         ),
     };
+    if let Some(directory) = emit_dir {
+        if let Err(error) = super::evidence::write(&directory, record.as_ref(), &report) {
+            let refused = super::diagnostics::failure_report(
+                schema,
+                PROFILE,
+                &source_path,
+                submitted_sha256.as_deref(),
+                &error,
+            );
+            std::println!("{}", refused.encode());
+            return std::process::ExitCode::from(error.outcome.exit());
+        }
+    }
     std::println!("{}", report.encode());
     exit
 }
@@ -1198,6 +1245,30 @@ fn contract_subject_evidence(
         ("generated_statement", encoding::string(generated_statement)),
     ])
 }
+/// Verify that every arena slot in `candidate.nodes` carries exactly one
+/// accepted kernel derivation (no unreachable unchecked payload may hide in
+/// the candidate arena).
+fn ensure_all_nodes_derived(
+    candidate: &noble_kernel::untrusted::Candidate,
+    checked: &noble_kernel::untrusted::Checked,
+    detail: &str,
+) -> Result<(), output::Failure> {
+    let fail = || output::Failure::error("named-report-derivation", detail.into());
+    let mut visited = std::vec![false; candidate.nodes.len()];
+    for row in &checked.derivations {
+        let index = usize::try_from(row.node.0).map_err(|_| fail())?;
+        let slot = visited.get_mut(index).ok_or_else(fail)?;
+        if *slot {
+            return Err(fail());
+        }
+        *slot = true;
+    }
+    if visited.iter().any(|seen| !*seen) {
+        return Err(fail());
+    }
+    Ok(())
+}
+
 fn named_subject_evidence(
     contract: &noble_contracts::intrinsic::ContractGoal,
     obligation_source: &str,
@@ -1235,6 +1306,11 @@ fn named_subject_evidence(
             "accepted body derivation unavailable".into(),
         ));
     };
+    ensure_all_nodes_derived(
+        &selected.body.candidate,
+        &derived,
+        "accepted body contains unreachable or duplicate arena nodes",
+    )?;
     let root_node = usize::try_from(root.candidate_node.0)
         .ok()
         .and_then(|index| accepted.body.candidate.nodes.get(index));
@@ -1257,6 +1333,11 @@ fn named_subject_evidence(
             "submission root derivation unavailable".into(),
         ));
     };
+    ensure_all_nodes_derived(
+        &accepted.body.candidate,
+        &root_checked,
+        "submission root contains unreachable or duplicate arena nodes",
+    )?;
     let root_derivation = root_checked
         .derivations
         .iter()
@@ -1585,6 +1666,11 @@ fn specialization_evidence(
             "named step derivation unavailable".into(),
         ));
     };
+    ensure_all_nodes_derived(
+        body,
+        &checked,
+        "named step body contains unreachable or duplicate arena nodes",
+    )?;
     let mut nodes = std::vec::Vec::with_capacity(body.body.len());
     for id in &body.body {
         let node = usize::try_from(id.0)
@@ -1644,17 +1730,22 @@ fn execute(
     arguments: &[std::ffi::OsString],
     schema: super::diagnostics::Schema,
     submitted_sha256: &mut Option<std::string::String>,
+    emit_dir: &mut Option<std::path::PathBuf>,
+    record: &mut Option<super::evidence::Record>,
 ) -> Result<Option<encoding::Json>, output::Failure> {
     let path = arguments.get(1).ok_or_else(|| {
         output::Failure::error(
             "usage",
-            "verify-module SOURCE [--module FILE ...] [--timeout-ms N]".into(),
+            "verify-module SOURCE [--module FILE ...] [--timeout-ms N] [--emit NEW_DIR] [--evidence DIR ...]"
+                .into(),
         )
     })?;
     let mut modules = std::vec::Vec::new();
     let mut modules_exceeded = false;
     let mut timeout_ms = super::DEFAULT_TIMEOUT;
     let mut timeout_seen = false;
+    let mut emit: Option<std::path::PathBuf> = None;
+    let mut evidence = std::vec::Vec::new();
     let mut budgets =
         noble_contracts::intrinsic::ProofBudgets::from_limits(noble_contracts::Limits::default());
     let mut at = 2;
@@ -1692,6 +1783,24 @@ fn execute(
                         output::Failure::error("usage", "invalid proof deadline".into())
                     })?
             }
+            "--emit" => {
+                if emit.is_some() {
+                    return Err(output::Failure::error(
+                        "usage",
+                        "repeated evidence destination".into(),
+                    ));
+                }
+                emit = Some(std::path::PathBuf::from(value));
+            }
+            "--evidence" => {
+                if evidence.len() >= super::evidence::DIRECTORY_LIMIT {
+                    return Err(output::Failure::error(
+                        "evidence-limit",
+                        "too many retained evidence directories".into(),
+                    ));
+                }
+                evidence.push(std::path::PathBuf::from(value));
+            }
             // The revision selector was parsed and validated once, before
             // this loop; a repeated or unknown selector is already refused.
             "--report-schema" => {}
@@ -1724,6 +1833,7 @@ fn execute(
             "too many prior module units".into(),
         ));
     }
+    *emit_dir = emit.clone();
     let limits = noble_contracts::Limits::default();
     let retained = noble_contracts::source::RetainedSourceLimit::new(65_536)
         .expect("legacy verify-module retained source budget");
@@ -1741,6 +1851,33 @@ fn execute(
             .prepare(&source, &[], limits)
             .map_err(|error| source_error(&error))?;
         let has_proofs = prepared.proof_obligations().is_some();
+        // A retained evidence directory is offered for the target module. It
+        // never substitutes for checking: a record whose staleness key differs
+        // from the current prepared subject is refused before any consumer
+        // runs, and a matching record still goes through the ordinary recheck.
+        if module == &target && !evidence.is_empty() {
+            let Some(batch) = prepared.proof_obligations() else {
+                return Err(output::Failure::error(
+                    "usage",
+                    "--evidence requires a module with proof declarations".into(),
+                ));
+            };
+            let Some(digest) = submitted_sha256.as_deref() else {
+                return Err(output::Failure::error(
+                    "intrinsic-internal",
+                    "a target module with evidence must have been read".into(),
+                ));
+            };
+            let current =
+                super::evidence::current(batch, digest, &evidence_revisions(batch), limits)?;
+            for directory in &evidence {
+                let loaded = super::evidence::load(directory)?;
+                let mismatches = super::evidence::compare(&loaded.record, &current);
+                if !mismatches.is_empty() {
+                    return Err(super::evidence::stale_failure(&loaded, &mismatches));
+                }
+            }
+        }
         let mut accepted = None;
         let mut verification_failure = None;
         let (next, committed) = if has_proofs {
@@ -1779,6 +1916,16 @@ fn execute(
                         digest,
                         schema,
                     ));
+                    if emit.is_some() {
+                        match super::evidence::record(batch, &verified, limits) {
+                            Ok(value) => *record = Some(value),
+                            Err(error) => {
+                                let message = std::format!("{}: {}", error.code, error.message);
+                                verification_failure = Some(error);
+                                return Err(message);
+                            }
+                        }
+                    }
                 }
                 Ok(verified)
             })
@@ -1798,6 +1945,27 @@ fn execute(
         "intrinsic-internal",
         "no target module was selected".into(),
     ))
+}
+
+/// The revisions a prepared batch's proofs are selected and compared under.
+fn evidence_revisions(batch: &ProofBatch) -> super::evidence::Revisions {
+    let named = batch
+        .obligations
+        .iter()
+        .any(|obligation| match &obligation.goal {
+            noble_contracts::intrinsic::PendingGoal::Contract { contract } => {
+                contract.revision >= 2
+            }
+            noble_contracts::intrinsic::PendingGoal::Pure { .. } => false,
+        })
+        || batch.dependencies.iter().any(has_named_dependency);
+    let checker = checker_revision();
+    super::evidence::Revisions {
+        model: model_revision(),
+        named_model: named.then(named_model_revision),
+        named_checker: named.then(|| named_checker_revision(&checker)),
+        checker,
+    }
 }
 
 #[cfg(test)]
@@ -2041,5 +2209,85 @@ mod tests {
             million.finish(),
             "cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0"
         );
+    }
+
+    #[test]
+    fn specialization_evidence_rejects_unreachable_ill_typed_arena_node() {
+        use noble_kernel::contracts::Definition;
+        use noble_kernel::execution::{Body, Definition as ExecDef, Submission};
+        use noble_kernel::types::{EffSet, Ty};
+        use noble_kernel::untrusted::{
+            Candidate, Expected, Limits, Lit, Node, NodeId, Request, CANDIDATE_FORMAT,
+            SEMANTIC_REVISION,
+        };
+        use noble_kernel::words::{Binding, Inst};
+
+        let env = noble_kernel::contracts::environment().expect("bootstrap env");
+        let valid_lit = Node::Literal {
+            lit: Lit::I64(1),
+            inst: Inst {
+                bindings: vec![Binding::Stack(vec![])],
+            },
+        };
+        // An unreachable arena slot carrying an unknown definition / type error.
+        let unreachable_bad = Node::Invocation {
+            def: Definition(9999),
+            inst: Inst { bindings: vec![] },
+        };
+        let expected = Expected {
+            stack_in: vec![],
+            stack_out: vec![Ty::I64],
+            allowed_effects: EffSet::empty(),
+        };
+        let limits = Limits {
+            bytes: 4096,
+            nodes: 64,
+            depth: 16,
+            stack_height: 64,
+            type_size: 64,
+            work: 10_000,
+            diagnostics: 64,
+        };
+        let request = Request {
+            input_bytes: 0,
+            expected: expected.clone(),
+            limits,
+        };
+        let clean_body = Body {
+            candidate: Candidate {
+                format: CANDIDATE_FORMAT,
+                revision: SEMANTIC_REVISION,
+                nodes: vec![valid_lit.clone()],
+                body: vec![NodeId(0)],
+            },
+            texts: vec![],
+        };
+        let polluted_def = ExecDef {
+            definition: Definition(23),
+            identity: 1,
+            source_identity: 1,
+            expected,
+            body: Body {
+                candidate: Candidate {
+                    format: CANDIDATE_FORMAT,
+                    revision: SEMANTIC_REVISION,
+                    nodes: vec![valid_lit, unreachable_bad],
+                    body: vec![NodeId(0)],
+                },
+                texts: vec![],
+            },
+            owner_slot: None,
+            owner_inst: None,
+        };
+        let submission = Submission {
+            environment: env,
+            request,
+            definitions: vec![polluted_def.clone()],
+            body: clean_body,
+        };
+        let Err(refusal) = super::specialization_evidence(&submission, &polluted_def) else {
+            panic!("unreachable arena slot must be refused");
+        };
+        assert_eq!(refusal.code, "named-report-derivation");
     }
 }

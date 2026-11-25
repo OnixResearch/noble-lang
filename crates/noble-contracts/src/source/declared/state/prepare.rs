@@ -1117,11 +1117,12 @@ fn uses(form: &crate::intrinsic::Form, name: &str) -> bool {
     tigerstyle::missing_const_fn,
     reason = "Owner: noble-contracts; the helper reads runtime tables or calls non-const helpers, so the const suggestion does not apply"
 )]
-/// Whether `form` is the two-item list `(use name)`.
+/// Whether `form` is `(use name)` or a revision-3 call slice `(pc-call _ name _)`.
 fn is_use_of(form: &crate::intrinsic::Form, name: &str) -> bool {
     match &form.kind {
         crate::intrinsic::FormKind::List(items) => {
-            items.len() == 2 && atom_is(&items[0], "use") && atom_is(&items[1], name)
+            (items.len() == 2 && atom_is(&items[0], "use") && atom_is(&items[1], name))
+                || (items.len() == 4 && atom_is(&items[0], "pc-call") && atom_is(&items[2], name))
         }
         crate::intrinsic::FormKind::Atom(_) => false,
     }

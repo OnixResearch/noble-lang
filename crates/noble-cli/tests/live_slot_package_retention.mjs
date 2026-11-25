@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { cli, expectOutcome, selectedAuthority } from './live_slot_resource_ref_cli.mjs';
 
-// LREF-CASE-03 (`.cairn/changes/live-reference-lifetimes`): package retention across slot
+// LREF-CASE-03 (`.cairn/archive/2026-11-23-live-reference-lifetimes`): package retention across slot
 // replacement. Slot S's version v1 is module M1's root, whose body returns `[ h ]`; the compiled
 // body reads `h` through an M1 global. A root R dispatches to v1 through `slot.invoke` and saves
 // the returned Program O; R then ends and v2 replaces v1, so the publication's sweep finds O as

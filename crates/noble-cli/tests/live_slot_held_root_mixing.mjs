@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import { cli, expectOutcome, selectedAuthority } from './live_slot_resource_ref_cli.mjs';
 
-// LREF-CASE-06 (`.cairn/changes/live-reference-lifetimes`): held roots and allowed mixing. S-v0
-// is the quotation `[ 100 + ]` of module s0; invoking s0 saves that exact Program as P, so P is of
+// LREF-CASE-06 (`.cairn/archive/2026-11-23-live-reference-lifetimes`): held roots and allowed
+// mixing. S-v0 is the quotation `[ 100 + ]` of module s0; invoking s0 saves that exact Program as
+// P, so P is of
 // S-v0's lineage. S-v1 (`1 +`) replaces v0. Root R1 receives P, dispatches S, and is held at its
 // second selection while S-v2 (`2 +`) is published; R1 then resumes, dispatches S again and runs
 // P. R1 must select S-v1 for both dispatches with its trace at R1's epoch throughout, and P must
