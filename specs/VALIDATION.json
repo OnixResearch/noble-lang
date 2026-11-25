@@ -3071,7 +3071,7 @@
     },
     {
       "file": "verification/aeneas-re-extraction/README.md",
-      "sha256": "5a82f231a73cd9d284aacf79cdf9372b58d58656f054daf2d7ac84905e43b1c0"
+      "sha256": "26a670a60f05f98ee780875347684c4773735ef009d55494de7523b2f0d1bbf1"
     },
     {
       "file": "verification/allocator-admission/decision.md",
@@ -3623,7 +3623,7 @@
     },
     {
       "file": "verification/service-wire-refinement/README.md",
-      "sha256": "b2574ac27fe02065353734ad8b6306dfce4325ced654c46028138ef2fda08668"
+      "sha256": "95a1ac53dc46cfc47dcb97e30bd76427c9814a08ca78e9331baa35c3d892d67f"
     },
     {
       "file": "verification/shared-candidates/criteria.md",
