@@ -2,6 +2,11 @@
 
 mod sizechange;
 
+/// The contract-time projection: a generated Lean statement.
+enum Generated {
+    Statement(std::string::String),
+}
+
 impl super::Session {
     pub(super) fn commit_declared(
         &mut self,
@@ -64,7 +69,7 @@ impl super::Session {
                 batch,
                 source,
                 limits,
-                crate::workflow::DEFAULT_TIMEOUT,
+                crate::workflow::MAX_TIMEOUT,
                 noble_contracts::intrinsic::ProofBudgets::from_limits(limits),
             )
             .map_err(|problem| std::format!("{}: {}", problem.code, problem.message))?;
@@ -139,10 +144,14 @@ impl super::Session {
             .map(|binding| (binding.adapter_identity.clone(), binding.adapter_slot));
         let mut contract_reports = std::vec::Vec::new();
         for goal in prepared.contract_goals() {
-            let generated_statement = match goal.revision {
+            let generated = match goal.revision {
                 1 => noble_contracts::intrinsic::prepare_contract(goal, options.limits)
-                    .map(|typed| noble_contracts::export_lean(&typed)),
-                2 => noble_contracts::intrinsic::prepare_named_contract(goal, options.limits),
+                    .map(|typed| noble_contracts::export_lean(&typed))
+                    .map(Generated::Statement),
+                2 => noble_contracts::intrinsic::prepare_named_contract(goal, options.limits)
+                    .map(Generated::Statement),
+                3 => noble_contracts::intrinsic::prepare_named_v3_contract(goal, options.limits)
+                    .map(Generated::Statement),
                 _ => {
                     return Err(super::output::Failure::new(
                         super::output::ErrorContext {
@@ -153,16 +162,13 @@ impl super::Session {
                     ))
                 }
             };
-            let generated_statement =
-                attempt!(
-                    generated_statement.map_err(|problem| super::output::Failure::new(
-                        super::output::ErrorContext {
-                            stage: "check",
-                            outcome: "internal-failure"
-                        },
-                        problem.message,
-                    ))
-                );
+            let generated = attempt!(generated.map_err(|problem| super::output::Failure::new(
+                super::output::ErrorContext {
+                    stage: "check",
+                    outcome: "internal-failure"
+                },
+                problem.message,
+            )));
             let mut fields = std::vec::Vec::from([
                 (
                     "name",
@@ -189,7 +195,8 @@ impl super::Session {
                     )),
                 ),
             ]);
-            if goal.revision == 2 {
+            if goal.revision == 2 || goal.revision == 3 {
+                let Generated::Statement(generated_statement) = &generated;
                 fields.push((
                     "generated_statement_sha256",
                     crate::workflow::encoding::string(crate::workflow::intrinsic::sha256(
@@ -198,12 +205,17 @@ impl super::Session {
                 ));
                 fields.push((
                     "generated_claim",
-                    crate::workflow::encoding::string("NamedV2Obligation.claim"),
+                    crate::workflow::encoding::string(if goal.revision == 3 {
+                        "NamedV3Obligation.claim"
+                    } else {
+                        "NamedV2Obligation.claim"
+                    }),
                 ));
             } else {
+                let Generated::Statement(generated_statement) = &generated;
                 fields.push((
                     "generated_statement",
-                    crate::workflow::encoding::string(&generated_statement),
+                    crate::workflow::encoding::string(generated_statement),
                 ));
             }
             fields.push((
@@ -213,8 +225,11 @@ impl super::Session {
                     goal.subject.accepted_submission.definitions
                 )),
             ));
-            if goal.revision == 2 {
-                fields.push(("revision", crate::workflow::encoding::Json::Number(2)));
+            if goal.revision == 2 || goal.revision == 3 {
+                fields.push((
+                    "revision",
+                    crate::workflow::encoding::Json::Number(u64::from(goal.revision)),
+                ));
                 fields.push((
                     "original_sources",
                     crate::workflow::encoding::Json::Array(

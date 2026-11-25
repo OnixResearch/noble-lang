@@ -117,6 +117,10 @@ fn statement_digest(
             noble_contracts::intrinsic::prepare_named_contract(contract, limits)
                 .map_err(|problem| failure("proof-artifact", problem.message))?
         }
+        PendingGoal::Contract { contract } if contract.revision == 3 => {
+            noble_contracts::intrinsic::prepare_named_v3_contract(contract, limits)
+                .map_err(|problem| failure("proof-artifact", problem.message))?
+        }
         PendingGoal::Contract { contract } => {
             let prepared = noble_contracts::intrinsic::prepare_contract(contract, limits)
                 .map_err(|problem| failure("proof-artifact", problem.message))?;
@@ -156,6 +160,7 @@ pub(crate) fn record(
             ProofKind::Pure => "pure",
             ProofKind::Contract => "contract",
             ProofKind::NamedContract => "named-contract",
+            ProofKind::NamedV3Contract => "named-v3-contract",
         };
         let digest = statement_digest(&obligation.goal, limits)?;
         let basis = if digest.is_some() {
@@ -179,9 +184,9 @@ pub(crate) fn record(
             subject,
         });
     }
-    let named = proofs
-        .iter()
-        .any(|proof| proof.kind == ProofKind::NamedContract);
+    let named = proofs.iter().any(|proof| {
+        proof.kind == ProofKind::NamedContract || proof.kind == ProofKind::NamedV3Contract
+    });
     let checker = intrinsic::checker_revision();
     let revisions = Revisions {
         model: intrinsic::model_revision(),
@@ -405,6 +410,7 @@ fn proof_from_json(value: &serde_json::Value) -> Result<Proof, String> {
         "pure" => "pure",
         "contract" => "contract",
         "named-contract" => "named-contract",
+        "named-v3-contract" => "named-v3-contract",
         other => return Err(std::format!("unknown evidence proof kind {other}")),
     };
     let statement_digest = match value.get("statement_digest") {
@@ -609,7 +615,7 @@ pub(crate) fn current(
         .obligations
         .iter()
         .any(|obligation| match &obligation.goal {
-            PendingGoal::Contract { contract } => contract.revision == 2,
+            PendingGoal::Contract { contract } => contract.revision >= 2,
             PendingGoal::Pure { .. } => false,
         });
     if named && (revisions.named_model.is_none() || revisions.named_checker.is_none()) {
@@ -626,6 +632,11 @@ pub(crate) fn current(
             }
             PendingGoal::Contract { contract } if contract.revision == 2 => (
                 "named-contract",
+                revisions.named_model.clone().unwrap_or_default(),
+                revisions.named_checker.clone().unwrap_or_default(),
+            ),
+            PendingGoal::Contract { contract } if contract.revision == 3 => (
+                "named-v3-contract",
                 revisions.named_model.clone().unwrap_or_default(),
                 revisions.named_checker.clone().unwrap_or_default(),
             ),

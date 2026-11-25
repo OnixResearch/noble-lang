@@ -379,6 +379,7 @@ fn logical_revision(token: &crate::source::lexer::Token) -> Option<u32> {
     match &token.kind {
         crate::source::lexer::TokenKind::Literal(noble_kernel::untrusted::Lit::I64(1)) => Some(1),
         crate::source::lexer::TokenKind::Literal(noble_kernel::untrusted::Lit::I64(2)) => Some(2),
+        crate::source::lexer::TokenKind::Literal(noble_kernel::untrusted::Lit::I64(3)) => Some(3),
         _ => None,
     }
 }

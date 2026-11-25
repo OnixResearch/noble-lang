@@ -19,7 +19,7 @@ pub(in crate::workflow) fn verify(
         workspace: attempt!(super::Workspace::create(library, false)),
         deadline,
     };
-    attempt!(session.compile_library(library));
+    attempt!(session.compile_library_for(library, &["NobleContracts.NamedV2"]));
     let generated = &session.workspace.obligation;
     attempt!(super::super::artifacts::write_source(
         &generated.join("NamedV2Obligation.lean"),
@@ -71,8 +71,8 @@ elab "check_named_v2_axioms" : command => do
   let imported ← liftIO <| importModules
     #[{{ module := `NamedV2Obligation }}] {{}} (trustLevel := 0) (loadExts := false)
   let empty ← liftIO mkEmptyEnvironment
-  let trusted ← liftIO <| empty.replay imported.toKernelEnv.constants.map₁
-  let checked ← match trusted.toKernelEnv.addDeclCore 0 (.thmDecl proof) (cancelTk? := none) with
+  let trusted ← liftIO <| Kernel.Environment.replay imported.toKernelEnv.constants.map₁ empty.toKernelEnv
+  let checked ← match trusted.addDeclCore 0 maxRecDepth.defValue.toUSize (.thmDecl proof) (cancelTk? := none) with
     | .ok next => pure next
     | .error _ => throwError "named v2 fresh kernel rejected proof"
   match Kernel.isDefEq (.ofKernelEnv checked) {{}} proof.type

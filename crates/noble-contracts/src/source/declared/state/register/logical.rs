@@ -189,6 +189,10 @@ fn stage_contract(
     let prepared = match contract.revision {
         1 => crate::intrinsic::prepare_contract(&goal, request.limits).map(|_| ()),
         2 => crate::intrinsic::prepare_named_contract(&goal, request.limits).map(|_| ()),
+        // The revision-3 subject, acceptance and occurrence envelope are
+        // reconstructed here; its bridges, join and closure need the proof
+        // term and are checked with the proof batch.
+        3 => crate::intrinsic::claim_shape(&goal, request.limits).map(|_| ()),
         _ => {
             return Err(at(
                 crate::source::Stage::Check,
@@ -244,7 +248,7 @@ fn stage_proof(
     contracts: &[crate::source::declared::LogicalContract],
     proof: &crate::source::declared::parsing::Proof,
     prior: &[crate::intrinsic::ProofObligation],
-    dependencies: alloc::vec::Vec<crate::intrinsic::ProofDependency>,
+    mut dependencies: alloc::vec::Vec<crate::intrinsic::ProofDependency>,
 ) -> Result<
     (
         crate::intrinsic::ProofObligation,
@@ -273,12 +277,20 @@ fn stage_proof(
             }
         }
     };
-    let (term, dependencies) = attempt!(resolve_uses(
+    // A revision-3 proof resolves both its call slices and its `use`
+    // references through the contract's frozen import snapshot; revisions 1
+    // and 2 keep the session resolution they always had.
+    let snapshot = rev3_snapshot(&goal, proof.revision);
+    let context = UseContext {
         request,
-        proof.term.clone(),
         prior,
-        dependencies
-    ));
+        snapshot,
+    };
+    let mut term = proof.term.clone();
+    if snapshot.is_some() {
+        term = attempt!(resolve_pc_calls(context, term, &mut dependencies));
+    }
+    let (term, dependencies) = attempt!(resolve_uses(context, term, dependencies));
     // A proof hole is editor transport only. The reserved form is refused as
     // ordinary source before any checking, so no admission path can reach it;
     // only the goal view's proof-editor session admits it for analysis.
@@ -960,7 +972,7 @@ fn bind_subject(
         ));
     }
     let source_dependencies = attempt!(retained_dependencies(request, &submission));
-    let named_uses = if contract.revision == 2 {
+    let named_uses = if contract.revision >= 2 {
         attempt!(origin::trace(
             request,
             *index,
@@ -970,12 +982,17 @@ fn bind_subject(
     } else {
         alloc::vec::Vec::new()
     };
-    let named_imports = if contract.revision == 2 {
+    let named_imports = if contract.revision >= 2 {
         attempt!(origin::imports(
             request,
             original.owner,
             &source_dependencies
         ))
+    } else {
+        alloc::vec::Vec::new()
+    };
+    let proof_imports = if contract.revision == 3 {
+        attempt!(origin::proof_imports(request, original.owner))
     } else {
         alloc::vec::Vec::new()
     };
@@ -990,6 +1007,7 @@ fn bind_subject(
         definition_owner: original.owner,
         named_uses,
         named_imports,
+        proof_imports,
         accepted_submission: submission,
         input_types: inputs,
         output_types: outputs,
@@ -1239,13 +1257,41 @@ enum UseVisit {
     Enter(alloc::vec::Vec<crate::intrinsic::Form>),
 }
 
+const fn rev3_snapshot(
+    goal: &crate::intrinsic::PendingGoal,
+    revision: u32,
+) -> Option<Snapshot<'_>> {
+    if revision != 3 {
+        return None;
+    }
+    let crate::intrinsic::PendingGoal::Contract { contract } = goal else {
+        return None;
+    };
+    Some(Snapshot {
+        imports: contract.subject.proof_imports.as_slice(),
+        dependencies: contract.subject.source_dependencies.as_slice(),
+    })
+}
+
+#[derive(Clone, Copy)]
+struct Snapshot<'a> {
+    imports: &'a [crate::intrinsic::ProofImportBinding],
+    dependencies: &'a [crate::intrinsic::ResolvedSourceModule],
+}
+
+#[derive(Clone, Copy)]
+struct UseContext<'req, 'prior, 'snap> {
+    request: Request<'req>,
+    prior: &'prior [crate::intrinsic::ProofObligation],
+    snapshot: Option<Snapshot<'snap>>,
+}
+
 /// Resolves every `(use name)` in pre-order, left to right. The term and the
 /// module's dependency list are owned and returned; the first error wins.
 /// One loop over the stack of entered lists keeps the walk free of recursion.
 fn resolve_uses(
-    request: Request<'_>,
+    context: UseContext<'_, '_, '_>,
     mut term: crate::intrinsic::Form,
-    prior: &[crate::intrinsic::ProofObligation],
     mut dependencies: alloc::vec::Vec<crate::intrinsic::ProofDependency>,
 ) -> Result<
     (
@@ -1255,13 +1301,13 @@ fn resolve_uses(
     crate::source::Error,
 > {
     let mut frames = alloc::vec::Vec::new();
-    let root = attempt!(visit_use(request, &mut term, 0, prior, &mut dependencies));
+    let root = attempt!(visit_use(context, &mut term, 0, &mut dependencies));
     if let UseVisit::Enter(items) = root {
         frames.push(UseFrame { items, visited: 0 });
     }
     let mut failure = None;
     while failure.is_none() && !frames.is_empty() {
-        if let Err(problem) = use_step(request, &mut term, &mut frames, prior, &mut dependencies) {
+        if let Err(problem) = use_step(context, &mut term, &mut frames, &mut dependencies) {
             failure = Some(problem);
         }
     }
@@ -1295,10 +1341,9 @@ fn resolve_uses(
 /// entered list, or moves the items of a finished list back into the form
 /// they were taken from, the enclosing list's last visited item or the term.
 fn use_step(
-    request: Request<'_>,
+    context: UseContext<'_, '_, '_>,
     term: &mut crate::intrinsic::Form,
     frames: &mut alloc::vec::Vec<UseFrame>,
-    prior: &[crate::intrinsic::ProofObligation],
     dependencies: &mut alloc::vec::Vec<crate::intrinsic::ProofDependency>,
 ) -> Result<(), crate::source::Error> {
     // The items of the innermost entered list are `depth` lists deep.
@@ -1310,10 +1355,9 @@ fn use_step(
     if index < frames[top].items.len() {
         frames[top].visited += 1;
         let visited = attempt!(visit_use(
-            request,
+            context,
             &mut frames[top].items[index],
             depth,
-            prior,
             dependencies
         ));
         if let UseVisit::Enter(items) = visited {
@@ -1368,10 +1412,9 @@ fn restore_items(
 /// Visits one form `depth` lists deep: resolves a `(use name)` in place, or
 /// enters any other list by moving its items out for the walk to visit.
 fn visit_use(
-    request: Request<'_>,
+    context: UseContext<'_, '_, '_>,
     form: &mut crate::intrinsic::Form,
     depth: usize,
-    prior: &[crate::intrinsic::ProofObligation],
     dependencies: &mut alloc::vec::Vec<crate::intrinsic::ProofDependency>,
 ) -> Result<UseVisit, crate::source::Error> {
     let span = form.span;
@@ -1405,10 +1448,9 @@ fn visit_use(
         ));
     };
     attempt!(resolve_reference(
-        request,
+        context,
         reference,
         reference_span,
-        prior,
         dependencies
     ));
     Ok(UseVisit::Done)
@@ -1429,6 +1471,27 @@ fn is_use_list(items: &[crate::intrinsic::Form]) -> bool {
     }
 }
 
+fn is_rev3_fact_reference(reference: &str) -> bool {
+    let Some(digits) = crate::scan::strip_prefix_str(reference, "f") else {
+        return false;
+    };
+    let bytes = digits.as_bytes();
+    if bytes.is_empty() || bytes.len() > 3 {
+        return false;
+    }
+    let mut at = 0;
+    let mut is_all_digits = true;
+    while at < bytes.len() && is_all_digits {
+        if !bytes[at].is_ascii_digit() {
+            is_all_digits = false;
+        }
+        at += 1;
+    }
+    is_all_digits
+}
+
+/// Resolves one `use` reference: a current-module proof keeps only its local
+/// name, in place, and an imported proof records its dependency once.
 #[expect(
     tigerstyle::mutating_input_in_pure,
     reason = "Owner: noble-contracts; the reference and the dependency list are the walk's own term and accumulator, rewritten in place"
@@ -1445,16 +1508,18 @@ fn is_use_list(items: &[crate::intrinsic::Form]) -> bool {
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
 )]
-/// Resolves one `use` reference: a current-module proof keeps only its local
-/// name, in place, and an imported proof records its dependency once.
 fn resolve_reference(
-    request: Request<'_>,
+    context: UseContext<'_, '_, '_>,
     reference: &mut alloc::string::String,
     reference_span: crate::Span,
-    prior: &[crate::intrinsic::ProofObligation],
     dependencies: &mut alloc::vec::Vec<crate::intrinsic::ProofDependency>,
 ) -> Result<(), crate::source::Error> {
+    let request = context.request;
+    let prior = context.prior;
     let Some((scope, name)) = crate::scan::split_once_byte(reference, b'.') else {
+        if context.snapshot.is_some() && is_rev3_fact_reference(reference) {
+            return Ok(());
+        }
         if crate::scan::find_first(prior, |proof| proof.name == *reference).is_none() {
             return Err(at(
                 crate::source::Stage::Resolve,
@@ -1477,7 +1542,12 @@ fn resolve_reference(
         reference.replace_range(..=qualifier, "");
         return Ok(());
     }
-    let module = attempt!(imported_module(request.session, scope, reference_span));
+    let module = attempt!(resolve_module(
+        request.session,
+        scope,
+        reference_span,
+        context.snapshot
+    ));
     let Some(published) = crate::scan::find_first(&module.proofs, |proof| {
         proof.reference.name == name && proof.reference.exported
     }) else {
@@ -1493,6 +1563,235 @@ fn resolve_reference(
         dependencies.push(dependency);
     }
     Ok(())
+}
+
+/// Whether `owner` appears in the frozen revision-3 import or subject snapshot.
+fn snapshot_contains_owner(snapshot: Snapshot<'_>, owner: u64) -> bool {
+    let mut is_found = false;
+    let mut index = 0;
+    while !is_found && index < snapshot.imports.len() {
+        if snapshot.imports[index].owner == owner {
+            is_found = true;
+        }
+        index += 1;
+    }
+    let mut dep_at = 0;
+    while !is_found && dep_at < snapshot.dependencies.len() {
+        if snapshot.dependencies[dep_at].owner == owner {
+            is_found = true;
+        }
+        dep_at += 1;
+    }
+    is_found
+}
+
+/// Resolve one proof or contract reference for a revision-3 term: the frozen
+/// snapshot decides which module an alias names, and only its identity is
+/// looked up in the session. A session alias rebound after installation can
+/// therefore never redirect the reference.
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
+fn resolve_module<'a>(
+    session: &'a crate::source::declared::ModuleSession,
+    scope: &str,
+    span: crate::Span,
+    snapshot: Option<Snapshot<'_>>,
+) -> Result<&'a crate::source::declared::Module, crate::source::Error> {
+    let Some(snap) = snapshot else {
+        return imported_module(session, scope, span);
+    };
+    let owner = match crate::scan::split_once_byte(scope, b'@') {
+        Some((name, version)) => {
+            let version = crate::source::declared::canonical_version(version);
+            let module = crate::scan::find_first(&session.modules, |module| {
+                module.name == name && Some(module.version) == version
+            })
+            .ok_or_else(|| {
+                at(
+                    crate::source::Stage::Resolve,
+                    span,
+                    "missing imported proof module version",
+                )
+            })?;
+            if !snapshot_contains_owner(snap, module.identity) {
+                return Err(at(
+                    crate::source::Stage::Resolve,
+                    span,
+                    "proof module is not in the frozen import snapshot",
+                ));
+            }
+            module.identity
+        }
+        None => match crate::scan::find_first(snap.imports, |binding| binding.alias == scope) {
+            Some(binding) => binding.owner,
+            None => {
+                return Err(at(
+                    crate::source::Stage::Resolve,
+                    span,
+                    "unknown or private imported proof",
+                ))
+            }
+        },
+    };
+    crate::scan::find_first(&session.modules, |module| module.identity == owner).ok_or_else(|| {
+        at(
+            crate::source::Stage::Resolve,
+            span,
+            "missing imported proof module version",
+        )
+    })
+}
+
+fn form_head(items: &[crate::intrinsic::Form]) -> Option<&str> {
+    let first = items.first()?;
+    let crate::intrinsic::FormKind::Atom(head) = &first.kind else {
+        return None;
+    };
+    Some(head.as_str())
+}
+
+/// Resolve every `(pc-call k reference bridge)` contract reference of a
+/// revision-3 proof through the frozen snapshot, strip local qualifiers in
+/// place, and record each external dependency.
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the walk resolves `(pc-call ...)` contract references in place and records imported dependencies"
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; imported contract dependencies are appended with Vec::push"
+)]
+fn resolve_pc_calls(
+    context: UseContext<'_, '_, '_>,
+    mut term: crate::intrinsic::Form,
+    dependencies: &mut alloc::vec::Vec<crate::intrinsic::ProofDependency>,
+) -> Result<crate::intrinsic::Form, crate::source::Error> {
+    let mut frames = alloc::vec::Vec::new();
+    let root = attempt!(visit_pc_call(context, &mut term, 0, dependencies));
+    if let UseVisit::Enter(items) = root {
+        frames.push(UseFrame { items, visited: 0 });
+    }
+    let mut failure = None;
+    while failure.is_none() && !frames.is_empty() {
+        if let Err(problem) = pc_call_step(context, &mut term, &mut frames, dependencies) {
+            failure = Some(problem);
+        }
+    }
+    match failure {
+        Some(problem) => Err(problem),
+        None => Ok(term),
+    }
+}
+
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; advances the iterative `pc-call` walk over the entered frame stack"
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; entered lists and dependency accumulation need growable vectors"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; Vec indexing, push, pop and visiting pc-call frames are not const (E0277/E0015)."
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
+#[expect(
+    tigerstyle::raw_arithmetic_overflow,
+    reason = "Owner: noble-contracts; an entered list counts its visited index before pushing the child frame, so `visited` is at least 1 upon return."
+)]
+fn pc_call_step(
+    context: UseContext<'_, '_, '_>,
+    term: &mut crate::intrinsic::Form,
+    frames: &mut alloc::vec::Vec<UseFrame>,
+    dependencies: &mut alloc::vec::Vec<crate::intrinsic::ProofDependency>,
+) -> Result<(), crate::source::Error> {
+    let depth = frames.len();
+    let Some(top) = depth.checked_sub(1) else {
+        return Ok(());
+    };
+    let index = frames[top].visited;
+    if index < frames[top].items.len() {
+        frames[top].visited += 1;
+        let visited = attempt!(visit_pc_call(
+            context,
+            &mut frames[top].items[index],
+            depth,
+            dependencies
+        ));
+        if let UseVisit::Enter(items) = visited {
+            frames.push(UseFrame { items, visited: 0 });
+        }
+        return Ok(());
+    }
+    let Some(finished) = frames.pop() else {
+        return Ok(());
+    };
+    match top.checked_sub(1) {
+        None => restore_items(term, finished.items),
+        Some(parent) => {
+            let entered = frames[parent].visited - 1;
+            restore_items(&mut frames[parent].items[entered], finished.items);
+        }
+    }
+    Ok(())
+}
+
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; resolves the `(pc-call k reference bridge)` reference atom in place"
+)]
+#[expect(
+    tigerstyle::borrowed_argument_types,
+    reason = "Owner: noble-contracts; imported dependencies are appended with Vec::push"
+)]
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; resolving the pc-call atom and moving list items are not const (E0277/E0015)."
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite."
+)]
+fn visit_pc_call(
+    context: UseContext<'_, '_, '_>,
+    form: &mut crate::intrinsic::Form,
+    depth: usize,
+    dependencies: &mut alloc::vec::Vec<crate::intrinsic::ProofDependency>,
+) -> Result<UseVisit, crate::source::Error> {
+    let span = form.span;
+    let crate::intrinsic::FormKind::List(items) = &mut form.kind else {
+        return Ok(UseVisit::Done);
+    };
+    if items.len() == 4 && form_head(items) == Some("pc-call") {
+        let reference_span = items[2].span;
+        let crate::intrinsic::FormKind::Atom(reference) = &mut items[2].kind else {
+            return Err(at(
+                crate::source::Stage::Resolve,
+                reference_span,
+                "pc-call requires a proof identifier",
+            ));
+        };
+        attempt!(resolve_reference(
+            context,
+            reference,
+            reference_span,
+            dependencies
+        ));
+    }
+    if depth >= LIST_DEPTH {
+        return Err(at(
+            crate::source::Stage::Resolve,
+            span,
+            "logical nesting exceeds supported depth",
+        ));
+    }
+    Ok(UseVisit::Enter(core::mem::take(items)))
 }
 
 #[cfg(test)]
@@ -1740,7 +2039,12 @@ mod tests {
                 "use requires a proof identifier",
             ));
         };
-        super::resolve_reference(request, reference, reference_span, prior, dependencies)
+        let context = super::UseContext {
+            request,
+            prior,
+            snapshot: None,
+        };
+        super::resolve_reference(context, reference, reference_span, dependencies)
     }
 
     fn form(kind: crate::intrinsic::FormKind, at: u32) -> crate::intrinsic::Form {
@@ -1948,26 +2252,30 @@ mod tests {
             if expected.is_err() {
                 refusals += 1;
             }
-            let walked = super::resolve_uses(request, case, &prior, alloc::vec::Vec::new());
+            let context = super::UseContext {
+                request,
+                prior: &prior,
+                snapshot: None,
+            };
+            let walked = super::resolve_uses(context, case, alloc::vec::Vec::new());
             assert_eq!(outcome(walked), expected);
         }
         // Both accepted and refused walks are compared, and the qualifier of
         // a current-module use is removed in place.
         assert!(refusals > 0);
-        let local = super::resolve_uses(
+        let context = super::UseContext {
             request,
-            use_of("m@1.p", [1, 2]),
-            &prior,
-            alloc::vec::Vec::new(),
-        );
+            prior: &prior,
+            snapshot: None,
+        };
+        let local = super::resolve_uses(context, use_of("m@1.p", [1, 2]), alloc::vec::Vec::new());
         assert_eq!(
             outcome(local),
             Ok((use_of("p", [1, 2]), alloc::vec::Vec::new()))
         );
         let deep = super::resolve_uses(
-            request,
+            context,
             nest(64, list(alloc::vec::Vec::new(), 7)),
-            &prior,
             alloc::vec::Vec::new(),
         );
         assert_eq!(

@@ -209,7 +209,7 @@ fn revision_two_rejects_pure_proofs_noncanonical_revisions_and_new_field_syntax(
         b"module syntax@1 [ proof 3 p : [ true ] [ (refl 0) ] ]".as_slice(),
         b"module syntax@1 [ proof 02 p : [ true ] [ (refl 0) ] ]".as_slice(),
         b"module syntax@1 [ def inc [ 1 + ] contract 02 law [ subject inc input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ true ] ] ]".as_slice(),
-        b"module syntax@1 [ def inc [ 1 + ] contract 3 law [ subject inc input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ true ] ] ]".as_slice(),
+        b"module syntax@1 [ def inc [ 1 + ] contract 4 law [ subject inc input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ true ] ] ]".as_slice(),
         b"module syntax@1 [ def inc [ 1 + ] contract 2 law [ subject inc params [ ] input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ true ] ] ]".as_slice(),
     ];
     for source in bad {

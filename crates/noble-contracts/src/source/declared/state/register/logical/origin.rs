@@ -72,6 +72,121 @@ pub(super) fn imports(
     Ok(saved)
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; invalid input is rejected through typed outcomes rather than assertions, and the invariants are enforced by callers and the crate test suite"
+)]
+/// Freeze every settled module alias visible to a revision-3 contract at
+/// binding time, including lemma-only modules absent from `source_dependencies`.
+pub(super) fn proof_imports(
+    request: super::Request<'_>,
+    original_owner: u64,
+) -> Result<alloc::vec::Vec<crate::intrinsic::ProofImportBinding>, crate::source::Error> {
+    if original_owner == request.identity {
+        let mut alias_at = 0;
+        let mut outcome = Ok(alloc::vec::Vec::new());
+        while outcome.is_ok() && alias_at < request.session.aliases.len() {
+            outcome = match outcome {
+                Ok(saved) => session_proof_import(request.session, alias_at, saved),
+                Err(problem) => Err(problem),
+            };
+            alias_at += 1;
+        }
+        return outcome;
+    }
+    let original = crate::scan::find_first(&request.session.modules, |module| {
+        module.identity == original_owner
+    })
+    .ok_or_else(|| {
+        mismatch(
+            crate::Span { start: 0, end: 0 },
+            "original named caller module is absent",
+        )
+    })?;
+    let mut saved = alloc::vec::Vec::with_capacity(original.import_aliases.len());
+    for alias in original.import_aliases.iter() {
+        saved.push(crate::intrinsic::ProofImportBinding {
+            alias: alias.alias.clone(),
+            owner: alias.owner,
+        });
+    }
+    Ok(saved)
+}
+
+#[expect(
+    tigerstyle::ambiguous_params,
+    reason = "Owner: noble-contracts; constant byte-wise equality check for Aeneas extraction"
+)]
+const fn str_bytes_eq(text: &str, expected: &str) -> bool {
+    let a = text.as_bytes();
+    let b = expected.as_bytes();
+    if a.len() != b.len() {
+        return false;
+    }
+    let mut is_same = true;
+    let mut i = 0usize;
+    while is_same && i < a.len() {
+        if a[i] != b[i] {
+            is_same = false;
+        }
+        i += 1;
+    }
+    is_same
+}
+
+fn proof_import_has_alias(entry: &crate::intrinsic::ProofImportBinding, spelling: &str) -> bool {
+    str_bytes_eq(&entry.alias, spelling)
+}
+
+fn find_saved_proof_import(
+    saved: &[crate::intrinsic::ProofImportBinding],
+    spelling: &str,
+) -> Option<usize> {
+    let mut index = 0;
+    let mut existing = None;
+    while existing.is_none() && index < saved.len() {
+        if proof_import_has_alias(&saved[index], spelling) {
+            existing = Some(index);
+        }
+        index += 1;
+    }
+    existing
+}
+
+#[expect(
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; indexing aliases, module map lookup, and Vec mutation are not const"
+)]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; missing retained module returns typed Error"
+)]
+fn session_proof_import(
+    session: &crate::source::declared::ModuleSession,
+    alias_at: usize,
+    mut saved: alloc::vec::Vec<crate::intrinsic::ProofImportBinding>,
+) -> Result<alloc::vec::Vec<crate::intrinsic::ProofImportBinding>, crate::source::Error> {
+    let alias = &session.aliases[alias_at];
+    if alias.pending {
+        return Ok(saved);
+    }
+    let Some(imported) = session.modules.get(alias.module) else {
+        return Err(mismatch(
+            crate::Span { start: 0, end: 0 },
+            "original imported alias has no retained module",
+        ));
+    };
+    let existing = find_saved_proof_import(&saved, &alias.spelling);
+    match existing {
+        Some(pos) => saved[pos].owner = imported.identity,
+        None => saved.push(crate::intrinsic::ProofImportBinding {
+            alias: alias.spelling.clone(),
+            owner: imported.identity,
+        }),
+    }
+    Ok(saved)
+}
+
 /// `saved` followed by the binding of the session alias at `alias_at` when it
 /// is settled and its module is retained; an alias without a module fails.
 #[expect(

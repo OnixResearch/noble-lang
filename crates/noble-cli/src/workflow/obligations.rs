@@ -976,6 +976,10 @@ fn contract_predicates(goal: &ContractGoal, source: &[u8]) -> encoding::Json {
     // the revision-1 export names each predicate definition.
     let (pre, post) = match goal.revision {
         2 => ("NamedV2Obligation.claim", "NamedV2Obligation.claim"),
+        3 => (
+            "NamedV3Obligation.precondition",
+            "NamedV3Obligation.postcondition",
+        ),
         _ => ("MC1Obligation.precondition", "MC1Obligation.postcondition"),
     };
     encoding::object([
@@ -1172,6 +1176,40 @@ fn contract_sites(
                 ));
             }
         }
+        3 => {
+            sites.push(site_row(
+                key,
+                "claim",
+                "NamedV3Obligation.claim",
+                Some(goal.contract_span),
+            ));
+            sites.push(site_row(
+                key,
+                "subject",
+                "NamedV3Obligation.subject",
+                Some(goal.contract_span),
+            ));
+            sites.push(site_row(
+                key,
+                "precondition",
+                "NamedV3Obligation.precondition",
+                Some(goal.requires.span),
+            ));
+            sites.push(site_row(
+                key,
+                "postcondition",
+                "NamedV3Obligation.postcondition",
+                Some(goal.ensures.span),
+            ));
+            for (index, origin) in goal.subject.named_uses.iter().enumerate().skip(1) {
+                sites.push(site_row(
+                    key,
+                    &std::format!("use_{index}"),
+                    &std::format!("NamedV3Obligation.use_{index}"),
+                    Some(origin.source_span.unwrap_or(origin.definition_span)),
+                ));
+            }
+        }
         _ => {
             sites.push(site_row(
                 key,
@@ -1222,35 +1260,37 @@ fn contract_entry(
         goal.contract_name,
         goal.revision
     );
-    let named = goal.revision == 2;
-    let prepared: Result<(std::string::String, &'static str, &'static str), String> = if named {
-        noble_contracts::intrinsic::prepare_named_contract(goal, limits)
-            .map(|text| (text, "prepare_named_contract", "NamedV2Obligation.claim"))
-            .map_err(|problem| problem.message)
-    } else {
-        noble_contracts::intrinsic::prepare_contract(goal, limits)
-            .map(|prepared| {
-                (
-                    noble_contracts::export_lean(&prepared),
-                    "export_lean",
-                    "MC1Obligation.claim",
-                )
-            })
-            .map_err(|problem| problem.message)
-    };
+    let prepared: Result<(std::string::String, &'static str, &'static str), String> =
+        match goal.revision {
+            2 => noble_contracts::intrinsic::prepare_named_contract(goal, limits)
+                .map(|text| (text, "prepare_named_contract", "NamedV2Obligation.claim"))
+                .map_err(|problem| problem.message),
+            3 => noble_contracts::intrinsic::prepare_named_v3_contract(goal, limits)
+                .map(|text| (text, "prepare_named_v3_contract", "NamedV3Obligation.claim"))
+                .map_err(|problem| problem.message),
+            _ => noble_contracts::intrinsic::prepare_contract(goal, limits)
+                .map(|prepared| {
+                    (
+                        noble_contracts::export_lean(&prepared),
+                        "export_lean",
+                        "MC1Obligation.claim",
+                    )
+                })
+                .map_err(|problem| problem.message),
+        };
     let (statement, statement_source, statement_ref, refusal) = match prepared {
         Ok((text, source, reference)) => (Some(text), source, reference, None),
         Err(message) => (
             None,
-            if named {
-                "prepare_named_contract"
-            } else {
-                "export_lean"
+            match goal.revision {
+                3 => "prepare_named_v3_contract",
+                2 => "prepare_named_contract",
+                _ => "export_lean",
             },
-            if named {
-                "NamedV2Obligation.claim"
-            } else {
-                "MC1Obligation.claim"
+            match goal.revision {
+                3 => "NamedV3Obligation.claim",
+                2 => "NamedV2Obligation.claim",
+                _ => "MC1Obligation.claim",
             },
             Some(message),
         ),
@@ -1392,12 +1432,19 @@ fn module_report(
 ) -> Result<Document, output::Failure> {
     let limits = Limits::default();
     let batch = prepared.proof_obligations();
-    let named = prepared.contract_goals().any(|goal| goal.revision == 2)
+    let has_v3 = prepared.contract_goals().any(|goal| goal.revision == 3)
         || batch.is_some_and(|batch| {
             batch
                 .obligations
                 .iter()
-                .any(|obligation| obligation.revision == 2)
+                .any(|obligation| obligation.revision == 3)
+        });
+    let named = prepared.contract_goals().any(|goal| goal.revision >= 2)
+        || batch.is_some_and(|batch| {
+            batch
+                .obligations
+                .iter()
+                .any(|obligation| obligation.revision >= 2)
         });
     let versions = module_versions(named);
     let dependencies: std::vec::Vec<encoding::Json> = batch
@@ -1491,7 +1538,9 @@ fn module_report(
     };
     let document = Document {
         report,
-        profile: if named {
+        profile: if has_v3 {
+            "Named-Contract-Calls-v3"
+        } else if named {
             "Named-Contracts-v2"
         } else {
             "Intrinsic-Proofs-Draft"

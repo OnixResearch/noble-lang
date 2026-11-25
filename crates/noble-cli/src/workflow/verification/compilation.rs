@@ -33,20 +33,61 @@ impl super::Session {
         )
     }
 
-    pub(super) fn compile_library(
+    pub(super) fn compile_library_for(
         &self,
         library: &super::super::rules::Library,
+        roots: &[&str],
+    ) -> Result<(), super::super::output::Failure> {
+        let mut needed = std::vec![false; library.modules.len()];
+        let mut queue = std::vec::Vec::new();
+        for root in roots {
+            let mut idx = 0usize;
+            while idx < library.modules.len() {
+                if library.modules[idx].name == *root && !needed[idx] {
+                    needed[idx] = true;
+                    queue.push(idx);
+                }
+                idx += 1;
+            }
+        }
+        while let Some(mod_idx) = queue.pop() {
+            for dep in &library.modules[mod_idx].imports {
+                let mut di = 0usize;
+                while di < library.modules.len() {
+                    if library.modules[di].name == *dep && !needed[di] {
+                        needed[di] = true;
+                        queue.push(di);
+                    }
+                    di += 1;
+                }
+            }
+        }
+        self.compile_library_needed(library, &needed)
+    }
+
+    fn compile_library_needed(
+        &self,
+        library: &super::super::rules::Library,
+        needed: &[bool],
     ) -> Result<(), super::super::output::Failure> {
         let mut built = std::vec![false; library.modules.len()];
-        let mut built_count = 0;
-        while built_count < library.modules.len() {
+        let mut target_count = 0usize;
+        let mut idx = 0usize;
+        while idx < needed.len() {
+            if needed[idx] {
+                target_count += 1;
+            }
+            idx += 1;
+        }
+        let mut built_count = 0usize;
+        while built_count < target_count {
             let mut has_progress = false;
             attempt!(library
                 .modules
                 .iter()
                 .enumerate()
                 .try_for_each(|(index, module)| {
-                    if built[index] || !can_compile(library, module, &built) {
+                    if !needed[index] || built[index] || !can_compile(library, module, &built) {
                         return Ok(());
                     }
                     attempt!(self.compile_rule(module));

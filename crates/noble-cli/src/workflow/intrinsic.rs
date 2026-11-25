@@ -75,6 +75,23 @@ const NAMED_MODEL: &[(&str, &str)] = &[
             "/../../proofs/mc1/NobleContracts/NamedV2.lean"
         )),
     ),
+    // Revision 3's reviewed model and its lifted-frame restriction. Both import
+    // only modules the closure above pins; the generated revision-3 obligation
+    // (when a lowering lands) imports the two of them.
+    (
+        "NobleContracts.NamedV3",
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../proofs/mc1/NobleContracts/NamedV3.lean"
+        )),
+    ),
+    (
+        "NobleContracts.NamedV3Lifted",
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../proofs/mc1/NobleContracts/NamedV3Lifted.lean"
+        )),
+    ),
 ];
 const TYPE_WITNESS: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
@@ -260,11 +277,26 @@ pub(crate) fn named_checker_revision(base: &str) -> std::string::String {
     digest.update(
         include_str!(concat!(
             env!("CARGO_MANIFEST_DIR"),
+            "/../noble-contracts/src/intrinsic/named_v3.rs"
+        ))
+        .as_bytes(),
+    );
+    digest.update(
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../noble-contracts/src/intrinsic/named_v3/lower.rs"
+        ))
+        .as_bytes(),
+    );
+    digest.update(
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
             "/../noble-contracts/src/source/declared/state/register/logical/origin.rs"
         ))
         .as_bytes(),
     );
     digest.update(include_str!("verification/named_v2.rs").as_bytes());
+    digest.update(include_str!("verification/named_v3.rs").as_bytes());
     digest.update(include_str!("verification/compilation.rs").as_bytes());
     digest.update(include_str!("rules.rs").as_bytes());
     digest.update(include_str!("artifacts.rs").as_bytes());
@@ -276,7 +308,7 @@ pub(crate) fn named_checker_revision(base: &str) -> std::string::String {
     digest.finish()
 }
 fn has_named_dependency(dependency: &noble_contracts::intrinsic::ProofDependency) -> bool {
-    dependency.declaration.revision == 2 || dependency.dependencies.iter().any(has_named_dependency)
+    dependency.declaration.revision >= 2 || dependency.dependencies.iter().any(has_named_dependency)
 }
 fn validate_dependency_revision(
     dependency: &noble_contracts::intrinsic::ProofDependency,
@@ -295,6 +327,9 @@ fn validate_dependency_revision(
         let (selected_model, selected_checker) =
             match (&node.declaration.goal, node.declaration.revision) {
                 (PendingGoal::Contract { contract }, 2) if contract.revision == 2 => {
+                    (named_model, named_checker)
+                }
+                (PendingGoal::Contract { contract }, 3) if contract.revision == 3 => {
                     (named_model, named_checker)
                 }
                 (PendingGoal::Contract { contract }, 1) if contract.revision == 1 => {
@@ -555,6 +590,7 @@ pub(crate) fn session_proof_report(
                                     ProofKind::Pure => "pure",
                                     ProofKind::Contract => "contract",
                                     ProofKind::NamedContract => "named-contract",
+                                    ProofKind::NamedV3Contract => "named-v3-contract",
                                 }),
                             ),
                             ("claim", encoding::string(&proof.claim)),
@@ -572,8 +608,17 @@ pub(crate) fn session_proof_report(
                             ("strict_lean_tools", proof_evidence.acceptance.tools.clone()),
                             ("subject", proof_evidence.subject.clone()),
                         ]);
-                        if proof.kind == ProofKind::NamedContract {
-                            fields.push(("wire_mode", encoding::string("named-v2-strict-kernel")));
+                        if proof.kind == ProofKind::NamedContract
+                            || proof.kind == ProofKind::NamedV3Contract
+                        {
+                            fields.push((
+                                "wire_mode",
+                                encoding::string(if proof.kind == ProofKind::NamedV3Contract {
+                                    "named-v3-strict-kernel"
+                                } else {
+                                    "named-v2-strict-kernel"
+                                }),
+                            ));
                             fields
                                 .push(("model_revision", encoding::string(&proof.model_revision)));
                             fields.push((
@@ -657,10 +702,9 @@ pub(crate) fn verify_with_evidence(
     pinned_library(&library)?;
     let model = model_revision();
     let checker = checker_revision();
-    let named = checked
-        .iter()
-        .any(|proof| proof.kind == ProofKind::NamedContract)
-        || batch.dependencies.iter().any(has_named_dependency);
+    let named = checked.iter().any(|proof| {
+        proof.kind == ProofKind::NamedContract || proof.kind == ProofKind::NamedV3Contract
+    }) || batch.dependencies.iter().any(has_named_dependency);
     let named_model = if named {
         named_model_revision()
     } else {
@@ -725,6 +769,38 @@ pub(crate) fn verify_with_evidence(
                     contract_subject_evidence(contract, &typed, &claim),
                 )
             }
+            (PendingGoal::Contract { contract }, ProofKind::NamedV3Contract) => {
+                if contract.revision != 3
+                    || obligation.revision != 3
+                    || proof.claim != "NamedV3Obligation.claim"
+                {
+                    return Err(output::Failure::error(
+                        "intrinsic-kind-mismatch",
+                        "revision-3 contract rule or claim mismatch".into(),
+                    ));
+                }
+                pinned_named_library(&library)?;
+                let obligation_source =
+                    noble_contracts::intrinsic::prepare_named_v3_contract(contract, limits)
+                        .map_err(|problem| {
+                            output::Failure::error("intrinsic-contract-invalid", problem.message)
+                        })?;
+                let acceptance =
+                    verification::named_v3::verify(&verification::named_v3::CallerVerification {
+                        obligation,
+                        contract,
+                        proof,
+                        batch,
+                        obligation_source: &obligation_source,
+                        library: &library,
+                        limits,
+                        timeout_ms,
+                    })?;
+                (
+                    acceptance,
+                    named_subject_evidence(contract, &obligation_source)?,
+                )
+            }
             (PendingGoal::Contract { contract }, ProofKind::NamedContract) => {
                 if contract.revision != 2
                     || obligation.revision != 2
@@ -766,20 +842,14 @@ pub(crate) fn verify_with_evidence(
         });
     }
     for proof in &mut checked {
+        let is_named =
+            proof.kind == ProofKind::NamedContract || proof.kind == ProofKind::NamedV3Contract;
         proof
             .model_revision
-            .clone_from(if proof.kind == ProofKind::NamedContract {
-                &named_model
-            } else {
-                &model
-            });
+            .clone_from(if is_named { &named_model } else { &model });
         proof
             .checker_revision
-            .clone_from(if proof.kind == ProofKind::NamedContract {
-                &named_checker
-            } else {
-                &checker
-            });
+            .clone_from(if is_named { &named_checker } else { &checker });
     }
     Ok((checked, evidence, work))
 }
@@ -824,14 +894,19 @@ fn accepted_report(
     submitted: &str,
     schema: super::diagnostics::Schema,
 ) -> encoding::Json {
-    let named = proofs
+    let has_v3 = proofs
         .iter()
-        .any(|proof| proof.kind == ProofKind::NamedContract);
+        .any(|proof| proof.kind == ProofKind::NamedV3Contract);
+    let named = proofs.iter().any(|proof| {
+        proof.kind == ProofKind::NamedContract || proof.kind == ProofKind::NamedV3Contract
+    });
     let mut fields = std::vec::Vec::from([
         ("schema", encoding::string(schema.module_schema(named))),
         (
             "profile",
-            encoding::string(if named {
+            encoding::string(if has_v3 {
+                "Named-Contract-Calls-v3"
+            } else if named {
                 "Named-Contracts-v2"
             } else {
                 "Intrinsic-Proofs-Draft"
@@ -891,6 +966,7 @@ fn accepted_report(
                                     ProofKind::Pure => "pure",
                                     ProofKind::Contract => "contract",
                                     ProofKind::NamedContract => "named-contract",
+                                    ProofKind::NamedV3Contract => "named-v3-contract",
                                 }),
                             ),
                             ("claim", encoding::string(&proof.claim)),
@@ -1272,8 +1348,70 @@ fn named_subject_evidence(
                 "submission root node derivation missing".into(),
             )
         })?;
+    let mut checked_defs = std::vec![(selected.definition, derived)];
     let mut use_reports = std::vec::Vec::with_capacity(2);
     for (order, use_record) in subject.named_uses.iter().enumerate().skip(1) {
+        let caller_def = use_record.caller_definition.ok_or_else(|| {
+            output::Failure::error(
+                "named-report-graph",
+                "named use lacks caller definition".into(),
+            )
+        })?;
+        let caller_row = accepted
+            .definitions
+            .iter()
+            .find(|row| row.definition == caller_def)
+            .ok_or_else(|| {
+                output::Failure::error("named-report-graph", "caller definition row missing".into())
+            })?;
+        let caller_origin = subject
+            .named_uses
+            .iter()
+            .find(|item| item.definition == caller_def)
+            .ok_or_else(|| {
+                output::Failure::error(
+                    "named-report-graph",
+                    "caller definition origin missing".into(),
+                )
+            })?;
+        let caller_module = subject
+            .source_dependencies
+            .get(caller_origin.module_index)
+            .ok_or_else(|| {
+                output::Failure::error(
+                    "named-report-graph",
+                    "caller original module missing".into(),
+                )
+            })?;
+        let caller_pos = if let Some(pos) = checked_defs
+            .iter()
+            .position(|(def_id, _)| *def_id == caller_def)
+        {
+            pos
+        } else {
+            let Outcome::Accepted(caller_checked) = noble_kernel::acceptance::check(
+                &accepted.environment,
+                &noble_kernel::untrusted::Request {
+                    input_bytes: accepted.request.input_bytes,
+                    expected: caller_row.expected.clone(),
+                    limits: accepted.request.limits,
+                },
+                &caller_row.body.candidate,
+            ) else {
+                return Err(output::Failure::error(
+                    "named-report-derivation",
+                    "caller body derivation unavailable".into(),
+                ));
+            };
+            ensure_all_nodes_derived(
+                &caller_row.body.candidate,
+                &caller_checked,
+                "caller body contains unreachable or duplicate arena nodes",
+            )?;
+            checked_defs.push((caller_def, caller_checked));
+            checked_defs.len().saturating_sub(1)
+        };
+        let caller_derived = &checked_defs[caller_pos].1;
         let module = subject
             .source_dependencies
             .get(use_record.module_index)
@@ -1282,7 +1420,7 @@ fn named_subject_evidence(
             })?;
         let node = usize::try_from(use_record.candidate_node.0)
             .ok()
-            .and_then(|index| selected.body.candidate.nodes.get(index));
+            .and_then(|index| caller_row.body.candidate.nodes.get(index));
         let Some(Node::Invocation { def, inst }) = node else {
             return Err(output::Failure::error(
                 "named-report-graph",
@@ -1295,7 +1433,7 @@ fn named_subject_evidence(
                 "named use slot differs".into(),
             ));
         }
-        let actual = derived
+        let actual = caller_derived
             .derivations
             .iter()
             .find(|item| item.node == use_record.candidate_node)
@@ -1346,17 +1484,23 @@ fn named_subject_evidence(
             (
                 "caller",
                 encoding::object([
-                    ("module", encoding::string(&subject.module)),
+                    ("module", encoding::string(&caller_module.module)),
                     (
                         "owner_session_local",
-                        encoding::Json::Number(subject.definition_owner),
+                        encoding::Json::Number(caller_origin.definition_owner),
                     ),
-                    ("definition", encoding::string(&subject.definition)),
+                    (
+                        "definition",
+                        encoding::string(&caller_origin.definition_name),
+                    ),
                     (
                         "ordinal",
-                        encoding::Json::Number(u64::from(subject.definition_ordinal)),
+                        encoding::Json::Number(u64::from(caller_origin.definition_ordinal)),
                     ),
-                    ("definition_span", span_evidence(subject.source_span)),
+                    (
+                        "definition_span",
+                        span_evidence(caller_origin.definition_span),
+                    ),
                     (
                         "lexical_span",
                         use_record
@@ -1441,7 +1585,11 @@ fn named_subject_evidence(
         ),
         (
             "generated_claim",
-            encoding::string("NamedV2Obligation.claim"),
+            encoding::string(if contract.revision == 3 {
+                "NamedV3Obligation.claim"
+            } else {
+                "NamedV2Obligation.claim"
+            }),
         ),
         (
             "named_use_count",
@@ -1878,7 +2026,7 @@ fn evidence_revisions(batch: &ProofBatch) -> super::evidence::Revisions {
         .iter()
         .any(|obligation| match &obligation.goal {
             noble_contracts::intrinsic::PendingGoal::Contract { contract } => {
-                contract.revision == 2
+                contract.revision >= 2
             }
             noble_contracts::intrinsic::PendingGoal::Pure { .. } => false,
         })

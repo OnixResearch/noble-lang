@@ -3660,6 +3660,13 @@ fn prop_term(prop: &Proposition, span: Span) -> Result<PropTerm, Diagnostic> {
             Val::Level(u32_level(*left, span)?),
             Val::Level(u32_level(*right, span)?),
         )),
+        // The opt-in implicit-argument elaborator models value positions only;
+        // it never guesses at a bounded scalar term, so a statement carrying one
+        // is refused rather than approximated.
+        Proposition::EqTerm(..) => Err(unsupported(
+            span,
+            "elaboration does not support bounded scalar equalities",
+        )),
     }
 }
 
