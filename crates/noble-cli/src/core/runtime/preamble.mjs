@@ -21,4 +21,19 @@ const integer = (value, maximum, label) => {
   if (!Number.isSafeInteger(value) || value < 0 || value > maximum) fail(`invalid ${label}`);
   return value;
 };
+const isEngineOomError = error => {
+  if (!error || typeof error !== 'object') return false;
+  if (error.code === 'ERR_MEMORY_ALLOCATION_FAILED') return true;
+  const message = String(error.message ?? '');
+  if (error instanceof RangeError) {
+    return /out of memory|allocation failed|could not allocate|webassembly\.memory/i.test(message);
+  }
+  return /out of memory|allocation failed|could not allocate/i.test(message);
+};
+const classifyFailure = (abi, { status = 0, quotaCode = 0, extraExhausted = null, oom = false } = {}) => {
+  if (oom) return 'F4-engine-oom';
+  if (status !== 1 && status !== 2) return null;
+  if (extraExhausted !== null) return 'F1-logical-quota';
+  return abi?.failure_class?.[String(quotaCode)] ?? null;
+};
 

@@ -2865,7 +2865,8 @@ mod tests {
     // Recorded from the lowering before its loops were restructured for the
     // pinned Aeneas extraction (issue #97): every charge, grant, allocation and
     // emitted byte of these ordinary, experimental, calculator and nominal
-    // fixtures must stay identical.
+    // fixtures must stay identical (digests updated for accounting.wat quota(9)
+    // on memory-growth failure).
     #[test]
     fn restructured_lowering_keeps_its_recorded_accounting_and_bytes() {
         let ordinary_session = noble_contracts::source::Session::new();
@@ -2900,7 +2901,7 @@ mod tests {
             type_directed_fallback_operations: 0,
         };
         assert_eq!(ordinary.metrics(), ordinary_metrics);
-        assert_eq!(wat_digest(ordinary.wat()), 0x4db9_0ea5_8a6a_6d3d);
+        assert_eq!(wat_digest(ordinary.wat()), 0xe1a1_6b98_21e8_b5b5);
         let experimental = Compiler::new_type_directed_experimental()
             .prepare(submission)
             .unwrap_or_else(|_| panic!("experimental compile refused"));
@@ -2914,7 +2915,7 @@ mod tests {
                 ..ordinary_metrics
             }
         );
-        assert_eq!(wat_digest(experimental.wat()), 0x01dc_dfc9_8cfc_9c28);
+        assert_eq!(wat_digest(experimental.wat()), 0x29d0_ef8c_e999_bb60);
 
         let mut calculator = noble_contracts::source::Session::new_calculator();
         let defined = calculator
@@ -2957,7 +2958,7 @@ mod tests {
         ] {
             let prepared = prepared.unwrap_or_else(|_| panic!("calculator compile refused"));
             assert_eq!(prepared.metrics(), calculator_metrics);
-            assert_eq!(wat_digest(prepared.wat()), 0x0e66_33b3_71d5_56e0);
+            assert_eq!(wat_digest(prepared.wat()), 0x6839_191c_4139_d708);
         }
 
         let module = b"module capsule@1 [
@@ -3001,7 +3002,7 @@ mod tests {
             ..calculator_metrics
         };
         assert_eq!(created.metrics(), make_metrics);
-        assert_eq!(wat_digest(created.wat()), 0xb780_9508_aaf8_180b);
+        assert_eq!(wat_digest(created.wat()), 0x9ab9_ff63_bc04_b483);
         compiler
             .commit(created)
             .unwrap_or_else(|_| panic!("nominal creator commit refused"));
@@ -3032,7 +3033,7 @@ mod tests {
                 ..make_metrics
             }
         );
-        assert_eq!(wat_digest(consumed.wat()), 0x4220_b858_9924_b696);
+        assert_eq!(wat_digest(consumed.wat()), 0xc868_78cf_4c5e_303e);
     }
 
     #[test]

@@ -26,21 +26,38 @@ async function protocol(config) {
     process.stdout.write(`${outcome} ${json.length}\n`);
     process.stdout.write(json);
   };
-  const reportError = error => config.slot_mode === true
-    ? { ...slotReply('internal-failure'), diagnostic: `${error.name}: ${error.message}`,
+  const reportError = error => {
+    const engineOom = isEngineOomError(error);
+    if (config.slot_mode === true) {
+      const failureCode = engine?.shared?.failure?.value ?? 0;
+      const quotaCode = engine?.shared?.quota_reason?.value ?? 0;
+      const quotaReason = (failureCode === 1 || failureCode === 2)
+        ? (engine?.abi?.quota_reason?.[String(quotaCode)] ?? null)
+        : null;
+      const failureClass = classifyFailure(engine?.abi, {
+        status: failureCode,
+        quotaCode,
+        oom: engineOom,
+      });
+      return { ...slotReply('internal-failure'), diagnostic: `${error.name}: ${error.message}`,
+        quota_reason: quotaReason,
+        failure_class: failureClass,
+        request_trace: engine ? engine.trace.slice(engine.lastTraceStart) : [],
+        session_state: 'terminated-after-internal-failure' };
+    }
+    return { schema: 'noble-core-report/v1',
+      profile: config.calculator === true ? 'Calculator-v1'
+        : config.checked_i64 === true ? 'Checked-I64-v1'
+          : engine?.declaredLive ? engine.profile : 'Core-Bootstrap',
+      backend: 'managed-linear-memory', stage: 'wasm', outcome: 'internal-failure',
+      diagnostic: `${error.name}: ${error.message}`,
+      failure_class: engineOom ? 'F4-engine-oom' : null,
       request_trace: engine ? engine.trace.slice(engine.lastTraceStart) : [],
-      session_state: 'terminated-after-internal-failure' }
-    : ({ schema: 'noble-core-report/v1',
-    profile: config.calculator === true ? 'Calculator-v1'
-      : config.checked_i64 === true ? 'Checked-I64-v1'
-        : engine?.declaredLive ? engine.profile : 'Core-Bootstrap',
-    backend: 'managed-linear-memory', stage: 'wasm', outcome: 'internal-failure',
-    diagnostic: `${error.name}: ${error.message}`,
-    request_trace: engine ? engine.trace.slice(engine.lastTraceStart) : [],
-    guest_requests: engine ? engine.trace.length - engine.lastTraceStart : 0,
-    protected_operations: 0, candidate_prepare_requests: 0,
-    session_state: engine?.proposalInspectionFailed
-      ? 'terminated-after-proposal-inspection-failure' : 'terminated-after-internal-failure' });
+      guest_requests: engine ? engine.trace.length - engine.lastTraceStart : 0,
+      protected_operations: 0, candidate_prepare_requests: 0,
+      session_state: engine?.proposalInspectionFailed
+        ? 'terminated-after-proposal-inspection-failure' : 'terminated-after-internal-failure' };
+  };
   // A committed Calculator-v1 engine survives a failed command: it is
   // poisoned until the host restores the last commit, and refuses every
   // other guest operation meanwhile. Any other engine terminates. Returns

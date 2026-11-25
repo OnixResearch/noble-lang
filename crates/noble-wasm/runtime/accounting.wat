@@ -21,7 +21,7 @@
              (i32.gt_u (local.get $bytes) (global.get $allocation_limit)))
   (then (call $quota (i32.const 1)) (return (i32.const 0))))
  (if (i32.eqz (call $storage_ensure (local.get $next)))
-  (then (call $quota (i32.const 1)) (return (i32.const 0))))
+  (then (call $quota (i32.const 9)) (return (i32.const 0))))
  (global.set $heap_cursor (local.get $next))
  (global.set $allocated_total (i64.add (global.get $allocated_total) (i64.const 48)))
  (if (i32.gt_u (local.get $bytes) (global.get $allocation_peak))
