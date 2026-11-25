@@ -1,0 +1,1 @@
+{"schema":"noble-obligation-map/v1","command":"obligations","role":"read-only-diagnostic","acceptance":false,"source_path":"sources/raw-hole.noble","outcome":"error","diagnostic":{"code":"intrinsic-contract-invalid","message":"Check: a proof hole is editor-only and never .noble source","details":{"start":361,"end":381}}}

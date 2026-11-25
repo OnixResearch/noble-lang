@@ -1,0 +1,1 @@
+module premise_shadowed@1 [ proof 1 h : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (refl x)) ] proof 1 bad : [ (Pi (h I64) (Eq I64 h h)) ] [ (intro (h I64) (use h)) ] ]

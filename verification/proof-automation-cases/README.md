@@ -43,3 +43,37 @@ change's review task.
   `6fe17303`), source revision `sha256:9f4f7dd7…`, verdict `all-passed`,
   PAUTO-CASE-02..06 promotable, with the same kinds of retained raw reports,
   fixtures and build.
+
+## Proof holes and retained evidence (PAUTO-CASE-11, PAUTO-CASE-15)
+
+[`holes-gate.mjs`](holes-gate.mjs) executes the retained-evidence and
+editor-only proof-hole rows of the `proof-automation-diagnostics` design table
+(task 3) on one `noble` binary built with `cargo build --locked` from a clean
+checkout, keeping the PAUTO-CASE-02..06 lane and its retained `runs/` receipts
+separate:
+
+| Case | Route | Expected |
+|---|---|---|
+| PAUTO-CASE-11 | `verify-module --emit`, `goal-view --evidence`, `verify-module --evidence` on `increment` (`[ 1 + ]` -> `[ 2 + ]`), `model_revision` mismatch, and forged evidence | `verify-module --emit` records `noble-intrinsic-evidence/v1`; matching `goal-view --evidence` stays `incomplete`; changed subject or `model_revision` marks `goal-view` `stale` and refuses `verify-module --evidence` with `intrinsic-stale-proof`, 4 without modifying `evidence.json`; forged evidence refuses with `evidence-invalid`, 2 |
+| PAUTO-CASE-15 | `verify-module` with undeclared `(use h)`, `goal-view --proof-holes` (`noble-proof-editor/v1`), misplaced transport holes, and raw `(editor-hole ...)` across admission and ordinary commands | undeclared `(use h)` refuses at `resolve` with `intrinsic-resolve-invalid`/`rejected-source`, 2 (or at `acceptance` with `intrinsic-proof-refused`/`rejected-term`, 2 when shadowed by a value binder); valid proof-hole transport reports `unknown/incomplete-hole`, 3 (`incomplete` even with matching `--evidence`); misplaced transport holes refuse with `proof-hole-transport`, 2; raw `(editor-hole ...)` refuses on every admission and ordinary route with `editor-only` and zero guest requests |
+
+```sh
+node verification/proof-automation-cases/holes-gate.mjs --self-test
+node verification/proof-automation-cases/holes-gate.mjs --out NEW_DIRECTORY
+```
+
+Pass `--noble PATH` to reuse an externally built clean-source binary, or
+`--allow-dirty` for local development checks (marked non-retainable in the
+receipt). The receipt (`acceptance.json`, schema
+`noble-proof-automation-holes-acceptance/v1`) binds the tested commit, scope
+snapshot, design rows, binary digest before and after execution, all relative
+runs/raw outputs, and checks for public-repo path hygiene.
+
+### Retained holes runs
+
+- [`runs-holes/20261124-b4791ff3/acceptance.json`](runs-holes/20261124-b4791ff3/acceptance.json)
+  (`sha256:4139179f…`): clean commit `b4791ff3` (`tested_commit`
+  `b4791ff32536cd2d9693c84b2b82ce6eb502e1a1`), `source_revision`
+  `sha256:ef816430528dabb1c9ffe3fe5ecc1e247837edf22584dd2a12cebd9497cea395`,
+  verdict `all-passed`, `PAUTO-CASE-11` and `PAUTO-CASE-15` promotable, with
+  raw reports, fixtures, and emitted `noble-intrinsic-evidence/v1` artifacts.
