@@ -3498,9 +3498,9 @@ fn emit_prop_proof_one_step(
             )?;
             let mut s_type = String::new();
             push_sort_lean_type_buf(&mut s_type, code);
-            let mut p = String::from("(@Eq.subst ");
+            let mut p = String::from("(@Eq.subst (");
             p.push_str(&s_type);
-            p.push_str(" (fun (");
+            p.push_str(") (fun (");
             p.push_str(&binder_name);
             p.push_str(" : ");
             p.push_str(&s_type);

@@ -97,14 +97,36 @@ fn recheck_obligation(
     dependencies: &[noble_contracts::intrinsic::ProofDependency],
     limits: noble_contracts::Limits,
 ) -> Result<noble_contracts::intrinsic::CheckedProof, super::super::output::Failure> {
-    let mut obligations = preceding_locals.to_vec();
+    let is_rev3 = obligation.revision == 3;
+    let mut obligations: std::vec::Vec<_> = preceding_locals
+        .iter()
+        .filter(|obl| {
+            is_rev3
+                || matches!(
+                    obl.goal,
+                    noble_contracts::intrinsic::PendingGoal::Pure { .. }
+                )
+        })
+        .cloned()
+        .collect();
     obligations.push(obligation.clone());
+    let filtered_dependencies: std::vec::Vec<_> = dependencies
+        .iter()
+        .filter(|dep| {
+            is_rev3
+                || matches!(
+                    dep.declaration.goal,
+                    noble_contracts::intrinsic::PendingGoal::Pure { .. }
+                )
+        })
+        .cloned()
+        .collect();
     let synthetic = noble_contracts::intrinsic::ProofBatch {
         module: module.into(),
         version,
         source: source.to_vec(),
         generation: 0,
-        dependencies: dependencies.to_vec(),
+        dependencies: filtered_dependencies,
         obligations,
         elaborations: std::vec::Vec::new(),
         elaboration_work: noble_contracts::intrinsic::ProofWork {

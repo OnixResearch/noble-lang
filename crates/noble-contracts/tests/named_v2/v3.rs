@@ -107,7 +107,7 @@ fn rev3_symbolic_rules_bv_subst_eqterm_and_negatives() {
     );
     let checked = noble_contracts::intrinsic::check_batch(&batch_comm_mul, super::LIMITS).unwrap();
     assert!(checked[0].lean_term.contains("BitVec.add_comm"));
-    assert!(checked[0].lean_term.contains("@Eq.subst"));
+    assert!(checked[0].lean_term.contains("(@Eq.subst (BitVec 64)"));
 
     // Negative control: bridge unproved -> `preuse-bridge-unproved`
     let (_, batch_bad_bridge) = rev3_fixture(
