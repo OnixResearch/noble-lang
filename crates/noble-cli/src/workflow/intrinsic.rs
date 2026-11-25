@@ -1348,8 +1348,70 @@ fn named_subject_evidence(
                 "submission root node derivation missing".into(),
             )
         })?;
+    let mut checked_defs = std::vec![(selected.definition, derived)];
     let mut use_reports = std::vec::Vec::with_capacity(2);
     for (order, use_record) in subject.named_uses.iter().enumerate().skip(1) {
+        let caller_def = use_record.caller_definition.ok_or_else(|| {
+            output::Failure::error(
+                "named-report-graph",
+                "named use lacks caller definition".into(),
+            )
+        })?;
+        let caller_row = accepted
+            .definitions
+            .iter()
+            .find(|row| row.definition == caller_def)
+            .ok_or_else(|| {
+                output::Failure::error("named-report-graph", "caller definition row missing".into())
+            })?;
+        let caller_origin = subject
+            .named_uses
+            .iter()
+            .find(|item| item.definition == caller_def)
+            .ok_or_else(|| {
+                output::Failure::error(
+                    "named-report-graph",
+                    "caller definition origin missing".into(),
+                )
+            })?;
+        let caller_module = subject
+            .source_dependencies
+            .get(caller_origin.module_index)
+            .ok_or_else(|| {
+                output::Failure::error(
+                    "named-report-graph",
+                    "caller original module missing".into(),
+                )
+            })?;
+        let caller_pos = if let Some(pos) = checked_defs
+            .iter()
+            .position(|(def_id, _)| *def_id == caller_def)
+        {
+            pos
+        } else {
+            let Outcome::Accepted(caller_checked) = noble_kernel::acceptance::check(
+                &accepted.environment,
+                &noble_kernel::untrusted::Request {
+                    input_bytes: accepted.request.input_bytes,
+                    expected: caller_row.expected.clone(),
+                    limits: accepted.request.limits,
+                },
+                &caller_row.body.candidate,
+            ) else {
+                return Err(output::Failure::error(
+                    "named-report-derivation",
+                    "caller body derivation unavailable".into(),
+                ));
+            };
+            ensure_all_nodes_derived(
+                &caller_row.body.candidate,
+                &caller_checked,
+                "caller body contains unreachable or duplicate arena nodes",
+            )?;
+            checked_defs.push((caller_def, caller_checked));
+            checked_defs.len().saturating_sub(1)
+        };
+        let caller_derived = &checked_defs[caller_pos].1;
         let module = subject
             .source_dependencies
             .get(use_record.module_index)
@@ -1358,7 +1420,7 @@ fn named_subject_evidence(
             })?;
         let node = usize::try_from(use_record.candidate_node.0)
             .ok()
-            .and_then(|index| selected.body.candidate.nodes.get(index));
+            .and_then(|index| caller_row.body.candidate.nodes.get(index));
         let Some(Node::Invocation { def, inst }) = node else {
             return Err(output::Failure::error(
                 "named-report-graph",
@@ -1371,7 +1433,7 @@ fn named_subject_evidence(
                 "named use slot differs".into(),
             ));
         }
-        let actual = derived
+        let actual = caller_derived
             .derivations
             .iter()
             .find(|item| item.node == use_record.candidate_node)
@@ -1422,17 +1484,23 @@ fn named_subject_evidence(
             (
                 "caller",
                 encoding::object([
-                    ("module", encoding::string(&subject.module)),
+                    ("module", encoding::string(&caller_module.module)),
                     (
                         "owner_session_local",
-                        encoding::Json::Number(subject.definition_owner),
+                        encoding::Json::Number(caller_origin.definition_owner),
                     ),
-                    ("definition", encoding::string(&subject.definition)),
+                    (
+                        "definition",
+                        encoding::string(&caller_origin.definition_name),
+                    ),
                     (
                         "ordinal",
-                        encoding::Json::Number(u64::from(subject.definition_ordinal)),
+                        encoding::Json::Number(u64::from(caller_origin.definition_ordinal)),
                     ),
-                    ("definition_span", span_evidence(subject.source_span)),
+                    (
+                        "definition_span",
+                        span_evidence(caller_origin.definition_span),
+                    ),
                     (
                         "lexical_span",
                         use_record
@@ -1517,7 +1585,11 @@ fn named_subject_evidence(
         ),
         (
             "generated_claim",
-            encoding::string("NamedV2Obligation.claim"),
+            encoding::string(if contract.revision == 3 {
+                "NamedV3Obligation.claim"
+            } else {
+                "NamedV2Obligation.claim"
+            }),
         ),
         (
             "named_use_count",

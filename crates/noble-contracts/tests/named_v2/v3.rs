@@ -220,3 +220,45 @@ fn rev3_bool_eq_binder_shadowing_folding_and_fact_bounds() {
         assert!(res.is_err());
     }
 }
+
+#[test]
+fn rev3_nested_and_folded_conjunctions_and_twice_rev3() {
+    // 1. Repeated rev-3 callee `twice [ g.dec g.dec ]` emits per-occurrence `callee_0` and `callee_1`.
+    let (_, batch_twice) = rev3_fixture(
+        &[(
+            b"module g@1 [ export dec export dec-ok def dec [ 1 - ] contract 3 dec-law [ subject dec input [ x I64 ] output [ y I64 ] requires [ (lt 0 (in x)) ] ensures [ (eq (out y) (sub (in x) 1)) ] ] proof 3 dec-ok for dec-law [ (export-named-claim (join (refl (sub (in x) 1)))) ] ]",
+            b"import g@1 as g",
+        )],
+        b"module tw@1 [ export twice def twice [ g.dec g.dec ] contract 3 twice-law [ subject twice input [ x I64 ] output [ y I64 ] requires [ (and (lt 0 (in x)) (lt 0 (sub (in x) 1))) ] ensures [ (eq (out y) (sub (sub (in x) 1) 1)) ] ] proof 3 twice-ok for twice-law [ (export-named-claim (pc-call 0 g.dec-ok (use f0)) (pc-call 1 g.dec-ok (use f1)) (join (refl (sub (sub (in x) 1) 1)))) ] ]",
+    );
+    let checked_twice =
+        noble_contracts::intrinsic::check_batch(&batch_twice, super::LIMITS).unwrap();
+    assert!(checked_twice[0].lean_term.contains("callee_0"));
+    assert!(checked_twice[0].lean_term.contains("callee_1"));
+
+    // 2. Left-nested `(and (and ...) ...)` + constant-folded `requires` / `ensures` / `CombineAnd` under `Not`.
+    let (_, batch_left_and) = rev3_fixture(
+        &[(
+            b"module d@1 [ export id export id-ok def id [ 0 + ] contract 3 id-law [ subject id input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (add (in x) 0)) ] ] proof 3 id-ok for id-law [ (export-named-claim (join (refl (add (in x) 0)))) ] ]",
+            b"import d@1 as d",
+        )],
+        b"module land@1 [ export f def f [ d.id ] contract 3 f-law [ subject f input [ x I64 ] output [ y I64 ] requires [ (and (and (eq (in x) (in x)) (eq (add 2 3) 5)) (not (and (eq 1 2) (eq (in x) (in x))))) ] ensures [ (eq 1 1) ] ] proof 3 f-ok for f-law [ (export-named-claim (pc-call 0 d.id-ok (use f1)) (join (by-true))) ] ]",
+    );
+    let checked_land =
+        noble_contracts::intrinsic::check_batch(&batch_left_and, super::LIMITS).unwrap();
+    assert!(checked_land[0].lean_term.contains("rfact_0"));
+    assert!(checked_land[0].lean_term.contains("True.intro"));
+
+    // 3. Left-nested + constant-folded conjuncts in callee `ensures`.
+    let (_, batch_callee_and) = rev3_fixture(
+        &[(
+            b"module ce@1 [ export inc export inc-ok def inc [ 1 + ] contract 3 inc-law [ subject inc input [ x I64 ] output [ y I64 ] requires [ (lt 0 (in x)) ] ensures [ (and (and (eq (out y) (add (in x) 1)) (eq 1 1)) (eq 2 2)) ] ] proof 3 inc-ok for inc-law [ (export-named-claim (join (refl (add (in x) 1)))) ] ]",
+            b"import ce@1 as ce",
+        )],
+        b"module usece@1 [ export f def f [ ce.inc ] contract 3 f-law [ subject f input [ x I64 ] output [ y I64 ] requires [ (lt 0 (in x)) ] ensures [ (eq 1 1) ] ] proof 3 f-ok for f-law [ (export-named-claim (pc-call 0 ce.inc-ok (use f0)) (join (use f3))) ] ]",
+    );
+    let checked_ce =
+        noble_contracts::intrinsic::check_batch(&batch_callee_and, super::LIMITS).unwrap();
+    assert!(checked_ce[0].lean_term.contains("cfact_rest_0"));
+    assert!(checked_ce[0].lean_term.contains("cfact_2"));
+}

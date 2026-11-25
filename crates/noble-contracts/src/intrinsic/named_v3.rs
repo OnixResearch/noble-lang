@@ -214,12 +214,6 @@ struct Scope<'a> {
     allow_typed_eq: bool,
 }
 
-impl Scope<'_> {
-    fn sort(&self, term: &Term3) -> Option<Sort3> {
-        sort_of(term, self.inputs, self.outputs, self.bound)
-    }
-}
-
 #[octet::sealed_enum]
 #[derive(Clone, Copy)]
 enum ScopeMode {
@@ -757,10 +751,6 @@ fn map_term(term: &Term3, mode: TermSubst<'_>) -> Term3 {
     out.pop().unwrap_or(Term3::Bool(false))
 }
 
-fn instantiate_term(term: &Term3, inputs: &[Term3], outputs: &[Term3]) -> Term3 {
-    map_term(term, TermSubst::Interface { inputs, outputs })
-}
-
 #[octet::sealed_enum]
 enum MapPropStep {
     Visit(Prop3),
@@ -1027,7 +1017,7 @@ fn parse_binary_term_op(head: &str, items: &[Form], span: Span) -> Result<BinTer
     reason = "Owner: noble-contracts; `scope.sort` and `invalid` are not const"
 )]
 fn require_i64(term: &Term3, scope: Scope<'_>, span: Span) -> Result<(), Diagnostic> {
-    if scope.sort(term) == Some(Sort3::I64) {
+    if sort_of(term, scope.inputs, scope.outputs, scope.bound) == Some(Sort3::I64) {
         Ok(())
     } else {
         Err(invalid(span, "expected I64 scalar term"))
@@ -1044,8 +1034,9 @@ fn require_same_sort(
     scope: Scope<'_>,
     span: Span,
 ) -> Result<(), Diagnostic> {
-    let left_sort = scope.sort(left);
-    if left_sort.is_some() && left_sort == scope.sort(right) {
+    let left_sort = sort_of(left, scope.inputs, scope.outputs, scope.bound);
+    if left_sort.is_some() && left_sort == sort_of(right, scope.inputs, scope.outputs, scope.bound)
+    {
         Ok(())
     } else {
         Err(invalid(span, "equality operands have different sorts"))
@@ -1135,7 +1126,10 @@ fn parse_prop_step(
                     };
                     let left = parse_term(&items[2], scope, next, remaining, meter)?;
                     let right = parse_term(&items[3], scope, next, remaining, meter)?;
-                    if scope.sort(&left) != Some(expected) || scope.sort(&right) != Some(expected) {
+                    if sort_of(&left, scope.inputs, scope.outputs, scope.bound) != Some(expected)
+                        || sort_of(&right, scope.inputs, scope.outputs, scope.bound)
+                            != Some(expected)
+                    {
                         return Err(invalid(node.span, "typed equality operand sort mismatch"));
                     }
                     out.push(Prop3::Eq(left, right));
@@ -1345,12 +1339,6 @@ fn fact_index(name: &str) -> Option<usize> {
         return None;
     }
     digits.parse::<usize>().ok()
-}
-
-fn fact_statement(scope: ProofScope<'_>, name: &str) -> Option<Statement3> {
-    let index = fact_index(name)?;
-    let fact = scope.facts.get(index)?;
-    Some(Statement3::Prop(normalize_prop(fact)))
 }
 
 fn lemma_has_ref(lemma: &Lemma, name: &str) -> bool {
@@ -1576,7 +1564,14 @@ fn eval_leaf_or_push(
     }
     if let Ok(args) = operation(term, "refl", 1) {
         let scalar = parse_term(&args[0], scope.assignment, depth, remaining, meter)?;
-        if scope.assignment.sort(&scalar).is_none() {
+        if sort_of(
+            &scalar,
+            scope.assignment.inputs,
+            scope.assignment.outputs,
+            scope.assignment.bound,
+        )
+        .is_none()
+        {
             return Err(invalid(args[0].span, "refl operand has no admitted sort"));
         }
         return Ok(Some(Value3::Statement(Statement3::Prop(Prop3::Eq(
@@ -1624,8 +1619,10 @@ fn eval_leaf_or_push(
     reason = "Owner: noble-contracts; unresolved or non-lemma uses return explicit typed diagnostics"
 )]
 fn infer_use(name: &str, scope: ProofScope<'_>, span: Span) -> Result<Value3, Diagnostic> {
-    if let Some(statement) = fact_statement(scope, name) {
-        return Ok(Value3::Statement(statement));
+    if let Some(index) = fact_index(name) {
+        if let Some(fact) = scope.facts.get(index) {
+            return Ok(Value3::Statement(Statement3::Prop(normalize_prop(fact))));
+        }
     }
     if let Some(statement) = lemma_statement(scope.lemmas, name) {
         return Ok(Value3::Statement(statement.clone()));
@@ -1667,7 +1664,13 @@ fn apply_inferred(
         return Err(invalid(span, "apply requires a dependent Pi proof"));
     };
     let scalar = parse_term(argument, scope.assignment, depth, remaining, meter)?;
-    if scope.assignment.sort(&scalar) != Some(code) {
+    if sort_of(
+        &scalar,
+        scope.assignment.inputs,
+        scope.assignment.outputs,
+        scope.assignment.bound,
+    ) != Some(code)
+    {
         return Err(invalid(argument.span, "apply argument has wrong sort"));
     }
     Ok(Value3::Statement(replace_statement(&body, &scalar)))
@@ -1784,7 +1787,19 @@ fn extract_subst_eq(
         interface: scope.assignment.interface,
         allow_typed_eq: true,
     };
-    if motive_scope.sort(&left) != Some(*code) || motive_scope.sort(&right) != Some(*code) {
+    if sort_of(
+        &left,
+        motive_scope.inputs,
+        motive_scope.outputs,
+        motive_scope.bound,
+    ) != Some(*code)
+        || sort_of(
+            &right,
+            motive_scope.inputs,
+            motive_scope.outputs,
+            motive_scope.bound,
+        ) != Some(*code)
+    {
         return Err(invalid(eq_span, "subst equality has the wrong code"));
     }
     Ok((left, right))
@@ -2835,6 +2850,10 @@ fn is_direct_output_eq(prop: &Prop3, index: usize) -> bool {
     }
 }
 
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; scans ensures conjuncts for direct output term"
+)]
 fn direct_output(ensures: &Prop3, index: usize, arguments: &[Term3]) -> Option<Term3> {
     let mut conjuncts: Vec<Prop3> = Vec::new();
     collect_conjuncts_owned(ensures, &mut conjuncts);
@@ -2848,7 +2867,13 @@ fn direct_output(ensures: &Prop3, index: usize, arguments: &[Term3]) -> Option<T
     }
     match found {
         Some(idx) => match &conjuncts[idx] {
-            Prop3::Eq(_, right) => Some(normalize_term(&instantiate_term(right, arguments, &[]))),
+            Prop3::Eq(_, right) => Some(normalize_term(&map_term(
+                right,
+                TermSubst::Interface {
+                    inputs: arguments,
+                    outputs: &[],
+                },
+            ))),
             _ => None,
         },
         None => None,
@@ -2856,26 +2881,6 @@ fn direct_output(ensures: &Prop3, index: usize, arguments: &[Term3]) -> Option<T
 }
 
 /// Scan every `(use NAME)` of a proof term in form order, iteratively.
-#[expect(
-    tigerstyle::mutating_input_in_pure,
-    reason = "Owner: noble-contracts; appends distinct lemma names into the caller's list"
-)]
-#[expect(
-    tigerstyle::borrowed_argument_types,
-    reason = "Owner: noble-contracts; pushes resolved lemma names into `names`"
-)]
-fn record_lemma_name(name: &str, span: Span, names: &mut Vec<String>) -> Result<(), Diagnostic> {
-    let is_fact = fact_index(name).is_some();
-    if is_fact || replay_seen(names, name) {
-        return Ok(());
-    }
-    if names.len() >= MAX_LEMMA_USES {
-        return Err(budget(span));
-    }
-    names.push(String::from(name));
-    Ok(())
-}
-
 #[expect(
     tigerstyle::borrowed_argument_types,
     reason = "Owner: noble-contracts; pushes pending AST items in reverse order"
@@ -2906,13 +2911,19 @@ fn lemma_names_step(
     pending: &mut Vec<Form>,
     names: &mut Vec<String>,
 ) -> Result<(), Diagnostic> {
-    if let FormKind::List(items) = &node.kind {
-        if head_atom(items) == Some("use") && items.len() == 2 {
-            let name = atom(&items[1])?;
-            record_lemma_name(name, node.span, names)?;
+    let FormKind::List(items) = &node.kind else {
+        return Ok(());
+    };
+    if head_atom(items) == Some("use") && items.len() == 2 {
+        let name = atom(&items[1])?;
+        if fact_index(name).is_none() && !replay_seen(names, name) {
+            if names.len() >= MAX_LEMMA_USES {
+                return Err(budget(node.span));
+            }
+            names.push(String::from(name));
         }
-        push_pending_forms_rev(items, pending);
     }
+    push_pending_forms_rev(items, pending);
     Ok(())
 }
 
@@ -3261,7 +3272,7 @@ fn call_step(
     let (results, direct_outputs) =
         collect_callee_outputs(state, &ensures, &callee_outputs, &arguments, span)?;
     state.stack.truncate(split);
-    let instance = normalize_prop(&instantiate_prop(&ensures, &arguments, &results));
+    let instance = instantiate_prop(&ensures, &arguments, &results);
     add_fact(&mut state.facts, &instance)?;
     let mut outcome = Ok(());
     let mut ri = 0usize;
@@ -3682,6 +3693,7 @@ enum ReplayAction {
 struct ReplayLocalSpec<'a> {
     obligation: &'a ProofObligation,
     contract: &'a ContractGoal,
+    dependencies: &'a [ProofDependency],
     local: &'a [ProofObligation],
     identity: String,
     depth: u32,
@@ -3759,7 +3771,13 @@ fn replay_local_rev3(
     if spec.depth > MAX_CLOSURE_DEPTH {
         return Err(budget(spec.obligation.span));
     }
-    let outcome = verify_single(spec.contract, &[], spec.local, &spec.obligation.term, meter)?;
+    let outcome = verify_single(
+        spec.contract,
+        spec.dependencies,
+        spec.local,
+        &spec.obligation.term,
+        meter,
+    )?;
     let Some(next_depth) = spec.depth.checked_add(1) else {
         return Err(budget(spec.obligation.span));
     };
@@ -3791,6 +3809,7 @@ fn replay_local_rev3(
 )]
 fn replay_step(
     action: ReplayAction,
+    dependencies: &[ProofDependency],
     local: &[ProofObligation],
     replayed: &mut Vec<String>,
     closure: &mut Vec<String>,
@@ -3888,6 +3907,7 @@ fn replay_step(
                         ReplayLocalSpec {
                             obligation: &obligation,
                             contract,
+                            dependencies,
                             local,
                             identity,
                             depth,
@@ -3920,9 +3940,14 @@ fn replay_step(
     tigerstyle::unbounded_collection_growth,
     reason = "Owner: noble-contracts; `replayed`, `closure`, and `work` are bounded by MAX_CLOSURE and MAX_CLOSURE_DEPTH"
 )]
+#[expect(
+    tigerstyle::too_many_parameters,
+    reason = "Owner: noble-contracts; threads plan, dependencies, local scope, depth, and meter cleanly"
+)]
 fn replay_closure(
     root_plan: Vec<ProofDependency>,
     root_local_plan: Vec<ProofObligation>,
+    dependencies: &[ProofDependency],
     local: &[ProofObligation],
     start_depth: u32,
     meter: &mut Meter<'_>,
@@ -3947,7 +3972,15 @@ fn replay_closure(
     }
     let mut outcome = Ok(());
     while let Some(action) = work.pop() {
-        outcome = replay_step(action, local, &mut replayed, &mut closure, &mut work, meter);
+        outcome = replay_step(
+            action,
+            dependencies,
+            local,
+            &mut replayed,
+            &mut closure,
+            &mut work,
+            meter,
+        );
         if outcome.is_err() {
             break;
         }
@@ -4380,6 +4413,10 @@ fn verify_final_outputs(
     tigerstyle::too_many_parameters,
     reason = "Owner: noble-contracts; preserves the original public verifier signature cleanly"
 )]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; validates closure depth and returns typed Diagnostic"
+)]
 pub fn verify(
     goal: &ContractGoal,
     dependencies: &[ProofDependency],
@@ -4395,7 +4432,14 @@ pub fn verify(
     let Some(start_depth) = depth.checked_add(1) else {
         return Err(budget(goal.subject.source_span));
     };
-    let closure = replay_closure(outcome.plan, outcome.local_plan, local, start_depth, meter)?;
+    let closure = replay_closure(
+        outcome.plan,
+        outcome.local_plan,
+        dependencies,
+        local,
+        start_depth,
+        meter,
+    )?;
     let mut envelope = outcome.envelope_base;
     envelope.closure = closure;
     Ok(envelope)
@@ -4829,6 +4873,10 @@ pub(super) fn check_contract<'m>(
     tigerstyle::mutating_input_in_pure,
     reason = "Owner: noble-contracts; verifies the obligation, replays its closure, and lowers its proof term"
 )]
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; delegates verification, closure replay, and Lean lowering with typed diagnostics"
+)]
 fn checked(
     obligation: &ProofObligation,
     goal: &ContractGoal,
@@ -4838,7 +4886,14 @@ fn checked(
 ) -> Result<CheckedProof, Diagnostic> {
     let outcome = verify_single(goal, dependencies, local, &obligation.term, meter)?;
     let start_depth = 1u32;
-    let _closure = replay_closure(outcome.plan, outcome.local_plan, local, start_depth, meter)?;
+    let _closure = replay_closure(
+        outcome.plan,
+        outcome.local_plan,
+        dependencies,
+        local,
+        start_depth,
+        meter,
+    )?;
     let term = lower::proof(goal, &outcome.trace, meter)?;
     Ok(CheckedProof {
         name: obligation.name.clone(),

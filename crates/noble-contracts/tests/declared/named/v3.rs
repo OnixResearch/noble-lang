@@ -208,3 +208,35 @@ fn rev3_preuse_s01_s02_s03_s04_and_erasure() {
         format!("{:?}", verified_typed.submission().map(|s| &s.definitions))
     );
 }
+
+#[test]
+fn rev3_intra_module_multi_hop_chain_and_s02_bridge() {
+    let mut session = new_session();
+    session = register_and_check(
+        session,
+        b"module incmod@1 [ export inc export inc-ok def inc [ 1 + ] contract 1 inc-law [ subject inc input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (add (in x) 1)) ] ] proof 1 inc-ok for inc-law [ (export-unary-I64 (intro (tail Stack) (intro (x I64) (pc-sequence (pc-exact (exec-literal 1)) (pc-exact (exec-add)) (bridge (by-exact-append-assoc)) (join (by-exact-result))))) (mc1-true-eq-wrap)) ] ]",
+    )
+    .0;
+    session = commit_ok(session, b"import incmod@1 as m");
+    session = register_and_check(
+        session,
+        b"module guard@1 [ export dec export dec-ok def dec [ 1 - ] contract 3 dec-law [ subject dec input [ x I64 ] output [ y I64 ] requires [ (lt 0 (in x)) ] ensures [ (eq (out y) (sub (in x) 1)) ] ] proof 3 dec-ok for dec-law [ (export-named-claim (join (refl (sub (in x) 1)))) ] ]",
+    )
+    .0;
+    session = commit_ok(session, b"import guard@1 as g");
+
+    // PREUSE-S02 pattern with rev-3 callee first (`[ g.dec m.inc ]`) using `(use f0)`.
+    let (session, checked_dec_inc) = register_and_check(
+        session,
+        b"module decinc@1 [ export f def f [ g.dec m.inc ] contract 3 f-law [ subject f input [ x I64 ] output [ y I64 ] requires [ (lt 0 (in x)) ] ensures [ (eq (out y) (add (sub (in x) 1) 1)) ] ] proof 3 f-ok for f-law [ (export-named-claim (pc-call 0 g.dec-ok (use f0)) (pc-call 1 m.inc-ok (by-true)) (join (refl (add (sub (in x) 1) 1)))) ] ]",
+    );
+    assert_eq!(checked_dec_inc.len(), 1);
+
+    // Multi-hop intra-module chain `c3 -> c2 -> c1` where `c1` calls external `m.inc`
+    // and `c2` uses a local pure lemma `addcomm`.
+    let (_session, checked_chain) = register_and_check(
+        session,
+        b"module chain@1 [ proof 1 addcomm : [ (Pi (a I64) (Pi (b I64) (Eq I64 (add a b) (add b a)))) ] [ (intro (a I64) (intro (b I64) (bv-add-comm a b))) ] def c1 [ m.inc ] contract 3 c1-law [ subject c1 input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (add (in x) 1)) ] ] proof 3 c1-ok for c1-law [ (export-named-claim (pc-call 0 m.inc-ok (by-true)) (join (refl (add (in x) 1)))) ] def c2 [ c1 ] contract 3 c2-law [ subject c2 input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (add 1 (in x))) ] ] proof 3 c2-ok for c2-law [ (export-named-claim (pc-call 0 c1-ok (by-true)) (join (subst (motive (v I64) (eq (add (in x) 1) v)) (apply (apply (use addcomm) (in x)) 1) (refl (add (in x) 1))))) ] export c3 export c3-ok def c3 [ c2 ] contract 3 c3-law [ subject c3 input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (add 1 (in x))) ] ] proof 3 c3-ok for c3-law [ (export-named-claim (pc-call 0 c2-ok (by-true)) (join (refl (add 1 (in x))))) ] ]",
+    );
+    assert_eq!(checked_chain.len(), 4);
+}

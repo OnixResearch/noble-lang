@@ -2502,13 +2502,13 @@ fn lean_step<'a>(
             Term::Add(left, right) | Term::Sub(left, right) | Term::Mul(left, right) => {
                 push!(LeanFrame::Text(")"));
                 push!(LeanFrame::Term(right));
-                push!(LeanFrame::Text(match term {
-                    Term::Add(..) => " + ",
-                    Term::Sub(..) => " - ",
-                    _ => " * ",
-                }));
+                push!(LeanFrame::Text(" "));
                 push!(LeanFrame::Term(left));
-                push!(LeanFrame::Text("("));
+                push!(LeanFrame::Text(match term {
+                    Term::Add(..) => "(BitVec.add ",
+                    Term::Sub(..) => "(BitVec.sub ",
+                    _ => "(BitVec.mul ",
+                }));
             }
         },
     }
@@ -3151,7 +3151,7 @@ fn infer_step<'a>(
                 Box::new(Term::Mul(Box::new(a.clone()), Box::new(c.clone()))),
             ),
         );
-        let body = rule_text("BitVec.mul_add", &scalars, term.span, meter.tree_bounds)?;
+        let body = rule_text("@BitVec.mul_add 64", &scalars, term.span, meter.tree_bounds)?;
         *completed = Some(ProofValue::Inferred(proposition, body));
         return Ok(());
     }

@@ -225,8 +225,11 @@ impl super::Session {
                     goal.subject.accepted_submission.definitions
                 )),
             ));
-            if goal.revision == 2 {
-                fields.push(("revision", crate::workflow::encoding::Json::Number(2)));
+            if goal.revision == 2 || goal.revision == 3 {
+                fields.push((
+                    "revision",
+                    crate::workflow::encoding::Json::Number(u64::from(goal.revision)),
+                ));
                 fields.push((
                     "original_sources",
                     crate::workflow::encoding::Json::Array(
