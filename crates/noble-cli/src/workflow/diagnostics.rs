@@ -284,59 +284,57 @@ pub(crate) fn failure_report(
 #[cfg(test)]
 mod tests {
     #[test]
-    fn schema_parses_only_published_revisions() {
-        assert!(matches!(
-            super::Schema::parse("v1"),
-            Some(super::Schema::V1)
-        ));
-        assert!(matches!(
-            super::Schema::parse("v2"),
-            Some(super::Schema::V2)
-        ));
-        assert!(super::Schema::parse("v3").is_none());
-        assert!(super::Schema::parse("").is_none());
-    }
-
-    #[test]
-    fn named_acceptance_keeps_its_published_v2_schema() {
-        assert_eq!(
-            super::Schema::V1.module_schema(true),
-            "noble-intrinsic-module-report/v2"
-        );
-        assert_eq!(
-            super::Schema::V1.module_schema(false),
-            "noble-intrinsic-module-report/v1"
-        );
-        assert_eq!(
-            super::Schema::V2.module_schema(false),
-            "noble-intrinsic-module-report/v2"
-        );
-    }
-
-    #[test]
-    fn design_examples_classify_as_written() {
-        let stale = super::classify(
-            crate::workflow::output::Outcome::Unsupported,
-            "intrinsic-stale-proof",
-        );
-        assert_eq!(stale.category, "stale-dependency");
-        let normalization = super::classify(
-            crate::workflow::output::Outcome::Error,
-            "normalization-work-exhausted",
-        );
-        assert_eq!(normalization.category, "checker-exhausted");
-        let substitution = super::classify(
-            crate::workflow::output::Outcome::Error,
-            "substitution-work-exhausted",
-        );
-        assert_eq!(substitution.category, "checker-exhausted");
-        let deadline = super::classify(crate::workflow::output::Outcome::Timeout, "timeout");
-        assert_eq!(deadline.category, "checker-timeout");
-        let unknown = super::classify(
-            crate::workflow::output::Outcome::Unknown,
-            "evidence-missing",
-        );
-        assert_eq!(unknown.category, "internal");
+    fn schema_revisions_and_design_classifications() {
+        {
+            assert!(matches!(
+                super::Schema::parse("v1"),
+                Some(super::Schema::V1)
+            ));
+            assert!(matches!(
+                super::Schema::parse("v2"),
+                Some(super::Schema::V2)
+            ));
+            assert!(super::Schema::parse("v3").is_none());
+            assert!(super::Schema::parse("").is_none());
+        }
+        {
+            assert_eq!(
+                super::Schema::V1.module_schema(true),
+                "noble-intrinsic-module-report/v2"
+            );
+            assert_eq!(
+                super::Schema::V1.module_schema(false),
+                "noble-intrinsic-module-report/v1"
+            );
+            assert_eq!(
+                super::Schema::V2.module_schema(false),
+                "noble-intrinsic-module-report/v2"
+            );
+        }
+        {
+            let stale = super::classify(
+                crate::workflow::output::Outcome::Unsupported,
+                "intrinsic-stale-proof",
+            );
+            assert_eq!(stale.category, "stale-dependency");
+            let normalization = super::classify(
+                crate::workflow::output::Outcome::Error,
+                "normalization-work-exhausted",
+            );
+            assert_eq!(normalization.category, "checker-exhausted");
+            let substitution = super::classify(
+                crate::workflow::output::Outcome::Error,
+                "substitution-work-exhausted",
+            );
+            assert_eq!(substitution.category, "checker-exhausted");
+            let deadline = super::classify(crate::workflow::output::Outcome::Timeout, "timeout");
+            assert_eq!(deadline.category, "checker-timeout");
+            let unknown = super::classify(
+                crate::workflow::output::Outcome::Unknown,
+                "evidence-missing",
+            );
+            assert_eq!(unknown.category, "internal");
+        }
     }
 
     #[test]

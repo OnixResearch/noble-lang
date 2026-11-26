@@ -4065,83 +4065,106 @@ mod tests {
     }
 
     #[test]
-    fn cancelled_or_foreign_program_task_cannot_recall_a_late_result() {
-        let owner = TaskOwner::new(77);
-        assert!(owner.cancel(78).is_err());
-        assert!(owner.recall(78).is_err());
-        let engine = Engine::default();
-        owner.start(&engine).unwrap();
-        owner.complete(21).unwrap();
-        assert!(owner.cancel(77).unwrap());
-        assert_eq!(owner.recall(77).unwrap(), None);
-        assert!(!owner.cancel(77).unwrap());
-        let delivered = TaskOwner::new(79);
-        delivered.start(&engine).unwrap();
-        delivered.complete(42).unwrap();
-        assert_eq!(delivered.recall(79).unwrap(), Some(42));
-        assert_eq!(delivered.recall(79).unwrap(), None);
-        assert!(
-            !delivered.cancel(79).unwrap(),
-            "late cancellation cannot revoke an already delivered owner"
-        );
+    fn task_cancellation_and_delivery_reentry_refusals() {
+        {
+            let owner = TaskOwner::new(77);
+            assert!(owner.cancel(78).is_err());
+            assert!(owner.recall(78).is_err());
+            let engine = Engine::default();
+            owner.start(&engine).unwrap();
+            owner.complete(21).unwrap();
+            assert!(owner.cancel(77).unwrap());
+            assert_eq!(owner.recall(77).unwrap(), None);
+            assert!(!owner.cancel(77).unwrap());
+            let delivered = TaskOwner::new(79);
+            delivered.start(&engine).unwrap();
+            delivered.complete(42).unwrap();
+            assert_eq!(delivered.recall(79).unwrap(), Some(42));
+            assert_eq!(delivered.recall(79).unwrap(), None);
+            assert!(
+                !delivered.cancel(79).unwrap(),
+                "late cancellation cannot revoke an already delivered owner"
+            );
+        }
+        {
+            let (mut source, root) = ProgramStore::prepare(
+                b"module Arithmetic@1 [ def increment [ 1 + ] export increment ]",
+                "increment",
+                &[Ty::I64],
+                80_000_000,
+            )
+            .unwrap();
+            let cancelled = TaskOwner::new(source.instance_id());
+            assert!(cancelled.cancel(source.instance_id()).unwrap());
+            assert!(execute_with_task(&mut source, root, 41, 1, &cancelled).is_err());
+            let delivered = TaskOwner::new(source.instance_id());
+            assert_eq!(
+                execute_with_task(&mut source, root, 41, 1, &delivered)
+                    .unwrap()
+                    .value,
+                42
+            );
+            assert!(
+                execute_with_task(&mut source, root, 7, 1, &delivered).is_err(),
+                "one delivered task must not mint a second Program owner"
+            );
+        }
     }
 
     #[test]
-    fn selected_guest_executes_checked_program_and_consumes_own_resource() {
-        let (mut source, root) = ProgramStore::prepare(
-            b"module Arithmetic@1 [ def increment [ 1 + ] export increment ]",
-            "increment",
-            &[Ty::I64],
-            70_000_000,
-        )
-        .unwrap();
-        let observed = execute(&mut source, root, 41, 1).unwrap();
-        assert_eq!(observed.value, 42);
-        assert_eq!(
-            (observed.admits, observed.invokes, observed.live_owners),
-            (1, 1, 0)
-        );
-        let observed = execute(&mut source, root, -2, 1).unwrap();
-        assert_eq!(observed.value, -1);
-    }
-
-    #[test]
-    fn checked_pure_batch_feeds_each_result_through_a_fresh_linear_owner() {
-        let (mut source, root) = ProgramStore::prepare(
-            b"module Arithmetic@1 [ def increment [ 1 + ] export increment ]",
-            "increment",
-            &[Ty::I64],
-            70_000_000,
-        )
-        .unwrap();
-        let two = execute(&mut source, root, 41, 2).unwrap();
-        assert_eq!(two.value, 43);
-        assert_eq!((two.admits, two.invokes, two.live_owners), (2, 2, 0));
-        assert_eq!((two.effect_requests, two.protected_operations), (0, 0));
-        let three = execute(&mut source, root, 41, 3).unwrap();
-        assert_eq!(three.value, 44);
-        assert_eq!((three.admits, three.invokes, three.live_owners), (3, 3, 0));
-    }
-
-    #[test]
-    fn checked_pure_batch_accepts_512_real_guest_invocations() {
-        let (mut source, root) = ProgramStore::prepare(
-            b"module Arithmetic@1 [ def increment [ 1 + ] export increment ]",
-            "increment",
-            &[Ty::I64],
-            70_000_000,
-        )
-        .unwrap();
-        let observed = execute(&mut source, root, 41, 512).unwrap();
-        assert_eq!(observed.value, 553);
-        assert_eq!(
-            (observed.admits, observed.invokes, observed.live_owners),
-            (512, 512, 0)
-        );
-        assert_eq!(
-            (observed.effect_requests, observed.protected_operations),
-            (0, 0)
-        );
+    fn selected_guest_pure_single_and_512_batch_execution() {
+        {
+            let (mut source, root) = ProgramStore::prepare(
+                b"module Arithmetic@1 [ def increment [ 1 + ] export increment ]",
+                "increment",
+                &[Ty::I64],
+                70_000_000,
+            )
+            .unwrap();
+            let observed = execute(&mut source, root, 41, 1).unwrap();
+            assert_eq!(observed.value, 42);
+            assert_eq!(
+                (observed.admits, observed.invokes, observed.live_owners),
+                (1, 1, 0)
+            );
+            let observed = execute(&mut source, root, -2, 1).unwrap();
+            assert_eq!(observed.value, -1);
+        }
+        {
+            let (mut source, root) = ProgramStore::prepare(
+                b"module Arithmetic@1 [ def increment [ 1 + ] export increment ]",
+                "increment",
+                &[Ty::I64],
+                70_000_000,
+            )
+            .unwrap();
+            let two = execute(&mut source, root, 41, 2).unwrap();
+            assert_eq!(two.value, 43);
+            assert_eq!((two.admits, two.invokes, two.live_owners), (2, 2, 0));
+            assert_eq!((two.effect_requests, two.protected_operations), (0, 0));
+            let three = execute(&mut source, root, 41, 3).unwrap();
+            assert_eq!(three.value, 44);
+            assert_eq!((three.admits, three.invokes, three.live_owners), (3, 3, 0));
+        }
+        {
+            let (mut source, root) = ProgramStore::prepare(
+                b"module Arithmetic@1 [ def increment [ 1 + ] export increment ]",
+                "increment",
+                &[Ty::I64],
+                70_000_000,
+            )
+            .unwrap();
+            let observed = execute(&mut source, root, 41, 512).unwrap();
+            assert_eq!(observed.value, 553);
+            assert_eq!(
+                (observed.admits, observed.invokes, observed.live_owners),
+                (512, 512, 0)
+            );
+            assert_eq!(
+                (observed.effect_requests, observed.protected_operations),
+                (0, 0)
+            );
+        }
     }
 
     #[test]
@@ -4258,13 +4281,13 @@ mod tests {
     }
 
     #[test]
-    fn cancelled_batch_stops_between_committed_steps() {
-        interrupted_batch_cannot_deliver_or_append_after_ack(true);
-    }
-
-    #[test]
-    fn revoked_batch_stops_between_committed_steps() {
-        interrupted_batch_cannot_deliver_or_append_after_ack(false);
+    fn cancelled_and_revoked_batches_stop_between_committed_steps() {
+        {
+            interrupted_batch_cannot_deliver_or_append_after_ack(true);
+        }
+        {
+            interrupted_batch_cannot_deliver_or_append_after_ack(false);
+        }
     }
 
     #[test]
@@ -4295,37 +4318,62 @@ mod tests {
     }
 
     #[test]
-    fn type_level_widening_does_not_issue_a_host_effect_grant() {
-        let (mut source, root) = ProgramStore::prepare(
-            b"module Arithmetic@1 [ def increment [ 1 + ] export increment ]",
-            "increment",
-            &[Ty::I64],
-            50_000_000,
-        )
-        .unwrap();
-        let widened = source
-            .adapt(
-                root,
-                &noble_kernel::types::EffSet::from_ids(&[noble_kernel::contracts::TEST_EMIT]),
+    fn widening_lexical_text_atoms_and_foreign_handle_checks() {
+        {
+            let (mut source, root) = ProgramStore::prepare(
+                b"module Arithmetic@1 [ def increment [ 1 + ] export increment ]",
+                "increment",
+                &[Ty::I64],
+                50_000_000,
             )
             .unwrap();
-        assert!(
-            matches!(
-                execute(&mut source, widened, 41, 1),
-                Err(GuestFailure::Invalid(_))
-            ),
-            "an adapted effect witness alone cannot enter the pure Worker guest"
-        );
-    }
-
-    #[test]
-    fn equal_text_bytes_rebind_as_distinct_checked_lexical_atoms() {
-        let (mut source, root) = ProgramStore::prepare(
+            let widened = source
+                .adapt(
+                    root,
+                    &noble_kernel::types::EffSet::from_ids(&[noble_kernel::contracts::TEST_EMIT]),
+                )
+                .unwrap();
+            assert!(
+                matches!(
+                    execute(&mut source, widened, 41, 1),
+                    Err(GuestFailure::Invalid(_))
+                ),
+                "an adapted effect witness alone cannot enter the pure Worker guest"
+            );
+        }
+        {
+            let (mut source, root) = ProgramStore::prepare(
             b"module Arithmetic@1 [ def increment [ \"same\" drop \"same\" drop 1 + ] export increment ]",
             "increment", &[Ty::I64], 50_000_000).unwrap();
-        assert_eq!(source.text_aliases().len(), 2);
-        assert_ne!(source.text_aliases()[0].node, source.text_aliases()[1].node);
-        assert_eq!(execute(&mut source, root, 41, 1).unwrap().value, 42);
+            assert_eq!(source.text_aliases().len(), 2);
+            assert_ne!(source.text_aliases()[0].node, source.text_aliases()[1].node);
+            assert_eq!(execute(&mut source, root, 41, 1).unwrap().value, 42);
+        }
+        {
+            let (first, root) = ProgramStore::prepare(
+                b"module Arithmetic@1 [ def increment [ 1 + ] export increment ]",
+                "increment",
+                &[Ty::I64],
+                50_000_000,
+            )
+            .unwrap();
+            let (mut other, _) = ProgramStore::prepare(
+                b"module Arithmetic@1 [ def decrement [ 1 - ] export decrement ]",
+                "decrement",
+                &[Ty::I64],
+                50_000_000,
+            )
+            .unwrap();
+            assert!(first.named(root).is_some());
+            assert_ne!(first.instance_id(), other.instance_id());
+            assert!(other.interface(root).is_none());
+            assert!(
+            matches!(execute(&mut other, root, 3, 1),
+            Err(GuestFailure::Invalid(problem))
+                if problem.downcast_ref::<ForeignOrStaleProgramNode>().is_some()),
+            "another checked module must reject its foreign Program owner before guest admission"
+        );
+        }
     }
 
     #[test]
@@ -4369,58 +4417,6 @@ mod tests {
             Err(GuestFailure::Invalid(problem))
                 if problem.downcast_ref::<ForeignOrStaleProgramNode>().is_some()),
             "a dependency handle cannot cross a fresh source installation"
-        );
-    }
-
-    #[test]
-    fn checked_foreign_instance_handle_cannot_be_installed_in_guest() {
-        let (first, root) = ProgramStore::prepare(
-            b"module Arithmetic@1 [ def increment [ 1 + ] export increment ]",
-            "increment",
-            &[Ty::I64],
-            50_000_000,
-        )
-        .unwrap();
-        let (mut other, _) = ProgramStore::prepare(
-            b"module Arithmetic@1 [ def decrement [ 1 - ] export decrement ]",
-            "decrement",
-            &[Ty::I64],
-            50_000_000,
-        )
-        .unwrap();
-        assert!(first.named(root).is_some());
-        assert_ne!(first.instance_id(), other.instance_id());
-        assert!(other.interface(root).is_none());
-        assert!(
-            matches!(execute(&mut other, root, 3, 1),
-            Err(GuestFailure::Invalid(problem))
-                if problem.downcast_ref::<ForeignOrStaleProgramNode>().is_some()),
-            "another checked module must reject its foreign Program owner before guest admission"
-        );
-    }
-
-    #[test]
-    fn cancelled_and_delivered_tasks_cannot_reenter_guest_admission() {
-        let (mut source, root) = ProgramStore::prepare(
-            b"module Arithmetic@1 [ def increment [ 1 + ] export increment ]",
-            "increment",
-            &[Ty::I64],
-            80_000_000,
-        )
-        .unwrap();
-        let cancelled = TaskOwner::new(source.instance_id());
-        assert!(cancelled.cancel(source.instance_id()).unwrap());
-        assert!(execute_with_task(&mut source, root, 41, 1, &cancelled).is_err());
-        let delivered = TaskOwner::new(source.instance_id());
-        assert_eq!(
-            execute_with_task(&mut source, root, 41, 1, &delivered)
-                .unwrap()
-                .value,
-            42
-        );
-        assert!(
-            execute_with_task(&mut source, root, 7, 1, &delivered).is_err(),
-            "one delivered task must not mint a second Program owner"
         );
     }
 

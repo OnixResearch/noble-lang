@@ -635,33 +635,27 @@ mod tests {
     }
 
     #[test]
-    fn the_law_conforming_contract_matches_every_compared_field() {
-        assert!(checked(INCREMENT).is_ok());
-    }
-
-    #[test]
-    fn an_easier_statement_is_refused_as_a_postcondition_mismatch() {
-        let refusal = checked(IDENTITY).expect_err("identity statement refuses");
-        assert_eq!(refusal.code, "owner-law-ensures-mismatch");
-    }
-
-    #[test]
-    fn a_weakened_precondition_is_refused() {
-        let refusal = checked(WEAKENED).expect_err("weakened precondition refuses");
-        assert_eq!(refusal.code, "owner-law-requires-mismatch");
-    }
-
-    #[test]
-    fn a_different_declaration_is_refused() {
-        let refusal = checked(ADD_TWO).expect_err("add_two refuses under v1");
-        assert_eq!(refusal.code, "owner-law-declaration-mismatch");
-    }
-
-    #[test]
-    fn an_example_preserving_wrong_program_still_states_the_law_obligation() {
-        // The law comparison is not the program check: the wrong body keeps the
-        // law's interface and obligation, so it reaches the exact check, which
-        // is the only route that can bind the resolved program identity.
-        assert!(checked(WRONG_PROGRAM).is_ok());
+    fn owner_law_comparison_checks_and_refusals() {
+        {
+            assert!(checked(INCREMENT).is_ok());
+        }
+        {
+            let refusal = checked(IDENTITY).expect_err("identity statement refuses");
+            assert_eq!(refusal.code, "owner-law-ensures-mismatch");
+        }
+        {
+            let refusal = checked(WEAKENED).expect_err("weakened precondition refuses");
+            assert_eq!(refusal.code, "owner-law-requires-mismatch");
+        }
+        {
+            let refusal = checked(ADD_TWO).expect_err("add_two refuses under v1");
+            assert_eq!(refusal.code, "owner-law-declaration-mismatch");
+        }
+        {
+            // The law comparison is not the program check: the wrong body keeps the
+            // law's interface and obligation, so it reaches the exact check, which
+            // is the only route that can bind the resolved program identity.
+            assert!(checked(WRONG_PROGRAM).is_ok());
+        }
     }
 }

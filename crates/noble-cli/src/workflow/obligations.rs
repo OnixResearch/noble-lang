@@ -2025,19 +2025,34 @@ mod tests {
     }
 
     #[test]
-    fn contract_file_entry_digests_the_export_text() {
-        let limits = Limits::default();
-        let prepared = noble_contracts::prepare(INCREMENT, limits).expect("prepares");
-        let statement = noble_contracts::export_lean(&prepared);
-        let entry = contract_file_entry(&prepared, INCREMENT, "source", statement.clone(), limits);
-        assert_eq!(entry.statement.as_deref(), Some(statement.as_str()));
-        assert_eq!(
-            entry.statement_digest.as_deref(),
-            Some(intrinsic::sha256(statement.as_bytes()).as_str())
-        );
-        assert_eq!(entry.statement_source, "export_lean");
-        assert_eq!(entry.statement_ref, "MC1Obligation.claim");
-        assert_eq!(entry.kind, "contract");
+    fn contract_file_entry_lean_release_and_detection() {
+        {
+            let limits = Limits::default();
+            let prepared = noble_contracts::prepare(INCREMENT, limits).expect("prepares");
+            let statement = noble_contracts::export_lean(&prepared);
+            let entry =
+                contract_file_entry(&prepared, INCREMENT, "source", statement.clone(), limits);
+            assert_eq!(entry.statement.as_deref(), Some(statement.as_str()));
+            assert_eq!(
+                entry.statement_digest.as_deref(),
+                Some(intrinsic::sha256(statement.as_bytes()).as_str())
+            );
+            assert_eq!(entry.statement_source, "export_lean");
+            assert_eq!(entry.statement_ref, "MC1Obligation.claim");
+            assert_eq!(entry.kind, "contract");
+        }
+        {
+            assert!(
+                crate::workflow::USAGE.contains(LEAN_RELEASE),
+                "the usage text must state the pinned release"
+            );
+        }
+        {
+            assert!(contract_source(INCREMENT));
+            assert!(contract_source(b"\n  (contract 1 c)"));
+            assert!(!contract_source(MODULE));
+            assert!(!contract_source(b""));
+        }
     }
 
     #[test]
@@ -2093,116 +2108,100 @@ mod tests {
     }
 
     #[test]
-    fn pure_obligation_digests_its_exact_source_span() {
-        let source: &[u8] = b"module m@1 [ proof 1 refl : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (refl x)) ] ]";
-        let limits = Limits::default();
-        let retained = noble_contracts::source::RetainedSourceLimit::new(65_536)
-            .expect("retained source budget");
-        let session = ModuleSession::new(&[], retained).expect("session");
-        let prepared = session.prepare(source, &[], limits).expect("prepares");
-        let digest = intrinsic::sha256(source);
-        let batch = prepared.proof_obligations().expect("proof obligations");
-        let obligation = &batch.obligations[0];
-        let PendingGoal::Pure { proposition } = &obligation.goal else {
-            panic!("expected a pure obligation");
-        };
-        let entry = pure_entry(
-            &PureContext {
-                name: "m",
-                version: 1,
+    fn pure_obligation_digest_and_goal_view_arguments() {
+        {
+            let source: &[u8] = b"module m@1 [ proof 1 refl : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (refl x)) ] ]";
+            let limits = Limits::default();
+            let retained = noble_contracts::source::RetainedSourceLimit::new(65_536)
+                .expect("retained source budget");
+            let session = ModuleSession::new(&[], retained).expect("session");
+            let prepared = session.prepare(source, &[], limits).expect("prepares");
+            let digest = intrinsic::sha256(source);
+            let batch = prepared.proof_obligations().expect("proof obligations");
+            let obligation = &batch.obligations[0];
+            let PendingGoal::Pure { proposition } = &obligation.goal else {
+                panic!("expected a pure obligation");
+            };
+            let entry = pure_entry(
+                &PureContext {
+                    name: "m",
+                    version: 1,
+                    source,
+                    source_sha256: &digest,
+                },
+                obligation,
+                proposition,
+                &versions(),
+                limits,
+            );
+            let statement = entry.statement.as_deref().expect("declared proposition");
+            assert_eq!(statement, "(Pi (x I64) (Eq I64 x x))");
+            assert_eq!(
+                entry.statement_digest.as_deref(),
+                Some(intrinsic::sha256(statement_store(statement).as_bytes()).as_str())
+            );
+            assert_eq!(entry.statement_source, "source-span");
+            assert_eq!(entry.kind, "pure");
+        }
+        {
+            let source: &[u8] = b"module logic@1 [ proof 1 poly-refl : [ (Pi (A Type0) (Pi (x A) (Eq A x x))) ] [ (intro (A Type0) (intro (x A) (refl x))) ] proof 1 refl-type infer : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (apply (apply (use poly-refl) (infer)) (infer))) ] ]";
+            let limits = Limits::default();
+            let retained = noble_contracts::source::RetainedSourceLimit::new(65_536)
+                .expect("retained source budget");
+            let session = ModuleSession::new(&[], retained).expect("session");
+            let prepared = session.prepare(source, &[], limits).expect("prepares");
+            let digest = intrinsic::sha256(source);
+            let view = module_report(
+                &prepared,
                 source,
-                source_sha256: &digest,
-            },
-            obligation,
-            proposition,
-            &versions(),
-            limits,
-        );
-        let statement = entry.statement.as_deref().expect("declared proposition");
-        assert_eq!(statement, "(Pi (x I64) (Eq I64 x x))");
-        assert_eq!(
-            entry.statement_digest.as_deref(),
-            Some(intrinsic::sha256(statement_store(statement).as_bytes()).as_str())
-        );
-        assert_eq!(entry.statement_source, "source-span");
-        assert_eq!(entry.kind, "pure");
+                "logic.noble",
+                &digest,
+                Report::View,
+                None,
+                &[],
+            )
+            .unwrap_or_else(|failure| panic!("goal view failed: {}", failure.message))
+            .json()
+            .encode();
+            let parsed: serde_json::Value = serde_json::from_str(&view).expect("goal view JSON");
+            let sites = parsed["sites"].as_array().expect("goal view rows");
+            let row = |declaration: &str| {
+                sites
+                    .iter()
+                    .find(|site| site["declaration"] == declaration)
+                    .unwrap_or_else(|| panic!("no row for {declaration}: {view}"))
+            };
+            assert_eq!(
+                row("poly-refl")["inserted"],
+                serde_json::json!([]),
+                "an explicit proof has an empty inserted-arguments row"
+            );
+            let inserted = row("refl-type")["inserted"]
+                .as_array()
+                .expect("inserted-arguments row");
+            let pairs: std::vec::Vec<(&str, &str)> = inserted
+                .iter()
+                .map(|argument| {
+                    (
+                        argument["binder"].as_str().unwrap_or_default(),
+                        argument["solution"].as_str().unwrap_or_default(),
+                    )
+                })
+                .collect();
+            assert_eq!(pairs, [("A", "I64"), ("x", "x")], "{view}");
+            assert!(
+                inserted
+                    .iter()
+                    .all(|argument| argument["revision"] == "implicit-args/v1"
+                        && argument["head"] == "logic@1/poly-refl"),
+                "every row names the elaborator revision and the exact head: {view}"
+            );
+            assert_eq!(parsed["acceptance"], false, "the view stays a projection");
+        }
     }
 
     fn statement_store(statement: &str) -> std::string::String {
         std::string::String::from(statement)
-    }
-
-    #[test]
-    fn goal_view_lists_the_arguments_the_elaborator_inserted() {
-        let source: &[u8] = b"module logic@1 [ proof 1 poly-refl : [ (Pi (A Type0) (Pi (x A) (Eq A x x))) ] [ (intro (A Type0) (intro (x A) (refl x))) ] proof 1 refl-type infer : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (apply (apply (use poly-refl) (infer)) (infer))) ] ]";
-        let limits = Limits::default();
-        let retained = noble_contracts::source::RetainedSourceLimit::new(65_536)
-            .expect("retained source budget");
-        let session = ModuleSession::new(&[], retained).expect("session");
-        let prepared = session.prepare(source, &[], limits).expect("prepares");
-        let digest = intrinsic::sha256(source);
-        let view = module_report(
-            &prepared,
-            source,
-            "logic.noble",
-            &digest,
-            Report::View,
-            None,
-            &[],
-        )
-        .unwrap_or_else(|failure| panic!("goal view failed: {}", failure.message))
-        .json()
-        .encode();
-        let parsed: serde_json::Value = serde_json::from_str(&view).expect("goal view JSON");
-        let sites = parsed["sites"].as_array().expect("goal view rows");
-        let row = |declaration: &str| {
-            sites
-                .iter()
-                .find(|site| site["declaration"] == declaration)
-                .unwrap_or_else(|| panic!("no row for {declaration}: {view}"))
-        };
-        assert_eq!(
-            row("poly-refl")["inserted"],
-            serde_json::json!([]),
-            "an explicit proof has an empty inserted-arguments row"
-        );
-        let inserted = row("refl-type")["inserted"]
-            .as_array()
-            .expect("inserted-arguments row");
-        let pairs: std::vec::Vec<(&str, &str)> = inserted
-            .iter()
-            .map(|argument| {
-                (
-                    argument["binder"].as_str().unwrap_or_default(),
-                    argument["solution"].as_str().unwrap_or_default(),
-                )
-            })
-            .collect();
-        assert_eq!(pairs, [("A", "I64"), ("x", "x")], "{view}");
-        assert!(
-            inserted
-                .iter()
-                .all(|argument| argument["revision"] == "implicit-args/v1"
-                    && argument["head"] == "logic@1/poly-refl"),
-            "every row names the elaborator revision and the exact head: {view}"
-        );
-        assert_eq!(parsed["acceptance"], false, "the view stays a projection");
-    }
-
-    #[test]
-    fn published_lean_release_matches_the_usage_text() {
-        assert!(
-            crate::workflow::USAGE.contains(LEAN_RELEASE),
-            "the usage text must state the pinned release"
-        );
-    }
-
-    #[test]
-    fn contract_detection_reads_the_declared_top_level_form() {
-        assert!(contract_source(INCREMENT));
-        assert!(contract_source(b"\n  (contract 1 c)"));
-        assert!(!contract_source(MODULE));
-        assert!(!contract_source(b""));
     }
 
     const MODULE_TWO: &[u8] = b"module arithmetic@1 [ export increment def increment [ 2 + ] contract 1 increment-law [ subject increment input [ x I64 ] output [ y I64 ] requires [ true ] ensures [ (eq (out y) (add (in x) 2)) ] ] proof 1 increment-correct for increment-law [ (export-unary-I64 (intro (tail Stack) (intro (x I64) (pc-sequence (pc-exact (exec-literal 2)) (pc-exact (exec-add)) (bridge (by-exact-append-assoc)) (join (by-exact-result))))) (mc1-true-eq-wrap)) ] ]";
@@ -2225,182 +2224,186 @@ mod tests {
     }
 
     #[test]
-    fn ordinary_sessions_refuse_a_proof_hole_and_the_editor_session_admits_it() {
-        let limits = Limits::default();
-        let retained = noble_contracts::source::RetainedSourceLimit::new(65_536)
-            .expect("retained source budget");
-        let holes = transport_document(MODULE, "(bridge (by-exact-append-assoc))");
-        let ordinary = ModuleSession::new(&[], retained).expect("ordinary session");
-        assert!(ordinary.prepare(MODULE, &[], limits).is_ok());
-        let error = ordinary
-            .prepare(&holes.rendered, &[], limits)
-            .expect_err("ordinary source must refuse a proof hole");
-        assert_eq!(error.stage(), noble_contracts::source::Stage::Check);
-        assert!(
-            error.diagnostic().message.contains("editor-only"),
-            "{}",
-            error.diagnostic().message
-        );
-        for other in [
-            ModuleSession::new_signed_self(&[], retained).expect("signed self session"),
-            ModuleSession::new_declared_text(&[], false, retained).expect("declared text session"),
-        ] {
-            let refused = other
+    fn editor_proof_hole_admission_and_incomplete_site() {
+        {
+            let limits = Limits::default();
+            let retained = noble_contracts::source::RetainedSourceLimit::new(65_536)
+                .expect("retained source budget");
+            let holes = transport_document(MODULE, "(bridge (by-exact-append-assoc))");
+            let ordinary = ModuleSession::new(&[], retained).expect("ordinary session");
+            assert!(ordinary.prepare(MODULE, &[], limits).is_ok());
+            let error = ordinary
                 .prepare(&holes.rendered, &[], limits)
-                .expect_err("every non-editor session must refuse a proof hole");
-            assert_eq!(refused.stage(), noble_contracts::source::Stage::Check);
+                .expect_err("ordinary source must refuse a proof hole");
+            assert_eq!(error.stage(), noble_contracts::source::Stage::Check);
+            assert!(
+                error.diagnostic().message.contains("editor-only"),
+                "{}",
+                error.diagnostic().message
+            );
+            for other in [
+                ModuleSession::new_signed_self(&[], retained).expect("signed self session"),
+                ModuleSession::new_declared_text(&[], false, retained)
+                    .expect("declared text session"),
+            ] {
+                let refused = other
+                    .prepare(&holes.rendered, &[], limits)
+                    .expect_err("every non-editor session must refuse a proof hole");
+                assert_eq!(refused.stage(), noble_contracts::source::Stage::Check);
+            }
+            assert_eq!(holes.labels, ["bridge"]);
+            let prepared = editor_session()
+                .prepare(&holes.rendered, &[], limits)
+                .expect("the editor session admits the reserved form");
+            let batch = prepared
+                .proof_obligations()
+                .expect("editor session preserves proof obligations");
+            let budgets = noble_contracts::intrinsic::ProofBudgets::from_limits(limits);
+            assert!(
+                noble_contracts::intrinsic::check_batch_with_budgets(batch, limits, budgets)
+                    .is_err(),
+                "the explicit source proof checker must always reject an editor hole"
+            );
+            let sites = proof_hole_sites(Some(batch))
+                .unwrap_or_else(|failure| panic!("hole analysis failed: {}", failure.message));
+            assert_eq!(sites.len(), 1);
+            assert_eq!(sites[0].label, "bridge");
+            assert_eq!(sites[0].proof, "increment-correct");
+            assert_eq!(sites[0].span, holes.spans[0]);
         }
-        assert_eq!(holes.labels, ["bridge"]);
-        let prepared = editor_session()
-            .prepare(&holes.rendered, &[], limits)
-            .expect("the editor session admits the reserved form");
-        let batch = prepared
-            .proof_obligations()
-            .expect("editor session preserves proof obligations");
-        let budgets = noble_contracts::intrinsic::ProofBudgets::from_limits(limits);
-        assert!(
-            noble_contracts::intrinsic::check_batch_with_budgets(batch, limits, budgets).is_err(),
-            "the explicit source proof checker must always reject an editor hole"
-        );
-        let sites = proof_hole_sites(Some(batch))
-            .unwrap_or_else(|failure| panic!("hole analysis failed: {}", failure.message));
-        assert_eq!(sites.len(), 1);
-        assert_eq!(sites[0].label, "bridge");
-        assert_eq!(sites[0].proof, "increment-correct");
-        assert_eq!(sites[0].span, holes.spans[0]);
+        {
+            let limits = Limits::default();
+            let holes = transport_document(MODULE, "(bridge (by-exact-append-assoc))");
+            let prepared = editor_session()
+                .prepare(&holes.rendered, &[], limits)
+                .expect("prepares");
+            let document = module_report(
+                &prepared,
+                &holes.rendered,
+                "increment-hole.json",
+                &intrinsic::sha256(&holes.rendered),
+                Report::View,
+                Some(&holes),
+                &[],
+            )
+            .unwrap_or_else(|failure| panic!("transport analysis failed: {}", failure.message));
+            assert_eq!(document.exit, 3);
+            let view: serde_json::Value =
+                serde_json::from_str(&document.json().encode()).expect("view JSON");
+            assert_eq!(view["outcome"], "unknown");
+            assert_eq!(view["category"], "incomplete-hole");
+            assert_eq!(view["transport"]["schema"], HOLE_SCHEMA);
+            assert_eq!(view["transport"]["holes"][0]["label"], "bridge");
+            let site = &view["sites"][0];
+            assert_eq!(site["chip"], "incomplete");
+            assert_eq!(site["outcome"], "unknown");
+            assert_eq!(site["category"], "incomplete-hole");
+            assert_eq!(site["holes"], serde_json::json!(["bridge"]));
+            let hole = site["sites"]
+                .as_array()
+                .expect("sites")
+                .iter()
+                .find(|row| row["constructor"] == "editor-hole")
+                .expect("the hole site is listed");
+            assert_eq!(hole["chip"], "incomplete");
+            assert_eq!(hole["category"], "incomplete-hole");
+            assert_eq!(hole["label"], "bridge");
+            assert_eq!(hole["parent_constructor"], "pc-sequence");
+            assert_eq!(hole["goal"]["declaration"], "increment-law");
+            assert_eq!(hole["goal"]["statement_digest"], site["statement_digest"]);
+            assert!(
+                view["sites"]
+                    .as_array()
+                    .expect("rows")
+                    .iter()
+                    .all(|row| row["chip"] != "checked"),
+                "a declaration with a hole is never checked"
+            );
+        }
     }
 
     #[test]
-    fn a_hole_outside_a_proof_term_is_refused_by_the_same_frontend() {
-        let limits = Limits::default();
-        let text = std::str::from_utf8(MODULE).expect("utf-8 module");
-        let at = text.find("(add (in x) 1)").expect("ensures fragment");
-        let document = std::format!(
+    fn misplaced_and_commented_proof_hole_refusals() {
+        {
+            let limits = Limits::default();
+            let text = std::str::from_utf8(MODULE).expect("utf-8 module");
+            let at = text.find("(add (in x) 1)").expect("ensures fragment");
+            let document = std::format!(
             "{{\"format\":1,\"module\":[{},{{\"kind\":\"proof-hole\",\"label\":\"pred\"}},{}]}}",
             encoding::Json::String(text[..at].into()).encode(),
             encoding::Json::String(text[at + "(add (in x) 1)".len()..].into()).encode()
         );
-        let holes = crate::core::editor::decode_proof_holes(document.as_bytes()).expect("decodes");
-        let error = editor_session()
-            .prepare(&holes.rendered, &[], limits)
-            .expect_err("a predicate hole is never a proof-term hole");
-        assert!(
-            error
-                .diagnostic()
-                .message
-                .contains("only valid in a proof term"),
-            "{}",
-            error.diagnostic().message
-        );
-        assert_eq!(error.diagnostic().span, holes.spans[0]);
+            let holes =
+                crate::core::editor::decode_proof_holes(document.as_bytes()).expect("decodes");
+            let error = editor_session()
+                .prepare(&holes.rendered, &[], limits)
+                .expect_err("a predicate hole is never a proof-term hole");
+            assert!(
+                error
+                    .diagnostic()
+                    .message
+                    .contains("only valid in a proof term"),
+                "{}",
+                error.diagnostic().message
+            );
+            assert_eq!(error.diagnostic().span, holes.spans[0]);
 
-        let pure =
+            let pure =
             "module m@1 [ proof 1 p : [ (Pi (x I64) (Eq I64 x x)) ] [ (intro (x I64) (refl x)) ] ]";
-        let at = pure.find("(Eq I64 x x)").expect("pure proposition");
-        let pure_doc = std::format!(
+            let at = pure.find("(Eq I64 x x)").expect("pure proposition");
+            let pure_doc = std::format!(
             "{{\"format\":1,\"module\":[{},{{\"kind\":\"proof-hole\",\"label\":\"prop\"}},{}]}}",
             encoding::Json::String(pure[..at].into()).encode(),
             encoding::Json::String(pure[at + "(Eq I64 x x)".len()..].into()).encode()
         );
-        let pure_holes =
-            crate::core::editor::decode_proof_holes(pure_doc.as_bytes()).expect("decodes");
-        let pure_error = editor_session()
-            .prepare(&pure_holes.rendered, &[], limits)
-            .expect_err("a proposition hole is never a proof-term hole");
-        assert!(
-            pure_error
-                .diagnostic()
-                .message
-                .contains("only valid in a proof term"),
-            "{}",
-            pure_error.diagnostic().message
-        );
-        assert_eq!(pure_error.diagnostic().span, pure_holes.spans[0]);
-    }
-
-    #[test]
-    fn a_commented_transport_hole_cannot_disguise_a_hand_written_hole() {
-        let limits = Limits::default();
-        let text = std::str::from_utf8(MODULE).expect("utf-8 module");
-        let needle = "(bridge (by-exact-append-assoc))";
-        let forged = text.replacen(needle, "(editor-hole bridge)", 1);
-        let document = std::format!(
+            let pure_holes =
+                crate::core::editor::decode_proof_holes(pure_doc.as_bytes()).expect("decodes");
+            let pure_error = editor_session()
+                .prepare(&pure_holes.rendered, &[], limits)
+                .expect_err("a proposition hole is never a proof-term hole");
+            assert!(
+                pure_error
+                    .diagnostic()
+                    .message
+                    .contains("only valid in a proof term"),
+                "{}",
+                pure_error.diagnostic().message
+            );
+            assert_eq!(pure_error.diagnostic().span, pure_holes.spans[0]);
+        }
+        {
+            let limits = Limits::default();
+            let text = std::str::from_utf8(MODULE).expect("utf-8 module");
+            let needle = "(bridge (by-exact-append-assoc))";
+            let forged = text.replacen(needle, "(editor-hole bridge)", 1);
+            let document = std::format!(
             "{{\"format\":1,\"module\":[{},{{\"kind\":\"proof-hole\",\"label\":\"bridge\"}},\"\\n\"]}}",
             encoding::Json::String(std::format!("{forged} # ")).encode(),
         );
-        let holes = crate::core::editor::decode_proof_holes(document.as_bytes()).expect("decodes");
-        let prepared = editor_session()
-            .prepare(&holes.rendered, &[], limits)
-            .expect("editor session parses rendered text");
-        let result = module_report(
-            &prepared,
-            &holes.rendered,
-            "spoofed.json",
-            &intrinsic::sha256(&holes.rendered),
-            Report::View,
-            Some(&holes),
-            &[],
-        );
-        let Err(failure) = result else {
-            panic!("a hand-written hole at a different span must be refused");
-        };
-        assert_eq!(failure.code, "proof-hole-transport");
-        assert!(
-            failure.message.contains("span"),
-            "expected span mismatch refusal: {}",
-            failure.message
-        );
-    }
-
-    #[test]
-    fn a_transport_hole_marks_its_site_incomplete_and_never_checked() {
-        let limits = Limits::default();
-        let holes = transport_document(MODULE, "(bridge (by-exact-append-assoc))");
-        let prepared = editor_session()
-            .prepare(&holes.rendered, &[], limits)
-            .expect("prepares");
-        let document = module_report(
-            &prepared,
-            &holes.rendered,
-            "increment-hole.json",
-            &intrinsic::sha256(&holes.rendered),
-            Report::View,
-            Some(&holes),
-            &[],
-        )
-        .unwrap_or_else(|failure| panic!("transport analysis failed: {}", failure.message));
-        assert_eq!(document.exit, 3);
-        let view: serde_json::Value =
-            serde_json::from_str(&document.json().encode()).expect("view JSON");
-        assert_eq!(view["outcome"], "unknown");
-        assert_eq!(view["category"], "incomplete-hole");
-        assert_eq!(view["transport"]["schema"], HOLE_SCHEMA);
-        assert_eq!(view["transport"]["holes"][0]["label"], "bridge");
-        let site = &view["sites"][0];
-        assert_eq!(site["chip"], "incomplete");
-        assert_eq!(site["outcome"], "unknown");
-        assert_eq!(site["category"], "incomplete-hole");
-        assert_eq!(site["holes"], serde_json::json!(["bridge"]));
-        let hole = site["sites"]
-            .as_array()
-            .expect("sites")
-            .iter()
-            .find(|row| row["constructor"] == "editor-hole")
-            .expect("the hole site is listed");
-        assert_eq!(hole["chip"], "incomplete");
-        assert_eq!(hole["category"], "incomplete-hole");
-        assert_eq!(hole["label"], "bridge");
-        assert_eq!(hole["parent_constructor"], "pc-sequence");
-        assert_eq!(hole["goal"]["declaration"], "increment-law");
-        assert_eq!(hole["goal"]["statement_digest"], site["statement_digest"]);
-        assert!(
-            view["sites"]
-                .as_array()
-                .expect("rows")
-                .iter()
-                .all(|row| row["chip"] != "checked"),
-            "a declaration with a hole is never checked"
-        );
+            let holes =
+                crate::core::editor::decode_proof_holes(document.as_bytes()).expect("decodes");
+            let prepared = editor_session()
+                .prepare(&holes.rendered, &[], limits)
+                .expect("editor session parses rendered text");
+            let result = module_report(
+                &prepared,
+                &holes.rendered,
+                "spoofed.json",
+                &intrinsic::sha256(&holes.rendered),
+                Report::View,
+                Some(&holes),
+                &[],
+            );
+            let Err(failure) = result else {
+                panic!("a hand-written hole at a different span must be refused");
+            };
+            assert_eq!(failure.code, "proof-hole-transport");
+            assert!(
+                failure.message.contains("span"),
+                "expected span mismatch refusal: {}",
+                failure.message
+            );
+        }
     }
 
     fn checked_fixture(model: &str, checker: &str) -> noble_contracts::intrinsic::CheckedProof {
@@ -2425,125 +2428,125 @@ mod tests {
     }
 
     #[test]
-    fn saved_evidence_is_stale_after_a_subject_change_and_is_never_rewritten() {
-        let limits = Limits::default();
-        let retained = noble_contracts::source::RetainedSourceLimit::new(65_536)
-            .expect("retained source budget");
-        let first = ModuleSession::new(&[], retained)
-            .expect("session")
-            .prepare(MODULE, &[], limits)
-            .expect("prepares");
-        let batch = first.proof_obligations().expect("proof obligations");
-        let record = evidence::record(
-            batch,
-            &[checked_fixture(
-                &intrinsic::model_revision(),
-                &intrinsic::checker_revision(),
-            )],
-            limits,
-        )
-        .unwrap_or_else(|failure| panic!("evidence fixture rejected: {}", failure.message));
-        let base = temp_directory("stale");
-        let directory = base.join("emitted");
-        evidence::write(&directory, Some(&record), &encoding::Json::Null)
-            .unwrap_or_else(|failure| panic!("evidence write failed: {}", failure.message));
-        let before = std::fs::read(directory.join("evidence.json")).expect("evidence bytes");
-        let digest = intrinsic::sha256(&before);
-        let loaded = evidence::load(&directory)
-            .unwrap_or_else(|failure| panic!("evidence read failed: {}", failure.message));
-        assert_eq!(loaded.evidence_sha256, digest);
-        let view = module_report(
-            &first,
-            MODULE,
-            "increment.noble",
-            &intrinsic::sha256(MODULE),
-            Report::View,
-            None,
-            std::slice::from_ref(&directory),
-        )
-        .unwrap_or_else(|failure| panic!("matching record view failed: {}", failure.message));
-        let parsed: serde_json::Value =
-            serde_json::from_str(&view.json().encode()).expect("goal view JSON");
-        assert_eq!(parsed["evidence"]["records"][0]["matches"], true);
-        assert_ne!(parsed["sites"][0]["chip"], "checked");
-
-        let second = ModuleSession::new(&[], retained)
-            .expect("session")
-            .prepare(MODULE_TWO, &[], limits)
-            .expect("prepares the changed subject");
-        let changed = second.proof_obligations().expect("proof obligations");
-        let versions = module_versions(false);
-        let current = evidence::current(
-            changed,
-            &intrinsic::sha256(MODULE_TWO),
-            &evidence_revisions(&versions),
-            limits,
-        )
-        .unwrap_or_else(|failure| panic!("current key unavailable: {}", failure.message));
-        let mismatches = evidence::compare(&loaded.record, &current);
-        assert!(
-            mismatches.iter().any(|row| row == "source_sha256"),
-            "{mismatches:?}"
-        );
-        assert!(
-            mismatches
-                .iter()
-                .any(|row| row == "proofs.increment-correct.statement_digest"),
-            "{mismatches:?}"
-        );
-        let goal = second.contract_goals().next().expect("one contract");
-        let proof = changed.obligations.first().expect("one proof");
-        let mut entry = contract_entry(
-            goal,
-            Some(proof),
-            MODULE_TWO,
-            &module_versions(false),
-            None,
-            limits,
-        );
-        entry.apply_evidence(&loaded, &mismatches);
-        assert_eq!(entry.chip, "stale");
-        assert_eq!(entry.category, "stale-dependency");
-        assert_eq!(entry.outcome, "unsupported");
-        let retained = entry.retained_evidence.encode();
-        assert!(retained.contains("\"module\":\"arithmetic\""), "{retained}");
-        assert!(retained.contains("\"version\":1"), "{retained}");
-        assert!(
-            retained.contains("\"definition\":\"increment\""),
-            "{retained}"
-        );
-        assert!(retained.contains("\"mismatches\""), "{retained}");
-        let after = std::fs::read(directory.join("evidence.json")).expect("evidence bytes");
-        assert_eq!(after, before, "the retained record is never rewritten");
-        let _ = std::fs::remove_dir_all(&base);
-    }
-
-    #[test]
-    fn evidence_write_never_overwrites_and_load_rejects_a_forged_source() {
-        let limits = Limits::default();
-        let retained = noble_contracts::source::RetainedSourceLimit::new(65_536)
-            .expect("retained source budget");
-        let prepared = ModuleSession::new(&[], retained)
-            .expect("session")
-            .prepare(MODULE, &[], limits)
-            .expect("prepares");
-        let batch = prepared.proof_obligations().expect("proof obligations");
-        let record = evidence::record(batch, &[checked_fixture("model", "checker")], limits)
+    fn saved_evidence_staleness_and_non_overwrite() {
+        {
+            let limits = Limits::default();
+            let retained = noble_contracts::source::RetainedSourceLimit::new(65_536)
+                .expect("retained source budget");
+            let first = ModuleSession::new(&[], retained)
+                .expect("session")
+                .prepare(MODULE, &[], limits)
+                .expect("prepares");
+            let batch = first.proof_obligations().expect("proof obligations");
+            let record = evidence::record(
+                batch,
+                &[checked_fixture(
+                    &intrinsic::model_revision(),
+                    &intrinsic::checker_revision(),
+                )],
+                limits,
+            )
             .unwrap_or_else(|failure| panic!("evidence fixture rejected: {}", failure.message));
-        let directory = temp_directory("rewrite");
-        let target = directory.join("emitted");
-        evidence::write(&target, Some(&record), &encoding::Json::Null)
-            .unwrap_or_else(|failure| panic!("evidence write failed: {}", failure.message));
-        assert!(
-            evidence::write(&target, Some(&record), &encoding::Json::Null).is_err(),
-            "an existing evidence directory is never overwritten"
-        );
-        std::fs::write(target.join("source.noble"), b"module forged@1 [ ]")
-            .expect("forge the retained source");
-        assert!(
-            evidence::load(&target).is_err(),
-            "a source that differs from its recorded digest is refused"
-        );
-        let _ = std::fs::remove_dir_all(&directory);
+            let base = temp_directory("stale");
+            let directory = base.join("emitted");
+            evidence::write(&directory, Some(&record), &encoding::Json::Null)
+                .unwrap_or_else(|failure| panic!("evidence write failed: {}", failure.message));
+            let before = std::fs::read(directory.join("evidence.json")).expect("evidence bytes");
+            let digest = intrinsic::sha256(&before);
+            let loaded = evidence::load(&directory)
+                .unwrap_or_else(|failure| panic!("evidence read failed: {}", failure.message));
+            assert_eq!(loaded.evidence_sha256, digest);
+            let view = module_report(
+                &first,
+                MODULE,
+                "increment.noble",
+                &intrinsic::sha256(MODULE),
+                Report::View,
+                None,
+                std::slice::from_ref(&directory),
+            )
+            .unwrap_or_else(|failure| panic!("matching record view failed: {}", failure.message));
+            let parsed: serde_json::Value =
+                serde_json::from_str(&view.json().encode()).expect("goal view JSON");
+            assert_eq!(parsed["evidence"]["records"][0]["matches"], true);
+            assert_ne!(parsed["sites"][0]["chip"], "checked");
+
+            let second = ModuleSession::new(&[], retained)
+                .expect("session")
+                .prepare(MODULE_TWO, &[], limits)
+                .expect("prepares the changed subject");
+            let changed = second.proof_obligations().expect("proof obligations");
+            let versions = module_versions(false);
+            let current = evidence::current(
+                changed,
+                &intrinsic::sha256(MODULE_TWO),
+                &evidence_revisions(&versions),
+                limits,
+            )
+            .unwrap_or_else(|failure| panic!("current key unavailable: {}", failure.message));
+            let mismatches = evidence::compare(&loaded.record, &current);
+            assert!(
+                mismatches.iter().any(|row| row == "source_sha256"),
+                "{mismatches:?}"
+            );
+            assert!(
+                mismatches
+                    .iter()
+                    .any(|row| row == "proofs.increment-correct.statement_digest"),
+                "{mismatches:?}"
+            );
+            let goal = second.contract_goals().next().expect("one contract");
+            let proof = changed.obligations.first().expect("one proof");
+            let mut entry = contract_entry(
+                goal,
+                Some(proof),
+                MODULE_TWO,
+                &module_versions(false),
+                None,
+                limits,
+            );
+            entry.apply_evidence(&loaded, &mismatches);
+            assert_eq!(entry.chip, "stale");
+            assert_eq!(entry.category, "stale-dependency");
+            assert_eq!(entry.outcome, "unsupported");
+            let retained = entry.retained_evidence.encode();
+            assert!(retained.contains("\"module\":\"arithmetic\""), "{retained}");
+            assert!(retained.contains("\"version\":1"), "{retained}");
+            assert!(
+                retained.contains("\"definition\":\"increment\""),
+                "{retained}"
+            );
+            assert!(retained.contains("\"mismatches\""), "{retained}");
+            let after = std::fs::read(directory.join("evidence.json")).expect("evidence bytes");
+            assert_eq!(after, before, "the retained record is never rewritten");
+            let _ = std::fs::remove_dir_all(&base);
+        }
+        {
+            let limits = Limits::default();
+            let retained = noble_contracts::source::RetainedSourceLimit::new(65_536)
+                .expect("retained source budget");
+            let prepared = ModuleSession::new(&[], retained)
+                .expect("session")
+                .prepare(MODULE, &[], limits)
+                .expect("prepares");
+            let batch = prepared.proof_obligations().expect("proof obligations");
+            let record = evidence::record(batch, &[checked_fixture("model", "checker")], limits)
+                .unwrap_or_else(|failure| panic!("evidence fixture rejected: {}", failure.message));
+            let directory = temp_directory("rewrite");
+            let target = directory.join("emitted");
+            evidence::write(&target, Some(&record), &encoding::Json::Null)
+                .unwrap_or_else(|failure| panic!("evidence write failed: {}", failure.message));
+            assert!(
+                evidence::write(&target, Some(&record), &encoding::Json::Null).is_err(),
+                "an existing evidence directory is never overwritten"
+            );
+            std::fs::write(target.join("source.noble"), b"module forged@1 [ ]")
+                .expect("forge the retained source");
+            assert!(
+                evidence::load(&target).is_err(),
+                "a source that differs from its recorded digest is refused"
+            );
+            let _ = std::fs::remove_dir_all(&directory);
+        }
     }
 }

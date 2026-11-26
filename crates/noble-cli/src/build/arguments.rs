@@ -186,19 +186,33 @@ mod tests {
     }
 
     #[test]
-    fn v1_is_the_default_and_binds_no_toolchain() {
-        let parsed = parse(&argv(&[
-            "--require-proof",
-            "x.noble",
-            "--contract",
-            "c.json",
-        ]));
-        assert!(parsed.is_ok(), "v1 parses");
-        let Ok(options) = parsed else { return };
-        assert_eq!(options.schema, super::super::report::Schema::V1);
-        assert!(options.lean_binary.is_none());
-        assert!(options.library_tree.is_none());
-        assert!(options.pins.is_none());
+    fn v1_defaults_and_mandatory_require_proof() {
+        {
+            let parsed = parse(&argv(&[
+                "--require-proof",
+                "x.noble",
+                "--contract",
+                "c.json",
+            ]));
+            assert!(parsed.is_ok(), "v1 parses");
+            let Ok(options) = parsed else { return };
+            assert_eq!(options.schema, super::super::report::Schema::V1);
+            assert!(options.lean_binary.is_none());
+            assert!(options.library_tree.is_none());
+            assert!(options.pins.is_none());
+        }
+        {
+            let arguments = argv(&["[ 1 + ]", "--contract", "c.json"]);
+            assert!(parse(&arguments).is_err(), "the flag is required");
+            let duplicated = argv(&[
+                "--require-proof",
+                "--require-proof",
+                "[ 1 + ]",
+                "--contract",
+                "c.json",
+            ]);
+            assert!(parse(&duplicated).is_err(), "the flag is not repeatable");
+        }
     }
 
     #[test]
@@ -339,19 +353,5 @@ mod tests {
         let Ok(options) = parsed else { return };
         assert_eq!(options.schema, super::super::report::Schema::V4);
         assert_eq!(options.pins.as_deref(), Some(std::path::Path::new("/p")));
-    }
-
-    #[test]
-    fn require_proof_is_mandatory_and_occurs_at_most_once() {
-        let arguments = argv(&["[ 1 + ]", "--contract", "c.json"]);
-        assert!(parse(&arguments).is_err(), "the flag is required");
-        let duplicated = argv(&[
-            "--require-proof",
-            "--require-proof",
-            "[ 1 + ]",
-            "--contract",
-            "c.json",
-        ]);
-        assert!(parse(&duplicated).is_err(), "the flag is not repeatable");
     }
 }

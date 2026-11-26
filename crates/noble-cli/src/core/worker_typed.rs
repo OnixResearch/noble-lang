@@ -1271,26 +1271,58 @@ mod tests {
     use super::*;
 
     #[test]
-    fn worker_diagnostics_bound_serialized_bytes_at_utf8_and_escape_boundaries() {
-        let ascii = "x".repeat(511);
-        let at_limit = bounded_diagnostic(&ascii);
-        assert_eq!(at_limit.len(), 510);
-        assert_eq!(serde_json::to_string(at_limit).unwrap().len(), 512);
+    fn worker_diagnostics_and_typed_host_bounded_schema() -> Result<(), String> {
+        {
+            let ascii = "x".repeat(511);
+            let at_limit = bounded_diagnostic(&ascii);
+            assert_eq!(at_limit.len(), 510);
+            assert_eq!(serde_json::to_string(at_limit).unwrap().len(), 512);
 
-        let control = "\u{001f}".repeat(86);
-        let at_limit = bounded_diagnostic(&control);
-        assert_eq!(at_limit.chars().count(), 85);
-        assert_eq!(serde_json::to_string(at_limit).unwrap().len(), 512);
+            let control = "\u{001f}".repeat(86);
+            let at_limit = bounded_diagnostic(&control);
+            assert_eq!(at_limit.chars().count(), 85);
+            assert_eq!(serde_json::to_string(at_limit).unwrap().len(), 512);
 
-        let escaped = format!("{}\"tail", "x".repeat(508));
-        let at_limit = bounded_diagnostic(&escaped);
-        assert!(at_limit.ends_with('"'));
-        assert_eq!(serde_json::to_string(at_limit).unwrap().len(), 512);
+            let escaped = format!("{}\"tail", "x".repeat(508));
+            let at_limit = bounded_diagnostic(&escaped);
+            assert!(at_limit.ends_with('"'));
+            assert_eq!(serde_json::to_string(at_limit).unwrap().len(), 512);
 
-        let unicode = format!("{}😀tail", "x".repeat(506));
-        let at_limit = bounded_diagnostic(&unicode);
-        assert!(at_limit.ends_with('😀'));
-        assert_eq!(serde_json::to_string(at_limit).unwrap().len(), 512);
+            let unicode = format!("{}😀tail", "x".repeat(506));
+            let at_limit = bounded_diagnostic(&unicode);
+            assert!(at_limit.ends_with('😀'));
+            assert_eq!(serde_json::to_string(at_limit).unwrap().len(), 512);
+        }
+        {
+            let schema = SCHEMA.replacen(
+                "opaque AttemptId Text public",
+                &format!("opaque AttemptId Text public # {}\n", "s".repeat(38_000)),
+                1,
+            );
+            let source = SOURCE.replacen(
+                "export transition",
+                &format!("# {}\n export transition", "r".repeat(30_000)),
+                1,
+            );
+            let per_source = usize::try_from(LIMITS.bytes).map_err(|error| error.to_string())?;
+            if schema.len() > per_source
+                || source.len() > per_source
+                || schema.len() + source.len() <= per_source
+            {
+                return Err("Worker schema/root boundary fixture is not independent".into());
+            }
+            let fixture =
+                fixture_with_source(&schema, &source, json!({"tag":"text","value":"attempt-1"}))?;
+            let result = invoke(&fixture, schema.as_bytes(), &fixture.state, &fixture.event)?;
+            if result["outcome"] != "normal"
+                || result["typed_output"]["actions"]["items"][0]["arm"] != "right"
+            {
+                return Err(format!(
+                    "separately bounded Worker sources were refused: {result}"
+                ));
+            }
+            Ok(())
+        }
     }
 
     const SCHEMA: &str = "module WorkerData@1 [ \
@@ -1392,39 +1424,6 @@ mod tests {
         let report = execute(&package, schema, state, event)
             .map_err(|error| format!("{}: {}", error.context.outcome, error.message))?;
         serde_json::from_str(&report.json).map_err(|error| error.to_string())
-    }
-
-    #[test]
-    fn typed_host_retains_distinct_bounded_schema_and_root_above_single_source_limit(
-    ) -> Result<(), String> {
-        let schema = SCHEMA.replacen(
-            "opaque AttemptId Text public",
-            &format!("opaque AttemptId Text public # {}\n", "s".repeat(38_000)),
-            1,
-        );
-        let source = SOURCE.replacen(
-            "export transition",
-            &format!("# {}\n export transition", "r".repeat(30_000)),
-            1,
-        );
-        let per_source = usize::try_from(LIMITS.bytes).map_err(|error| error.to_string())?;
-        if schema.len() > per_source
-            || source.len() > per_source
-            || schema.len() + source.len() <= per_source
-        {
-            return Err("Worker schema/root boundary fixture is not independent".into());
-        }
-        let fixture =
-            fixture_with_source(&schema, &source, json!({"tag":"text","value":"attempt-1"}))?;
-        let result = invoke(&fixture, schema.as_bytes(), &fixture.state, &fixture.event)?;
-        if result["outcome"] != "normal"
-            || result["typed_output"]["actions"]["items"][0]["arm"] != "right"
-        {
-            return Err(format!(
-                "separately bounded Worker sources were refused: {result}"
-            ));
-        }
-        Ok(())
     }
 
     #[test]
@@ -2074,66 +2073,292 @@ mod tests {
         "8a1bb3c6ac496a19246663cfd42211be6aa45d52deafc7284fa318af32d62681";
 
     #[test]
-    fn preparation_service_reproduces_the_accepted_baseline_that_admission_runs(
-    ) -> Result<(), String> {
-        let mut trace = PreparationTrace::default();
-        let package = prepare(SOURCE.as_bytes(), SCHEMA.as_bytes(), &mut trace)
+    fn preparation_service_and_bounded_execution_profile() -> Result<(), String> {
+        (|| -> Result<(), String> {
+            let mut trace = PreparationTrace::default();
+            let package = prepare(SOURCE.as_bytes(), SCHEMA.as_bytes(), &mut trace)
+                .map_err(|problem| problem.message)?;
+            assert_eq!(
+                crate::workflow::intrinsic::sha256(&package),
+                ACCEPTED_BASELINE_PACKAGE_SHA256
+            );
+            assert_eq!(
+                (
+                    trace.source_checks,
+                    trace.closure_walks,
+                    trace.backend_compilations
+                ),
+                (3, 1, 1)
+            );
+            let repeated = prepare(
+                SOURCE.as_bytes(),
+                SCHEMA.as_bytes(),
+                &mut PreparationTrace::default(),
+            )
             .map_err(|problem| problem.message)?;
-        assert_eq!(
-            crate::workflow::intrinsic::sha256(&package),
-            ACCEPTED_BASELINE_PACKAGE_SHA256
-        );
-        assert_eq!(
-            (
-                trace.source_checks,
-                trace.closure_walks,
-                trace.backend_compilations
-            ),
-            (3, 1, 1)
-        );
-        let repeated = prepare(
-            SOURCE.as_bytes(),
-            SCHEMA.as_bytes(),
-            &mut PreparationTrace::default(),
-        )
-        .map_err(|problem| problem.message)?;
-        assert_eq!(repeated, package, "preparation is deterministic");
-        // Evaluation re-admits the untrusted package and runs exactly the
-        // module the service compiled.
-        let frames = fixture()?;
-        let report = execute(&package, SCHEMA.as_bytes(), &frames.state, &frames.event)
-            .map_err(|problem| problem.message)?;
-        let report: Value =
-            serde_json::from_str(&report.json).map_err(|error| error.to_string())?;
-        assert_eq!(report["outcome"], "normal");
-        assert_eq!(report["guest_requests"], 0);
-        assert_eq!(report["module"]["wat_sha256"], json!(trace.wat_sha256));
+            assert_eq!(repeated, package, "preparation is deterministic");
+            // Evaluation re-admits the untrusted package and runs exactly the
+            // module the service compiled.
+            let frames = fixture()?;
+            let report = execute(&package, SCHEMA.as_bytes(), &frames.state, &frames.event)
+                .map_err(|problem| problem.message)?;
+            let report: Value =
+                serde_json::from_str(&report.json).map_err(|error| error.to_string())?;
+            assert_eq!(report["outcome"], "normal");
+            assert_eq!(report["guest_requests"], 0);
+            assert_eq!(report["module"]["wat_sha256"], json!(trace.wat_sha256));
 
-        // The multi-definition transition table: three closure rows, one
-        // compilation, and admission runs the prepared package.
-        let mut trace = PreparationTrace::default();
-        let table = prepare(
-            WORKER_TRANSITION.as_bytes(),
-            WORKER_SCHEMA.as_bytes(),
-            &mut trace,
-        )
-        .map_err(|problem| problem.message)?;
-        let document: Value = serde_json::from_slice(&table).map_err(|error| error.to_string())?;
-        assert_eq!(document["definitions"].as_array().map(Vec::len), Some(3));
-        let frames = fixture_with_source(
-            WORKER_SCHEMA,
-            WORKER_TRANSITION,
-            json!({"tag":"i64","value":"1"}),
-        )?;
-        let state = worker_state(&frames, 0, None)?;
-        let event = worker_event(&frames, 1, Some("ping"))?;
-        let report = execute(&table, WORKER_SCHEMA.as_bytes(), &state, &event)
+            // The multi-definition transition table: three closure rows, one
+            // compilation, and admission runs the prepared package.
+            let mut trace = PreparationTrace::default();
+            let table = prepare(
+                WORKER_TRANSITION.as_bytes(),
+                WORKER_SCHEMA.as_bytes(),
+                &mut trace,
+            )
             .map_err(|problem| problem.message)?;
-        let report: Value =
-            serde_json::from_str(&report.json).map_err(|error| error.to_string())?;
-        assert_eq!(report["outcome"], "normal");
-        assert_eq!(report["typed_output"]["actions"]["items"][0]["arm"], "left");
-        assert_eq!(report["module"]["wat_sha256"], json!(trace.wat_sha256));
+            let document: Value =
+                serde_json::from_slice(&table).map_err(|error| error.to_string())?;
+            assert_eq!(document["definitions"].as_array().map(Vec::len), Some(3));
+            let frames = fixture_with_source(
+                WORKER_SCHEMA,
+                WORKER_TRANSITION,
+                json!({"tag":"i64","value":"1"}),
+            )?;
+            let state = worker_state(&frames, 0, None)?;
+            let event = worker_event(&frames, 1, Some("ping"))?;
+            let report = execute(&table, WORKER_SCHEMA.as_bytes(), &state, &event)
+                .map_err(|problem| problem.message)?;
+            let report: Value =
+                serde_json::from_str(&report.json).map_err(|error| error.to_string())?;
+            assert_eq!(report["outcome"], "normal");
+            assert_eq!(report["typed_output"]["actions"]["items"][0]["arm"], "left");
+            assert_eq!(report["module"]["wat_sha256"], json!(trace.wat_sha256));
+            Ok(())
+        })()?;
+        (|| -> Result<(), String> {
+            let production = ExecutionControl::PRODUCTION;
+            let at = |cancel: Option<u32>, fault: Option<(u32, Fault)>, deadline_ms: u64| {
+                ExecutionControl {
+                    deadline_ms,
+                    cancel_at_check: cancel,
+                    fault_at_check: fault,
+                }
+            };
+            let noop = "unit WorkerData@1.Action.Noop nil cons";
+            let transition = |body: String| {
+                format!("module worker@1 [ export transition def transition [ {body} ] ]")
+            };
+            // A pure 256-leaf recipe (128 increments) applied by runtime \`run\`:
+            // source has no unbounded loop, so work grows only at runtime.
+            let program = format!("[ 1 + ] {}", "dup compose ".repeat(7));
+            let apply = "dup [ run ] dip ";
+            let looped = |reps: usize| {
+                transition(format!(
+                    "drop 0 {program}{} drop drop {noop}",
+                    apply.repeat(reps)
+                ))
+            };
+            let nested = |outer: usize, inner: usize| {
+                transition(format!(
+                    "drop 0 {program}{}[ {} ] run drop drop {noop}",
+                    apply.repeat(outer),
+                    apply.repeat(inner)
+                ))
+            };
+            let composed = |times: usize| {
+                transition(format!(
+                    "drop [ 1 + ] {}drop {noop}",
+                    "dup compose ".repeat(times)
+                ))
+            };
+            // A domain error is data: this schema's Action has an error arm.
+            let refusing = SCHEMA
+                .replace("Noop Unit public", "Refused Text public")
+                .replace("export Action.Noop", "export Action.Refused");
+            let rows = [
+                Row {
+                    label: "finite-pure-step",
+                    schema: SCHEMA,
+                    source: SOURCE.into(),
+                    control: production,
+                    outcome: "normal",
+                    quota: None,
+                },
+                Row {
+                    label: "domain-error-arm",
+                    schema: &refusing,
+                    source: transition(
+                        "drop \"duplicate attempt\" WorkerData@1.Action.Refused nil cons".into(),
+                    ),
+                    control: production,
+                    outcome: "normal",
+                    quota: None,
+                },
+                Row {
+                    label: "pure-loop-within-budget",
+                    schema: SCHEMA,
+                    source: looped(8),
+                    control: production,
+                    outcome: "normal",
+                    quota: None,
+                },
+                Row {
+                    label: "pure-loop-work-limit",
+                    schema: SCHEMA,
+                    source: looped(12),
+                    control: production,
+                    outcome: "runtime-exhausted",
+                    quota: Some("execution work"),
+                },
+                Row {
+                    label: "builder-within-limit",
+                    schema: SCHEMA,
+                    source: composed(7),
+                    control: production,
+                    outcome: "normal",
+                    quota: None,
+                },
+                Row {
+                    label: "runtime-builder-allocation-limit",
+                    schema: SCHEMA,
+                    source: composed(8),
+                    control: production,
+                    outcome: "runtime-exhausted",
+                    quota: Some("recipe leaves"),
+                },
+                Row {
+                    label: "nested-alone",
+                    schema: SCHEMA,
+                    source: nested(0, 7),
+                    control: production,
+                    outcome: "normal",
+                    quota: None,
+                },
+                Row {
+                    label: "outer-alone",
+                    schema: SCHEMA,
+                    source: nested(7, 0),
+                    control: production,
+                    outcome: "normal",
+                    quota: None,
+                },
+                Row {
+                    label: "nested-invocation-budget",
+                    schema: SCHEMA,
+                    source: nested(7, 7),
+                    control: production,
+                    outcome: "runtime-exhausted",
+                    quota: Some("execution work"),
+                },
+                Row {
+                    label: "cancelled-invocation",
+                    schema: SCHEMA,
+                    source: SOURCE.into(),
+                    control: at(Some(2), None, production.deadline_ms),
+                    outcome: "cancelled",
+                    quota: None,
+                },
+                Row {
+                    label: "host-deadline",
+                    schema: SCHEMA,
+                    source: SOURCE.into(),
+                    control: at(None, None, 0),
+                    outcome: "host-deadline",
+                    quota: None,
+                },
+                Row {
+                    label: "guest-trap",
+                    schema: SCHEMA,
+                    source: SOURCE.into(),
+                    control: at(None, Some((1, Fault::Trap)), production.deadline_ms),
+                    outcome: "trap",
+                    quota: None,
+                },
+                Row {
+                    label: "runtime-internal-failure",
+                    schema: SCHEMA,
+                    source: SOURCE.into(),
+                    control: at(None, Some((1, Fault::Host)), production.deadline_ms),
+                    outcome: "internal-failure",
+                    quota: None,
+                },
+            ];
+            for row in rows {
+                let label = row.label;
+                let fixture = fixture_with_source(
+                    row.schema,
+                    &row.source,
+                    json!({"tag":"text","value":"attempt-1"}),
+                )?;
+                let package =
+                    serde_json::to_vec(&fixture.manifest).map_err(|error| error.to_string())?;
+                let report = execute_controlled(
+                    &package,
+                    row.schema.as_bytes(),
+                    &fixture.state,
+                    &fixture.event,
+                    row.control,
+                )
+                .map_err(|problem| format!("{label}: {}", problem.message))?;
+                let report: Value =
+                    serde_json::from_str(&report.json).map_err(|error| error.to_string())?;
+                // The WORKER-09 gate retains each row's report from this run.
+                if let Some(directory) = std::env::var_os("NOBLE_WORKER09_REPORT_DIR") {
+                    let mut file = std::fs::OpenOptions::new()
+                        .write(true)
+                        .create_new(true)
+                        .open(std::path::Path::new(&directory).join(format!("{label}.json")))
+                        .map_err(|error| error.to_string())?;
+                    std::io::Write::write_all(&mut file, report.to_string().as_bytes())
+                        .map_err(|error| error.to_string())?;
+                }
+                assert_eq!(report["outcome"], row.outcome, "{label}: {report}");
+                assert_eq!(
+                    report["typed_output"].is_null(),
+                    row.outcome != "normal",
+                    "{label}"
+                );
+                assert_eq!(report["guest_requests"], 0, "{label}");
+                if let Some(reason) = row.quota {
+                    assert_eq!(report["diagnostic"], reason, "{label}");
+                }
+                // A host fault ends the engine before it reports; every other
+                // outcome carries the host's own interruption observation.
+                if row.outcome == "internal-failure" {
+                    continue;
+                }
+                let interruption = &report["interruption"];
+                let steps = interruption["execution_steps"].as_u64().ok_or(label)?;
+                assert!(steps <= STEP_CEILING, "{label}: budget exceeded");
+                assert!(
+                    interruption["observed_max_guest_work_between_checks"]
+                        .as_u64()
+                        .is_some_and(|observed| observed <= INTERRUPTION_INTERVAL),
+                    "{label}: {interruption}"
+                );
+                match label {
+                    "domain-error-arm" => {
+                        let action = &report["typed_output"]["actions"]["items"][0];
+                        assert_eq!(action["arm"], "right");
+                        assert_eq!(action["value"]["value"], "duplicate attempt");
+                    }
+                    "pure-loop-work-limit" | "nested-invocation-budget" => {
+                        assert_eq!(
+                            steps, STEP_CEILING,
+                            "{label}: exhausted exactly at the ceiling"
+                        );
+                    }
+                    "cancelled-invocation" => assert_eq!(interruption["checks"], 2),
+                    "host-deadline" | "guest-trap" => {
+                        assert_eq!(interruption["checks"], 1, "{label}");
+                        assert!(steps < STEP_CEILING, "{label}: budget remained");
+                    }
+                    _ => {}
+                }
+            }
+            Ok(())
+        })()?;
         Ok(())
     }
 
@@ -2267,232 +2492,9 @@ mod tests {
         quota: Option<&'row str>,
     }
 
-    /// WORKER-09's MW1 rows through the real typed engine under the bounded
-    /// execution profile: each outcome is distinct, only a normal return has
-    /// a typed output, budgets are shared by nested work and never exceeded,
-    /// and the host observes at most eight units of guest work between its
-    /// interruption checks.
-    #[test]
-    fn bounded_execution_profile_keeps_each_outcome_distinct() -> Result<(), String> {
-        let production = ExecutionControl::PRODUCTION;
-        let at =
-            |cancel: Option<u32>, fault: Option<(u32, Fault)>, deadline_ms: u64| ExecutionControl {
-                deadline_ms,
-                cancel_at_check: cancel,
-                fault_at_check: fault,
-            };
-        let noop = "unit WorkerData@1.Action.Noop nil cons";
-        let transition = |body: String| {
-            format!("module worker@1 [ export transition def transition [ {body} ] ]")
-        };
-        // A pure 256-leaf recipe (128 increments) applied by runtime \`run\`:
-        // source has no unbounded loop, so work grows only at runtime.
-        let program = format!("[ 1 + ] {}", "dup compose ".repeat(7));
-        let apply = "dup [ run ] dip ";
-        let looped = |reps: usize| {
-            transition(format!(
-                "drop 0 {program}{} drop drop {noop}",
-                apply.repeat(reps)
-            ))
-        };
-        let nested = |outer: usize, inner: usize| {
-            transition(format!(
-                "drop 0 {program}{}[ {} ] run drop drop {noop}",
-                apply.repeat(outer),
-                apply.repeat(inner)
-            ))
-        };
-        let composed = |times: usize| {
-            transition(format!(
-                "drop [ 1 + ] {}drop {noop}",
-                "dup compose ".repeat(times)
-            ))
-        };
-        // A domain error is data: this schema's Action has an error arm.
-        let refusing = SCHEMA
-            .replace("Noop Unit public", "Refused Text public")
-            .replace("export Action.Noop", "export Action.Refused");
-        let rows = [
-            Row {
-                label: "finite-pure-step",
-                schema: SCHEMA,
-                source: SOURCE.into(),
-                control: production,
-                outcome: "normal",
-                quota: None,
-            },
-            Row {
-                label: "domain-error-arm",
-                schema: &refusing,
-                source: transition(
-                    "drop \"duplicate attempt\" WorkerData@1.Action.Refused nil cons".into(),
-                ),
-                control: production,
-                outcome: "normal",
-                quota: None,
-            },
-            Row {
-                label: "pure-loop-within-budget",
-                schema: SCHEMA,
-                source: looped(8),
-                control: production,
-                outcome: "normal",
-                quota: None,
-            },
-            Row {
-                label: "pure-loop-work-limit",
-                schema: SCHEMA,
-                source: looped(12),
-                control: production,
-                outcome: "runtime-exhausted",
-                quota: Some("execution work"),
-            },
-            Row {
-                label: "builder-within-limit",
-                schema: SCHEMA,
-                source: composed(7),
-                control: production,
-                outcome: "normal",
-                quota: None,
-            },
-            Row {
-                label: "runtime-builder-allocation-limit",
-                schema: SCHEMA,
-                source: composed(8),
-                control: production,
-                outcome: "runtime-exhausted",
-                quota: Some("recipe leaves"),
-            },
-            Row {
-                label: "nested-alone",
-                schema: SCHEMA,
-                source: nested(0, 7),
-                control: production,
-                outcome: "normal",
-                quota: None,
-            },
-            Row {
-                label: "outer-alone",
-                schema: SCHEMA,
-                source: nested(7, 0),
-                control: production,
-                outcome: "normal",
-                quota: None,
-            },
-            Row {
-                label: "nested-invocation-budget",
-                schema: SCHEMA,
-                source: nested(7, 7),
-                control: production,
-                outcome: "runtime-exhausted",
-                quota: Some("execution work"),
-            },
-            Row {
-                label: "cancelled-invocation",
-                schema: SCHEMA,
-                source: SOURCE.into(),
-                control: at(Some(2), None, production.deadline_ms),
-                outcome: "cancelled",
-                quota: None,
-            },
-            Row {
-                label: "host-deadline",
-                schema: SCHEMA,
-                source: SOURCE.into(),
-                control: at(None, None, 0),
-                outcome: "host-deadline",
-                quota: None,
-            },
-            Row {
-                label: "guest-trap",
-                schema: SCHEMA,
-                source: SOURCE.into(),
-                control: at(None, Some((1, Fault::Trap)), production.deadline_ms),
-                outcome: "trap",
-                quota: None,
-            },
-            Row {
-                label: "runtime-internal-failure",
-                schema: SCHEMA,
-                source: SOURCE.into(),
-                control: at(None, Some((1, Fault::Host)), production.deadline_ms),
-                outcome: "internal-failure",
-                quota: None,
-            },
-        ];
-        for row in rows {
-            let label = row.label;
-            let fixture = fixture_with_source(
-                row.schema,
-                &row.source,
-                json!({"tag":"text","value":"attempt-1"}),
-            )?;
-            let package =
-                serde_json::to_vec(&fixture.manifest).map_err(|error| error.to_string())?;
-            let report = execute_controlled(
-                &package,
-                row.schema.as_bytes(),
-                &fixture.state,
-                &fixture.event,
-                row.control,
-            )
-            .map_err(|problem| format!("{label}: {}", problem.message))?;
-            let report: Value =
-                serde_json::from_str(&report.json).map_err(|error| error.to_string())?;
-            // The WORKER-09 gate retains each row's report from this run.
-            if let Some(directory) = std::env::var_os("NOBLE_WORKER09_REPORT_DIR") {
-                let mut file = std::fs::OpenOptions::new()
-                    .write(true)
-                    .create_new(true)
-                    .open(std::path::Path::new(&directory).join(format!("{label}.json")))
-                    .map_err(|error| error.to_string())?;
-                std::io::Write::write_all(&mut file, report.to_string().as_bytes())
-                    .map_err(|error| error.to_string())?;
-            }
-            assert_eq!(report["outcome"], row.outcome, "{label}: {report}");
-            assert_eq!(
-                report["typed_output"].is_null(),
-                row.outcome != "normal",
-                "{label}"
-            );
-            assert_eq!(report["guest_requests"], 0, "{label}");
-            if let Some(reason) = row.quota {
-                assert_eq!(report["diagnostic"], reason, "{label}");
-            }
-            // A host fault ends the engine before it reports; every other
-            // outcome carries the host's own interruption observation.
-            if row.outcome == "internal-failure" {
-                continue;
-            }
-            let interruption = &report["interruption"];
-            let steps = interruption["execution_steps"].as_u64().ok_or(label)?;
-            assert!(steps <= STEP_CEILING, "{label}: budget exceeded");
-            assert!(
-                interruption["observed_max_guest_work_between_checks"]
-                    .as_u64()
-                    .is_some_and(|observed| observed <= INTERRUPTION_INTERVAL),
-                "{label}: {interruption}"
-            );
-            match label {
-                "domain-error-arm" => {
-                    let action = &report["typed_output"]["actions"]["items"][0];
-                    assert_eq!(action["arm"], "right");
-                    assert_eq!(action["value"]["value"], "duplicate attempt");
-                }
-                "pure-loop-work-limit" | "nested-invocation-budget" => {
-                    assert_eq!(
-                        steps, STEP_CEILING,
-                        "{label}: exhausted exactly at the ceiling"
-                    );
-                }
-                "cancelled-invocation" => assert_eq!(interruption["checks"], 2),
-                "host-deadline" | "guest-trap" => {
-                    assert_eq!(interruption["checks"], 1, "{label}");
-                    assert!(steps < STEP_CEILING, "{label}: budget remained");
-                }
-                _ => {}
-            }
-        }
-        Ok(())
-    }
+    // WORKER-09's MW1 rows through the real typed engine under the bounded
+    // execution profile: each outcome is distinct, only a normal return has
+    // a typed output, budgets are shared by nested work and never exceeded,
+    // and the host observes at most eight units of guest work between its
+    // interruption checks.
 }

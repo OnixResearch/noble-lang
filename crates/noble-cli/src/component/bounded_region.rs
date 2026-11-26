@@ -1272,14 +1272,40 @@ mod tests {
     }
 
     #[test]
-    fn end_boundary_is_empty_success_and_zero_length_outside_refuses() {
-        let mut host = Host::new(vec![0, 1, 2]).unwrap();
-        let claim = host.owner.as_ref().unwrap().handle();
-        assert_eq!(host.read(1, claim, 3, 0), Ok(Vec::new()));
-        assert_eq!(host.read(1, claim, 4, 0), Err("bounds-reject"));
-        assert_eq!(host.region_reads, 1);
-        host.release(1, Release::Guest).unwrap();
-        assert_eq!(host.table.observation().live, 0);
+    fn boundary_cross_invocation_and_double_release() {
+        {
+            let mut host = Host::new(vec![0, 1, 2]).unwrap();
+            let claim = host.owner.as_ref().unwrap().handle();
+            assert_eq!(host.read(1, claim, 3, 0), Ok(Vec::new()));
+            assert_eq!(host.read(1, claim, 4, 0), Err("bounds-reject"));
+            assert_eq!(host.region_reads, 1);
+            host.release(1, Release::Guest).unwrap();
+            assert_eq!(host.table.observation().live, 0);
+        }
+        {
+            let first = Host::new(vec![0, 1, 2]).unwrap();
+            let mut second = Host::new(vec![9, 8, 7]).unwrap();
+            let stolen = first.owner.as_ref().unwrap().handle();
+            let rightful = second.owner.as_ref().unwrap().handle();
+            assert_eq!(stolen.slot, rightful.slot);
+            assert_eq!(stolen.generation, rightful.generation);
+            assert_ne!(stolen.table, rightful.table);
+            assert_ne!(stolen.context, rightful.context);
+            assert_eq!(second.read(1, stolen, 0, 1), Err("invalid-handle"));
+            assert_eq!(second.region_reads, 0);
+            assert_eq!(second.table.observation().native_pins, 0);
+            assert_eq!(second.read(1, rightful, 0, 1), Ok(vec![9]));
+            second.release(1, Release::Guest).unwrap();
+        }
+        {
+            let mut host = Host::new(vec![0, 1, 2]).unwrap();
+            host.release(1, Release::Guest).unwrap();
+            assert_eq!(host.releases, 1);
+            assert_eq!(host.table.observation().live, 0);
+            assert!(host.release(1, Release::Guest).is_err());
+            assert_eq!(host.releases, 1);
+            assert_eq!(host.table.observation().live, 0);
+        }
     }
 
     #[test]
@@ -1379,106 +1405,78 @@ mod tests {
     }
 
     #[test]
-    fn same_slot_and_generation_from_another_live_invocation_cannot_cross() {
-        let first = Host::new(vec![0, 1, 2]).unwrap();
-        let mut second = Host::new(vec![9, 8, 7]).unwrap();
-        let stolen = first.owner.as_ref().unwrap().handle();
-        let rightful = second.owner.as_ref().unwrap().handle();
-        assert_eq!(stolen.slot, rightful.slot);
-        assert_eq!(stolen.generation, rightful.generation);
-        assert_ne!(stolen.table, rightful.table);
-        assert_ne!(stolen.context, rightful.context);
-        assert_eq!(second.read(1, stolen, 0, 1), Err("invalid-handle"));
-        assert_eq!(second.region_reads, 0);
-        assert_eq!(second.table.observation().native_pins, 0);
-        assert_eq!(second.read(1, rightful, 0, 1), Ok(vec![9]));
-        second.release(1, Release::Guest).unwrap();
-    }
-
-    #[test]
-    fn double_release_does_not_retire_the_owner_twice() {
-        let mut host = Host::new(vec![0, 1, 2]).unwrap();
-        host.release(1, Release::Guest).unwrap();
-        assert_eq!(host.releases, 1);
-        assert_eq!(host.table.observation().live, 0);
-        assert!(host.release(1, Release::Guest).is_err());
-        assert_eq!(host.releases, 1);
-        assert_eq!(host.table.observation().live, 0);
-    }
-
-    #[test]
-    fn exit_classes_distinguish_quota_trap_and_adapter_faults() {
-        let quota = anyhow::Error::new(Trap::OutOfFuel);
-        let guest = anyhow::Error::new(Trap::UnreachableCodeReached);
-        let adapter = anyhow::anyhow!("invalid success payload");
-        assert_eq!(ExitClass::of_error(&quota), ExitClass::QuotaExhausted);
-        assert_eq!(ExitClass::of_error(&guest), ExitClass::Trap);
-        assert_eq!(ExitClass::of_error(&adapter), ExitClass::AdapterInvalid);
-        assert_eq!(ExitClass::of_return(true), ExitClass::Rejected);
-        assert_eq!(ExitClass::of_return(false), ExitClass::Normal);
-        assert_eq!(ExitClass::QuotaExhausted.label(), "quota-exhausted");
-        assert_eq!(ExitClass::AdapterInvalid.label(), "adapter-invalid");
-    }
-
-    #[test]
-    fn abnormal_exit_cleanup_is_observed_rather_than_propagated() {
-        let mut host = Host::new(vec![0, 1, 2]).unwrap();
-        assert_eq!(
-            host.abnormal_exit_cleanup(ExitClass::Trap),
-            CleanupObservation::Retired
-        );
-        assert_eq!(host.releases, 1);
-        assert_eq!(host.table.observation().live, 0);
-        // A second pass has no retained owner left, so nothing is attributed to us.
-        assert_eq!(
-            host.abnormal_exit_cleanup(ExitClass::Trap),
-            CleanupObservation::AlreadyRetired
-        );
-        assert_eq!(host.releases, 1);
-    }
-
-    #[test]
-    fn failed_cleanup_is_reported_as_a_failed_observation() {
-        // Test-only corrupted Host state: a guest cannot mutate this context.
-        let mut host = Host::new(vec![0, 1, 2]).unwrap();
-        let context = host.context;
-        let original = host.owner.as_ref().unwrap().handle();
-        host.context = ownership::Context(context.0.checked_add(1).unwrap());
-        match host.abnormal_exit_cleanup(ExitClass::Trap) {
-            CleanupObservation::Failed(reason) => {
-                assert!(reason.contains("region release refused"), "{reason}");
-                assert_eq!(CleanupObservation::Failed(reason).label(), "failed");
-            }
-            other => panic!("expected a failed cleanup observation, got {other:?}"),
+    fn exit_classes_and_abnormal_cleanup() {
+        {
+            let quota = anyhow::Error::new(Trap::OutOfFuel);
+            let guest = anyhow::Error::new(Trap::UnreachableCodeReached);
+            let adapter = anyhow::anyhow!("invalid success payload");
+            assert_eq!(ExitClass::of_error(&quota), ExitClass::QuotaExhausted);
+            assert_eq!(ExitClass::of_error(&guest), ExitClass::Trap);
+            assert_eq!(ExitClass::of_error(&adapter), ExitClass::AdapterInvalid);
+            assert_eq!(ExitClass::of_return(true), ExitClass::Rejected);
+            assert_eq!(ExitClass::of_return(false), ExitClass::Normal);
+            assert_eq!(ExitClass::QuotaExhausted.label(), "quota-exhausted");
+            assert_eq!(ExitClass::AdapterInvalid.label(), "adapter-invalid");
         }
-        assert_eq!(host.releases, 0);
-        assert_eq!(host.table.observation().live, 1);
-        assert_eq!(host.owner.as_ref().unwrap().handle(), original);
-        host.context = context;
-        assert_eq!(
-            host.abnormal_exit_cleanup(ExitClass::Trap),
-            CleanupObservation::Retired
-        );
-        assert_eq!(host.releases, 1);
+        {
+            let mut host = Host::new(vec![0, 1, 2]).unwrap();
+            assert_eq!(
+                host.abnormal_exit_cleanup(ExitClass::Trap),
+                CleanupObservation::Retired
+            );
+            assert_eq!(host.releases, 1);
+            assert_eq!(host.table.observation().live, 0);
+            // A second pass has no retained owner left, so nothing is attributed to us.
+            assert_eq!(
+                host.abnormal_exit_cleanup(ExitClass::Trap),
+                CleanupObservation::AlreadyRetired
+            );
+            assert_eq!(host.releases, 1);
+        }
     }
 
     #[test]
-    fn failed_cleanup_release_retains_owner_for_recovery() {
-        // Test-only corrupted Host state: a guest cannot mutate this context.
-        // Exercise the production release refusal and returned-owner path.
-        let mut host = Host::new(vec![0, 1, 2]).unwrap();
-        let context = host.context;
-        let original = host.owner.as_ref().unwrap().handle();
-        host.context = ownership::Context(context.0.checked_add(1).unwrap());
-        assert!(host.release(1, Release::Guest).is_err());
-        assert_eq!(host.releases, 0);
-        assert_eq!(host.table.observation().live, 1);
-        assert_eq!(host.owner.as_ref().unwrap().handle(), original);
+    fn failed_cleanup_reporting_and_recovery() {
+        {
+            // Test-only corrupted Host state: a guest cannot mutate this context.
+            let mut host = Host::new(vec![0, 1, 2]).unwrap();
+            let context = host.context;
+            let original = host.owner.as_ref().unwrap().handle();
+            host.context = ownership::Context(context.0.checked_add(1).unwrap());
+            match host.abnormal_exit_cleanup(ExitClass::Trap) {
+                CleanupObservation::Failed(reason) => {
+                    assert!(reason.contains("region release refused"), "{reason}");
+                    assert_eq!(CleanupObservation::Failed(reason).label(), "failed");
+                }
+                other => panic!("expected a failed cleanup observation, got {other:?}"),
+            }
+            assert_eq!(host.releases, 0);
+            assert_eq!(host.table.observation().live, 1);
+            assert_eq!(host.owner.as_ref().unwrap().handle(), original);
+            host.context = context;
+            assert_eq!(
+                host.abnormal_exit_cleanup(ExitClass::Trap),
+                CleanupObservation::Retired
+            );
+            assert_eq!(host.releases, 1);
+        }
+        {
+            // Test-only corrupted Host state: a guest cannot mutate this context.
+            // Exercise the production release refusal and returned-owner path.
+            let mut host = Host::new(vec![0, 1, 2]).unwrap();
+            let context = host.context;
+            let original = host.owner.as_ref().unwrap().handle();
+            host.context = ownership::Context(context.0.checked_add(1).unwrap());
+            assert!(host.release(1, Release::Guest).is_err());
+            assert_eq!(host.releases, 0);
+            assert_eq!(host.table.observation().live, 1);
+            assert_eq!(host.owner.as_ref().unwrap().handle(), original);
 
-        host.context = context;
-        host.release(1, Release::Guest).unwrap();
-        assert_eq!(host.releases, 1);
-        assert_eq!(host.table.observation().live, 0);
+            host.context = context;
+            host.release(1, Release::Guest).unwrap();
+            assert_eq!(host.releases, 1);
+            assert_eq!(host.table.observation().live, 0);
+        }
     }
 }
 
@@ -1516,65 +1514,74 @@ mod ordered_trace_tests {
     }
 
     #[test]
-    fn an_admitted_read_records_request_response_and_its_protected_commit_in_order() {
-        let mut host = host(b"abc");
-        let claim = host.owner.as_ref().expect("owner").handle();
-        let identity = claim.table.0;
-        assert_eq!(host.read(1, claim, 0, 1).expect("read"), b"a");
-        assert_eq!(kinds(&host), ["region.read", "commit", "response"]);
-        assert_eq!(
-            host.events.first(),
-            Some(&HostEvent::Request {
-                operation: Operation::Read,
-                identity,
-                offset: Some(super::Offset(0)),
-                length: Some(super::Offset(1)),
-            })
-        );
-        assert_eq!(
-            host.events.get(2),
-            Some(&HostEvent::Response {
-                result: ResponseKind::Value,
-                bytes: Some(1),
-                reason: None,
-                class: None,
-            })
-        );
-        assert_eq!(identities(&host), [identity, identity]);
-    }
-
-    #[test]
-    fn a_refused_read_records_its_reason_and_no_commit() {
-        let mut host = host(b"abc");
-        let claim = host.owner.as_ref().expect("owner").handle();
-        assert_eq!(host.read(1, claim, 0, 9), Err("bounds-reject"));
-        assert_eq!(kinds(&host), ["region.read", "response"]);
-        match host.events.get(1) {
-            Some(HostEvent::Response {
-                result,
-                bytes,
-                reason,
-                class,
-            }) => {
-                assert_eq!(*result, ResponseKind::Refused);
-                assert_eq!(*bytes, None);
-                assert_eq!(reason.as_deref(), Some("bounds-reject"));
-                assert_eq!(*class, Some(super::RefusalClass::Bounds));
+    fn admitted_and_refused_read_trace_ordering() {
+        {
+            let mut host = host(b"abc");
+            let claim = host.owner.as_ref().expect("owner").handle();
+            let identity = claim.table.0;
+            assert_eq!(host.read(1, claim, 0, 1).expect("read"), b"a");
+            assert_eq!(kinds(&host), ["region.read", "commit", "response"]);
+            assert_eq!(
+                host.events.first(),
+                Some(&HostEvent::Request {
+                    operation: Operation::Read,
+                    identity,
+                    offset: Some(super::Offset(0)),
+                    length: Some(super::Offset(1)),
+                })
+            );
+            assert_eq!(
+                host.events.get(2),
+                Some(&HostEvent::Response {
+                    result: ResponseKind::Value,
+                    bytes: Some(1),
+                    reason: None,
+                    class: None,
+                })
+            );
+            assert_eq!(identities(&host), [identity, identity]);
+        }
+        {
+            let mut host = host(b"abc");
+            let claim = host.owner.as_ref().expect("owner").handle();
+            assert_eq!(host.read(1, claim, 0, 9), Err("bounds-reject"));
+            assert_eq!(kinds(&host), ["region.read", "response"]);
+            match host.events.get(1) {
+                Some(HostEvent::Response {
+                    result,
+                    bytes,
+                    reason,
+                    class,
+                }) => {
+                    assert_eq!(*result, ResponseKind::Refused);
+                    assert_eq!(*bytes, None);
+                    assert_eq!(reason.as_deref(), Some("bounds-reject"));
+                    assert_eq!(*class, Some(super::RefusalClass::Bounds));
+                }
+                other => panic!("expected a refused response: {other:?}"),
             }
-            other => panic!("expected a refused response: {other:?}"),
         }
     }
 
     #[test]
-    fn host_retirement_is_its_own_request_and_never_a_guest_release() {
-        let mut host = host(b"abc");
-        assert_eq!(
-            host.abnormal_exit_cleanup(super::ExitClass::Trap),
-            super::CleanupObservation::Retired
-        );
-        assert_eq!(kinds(&host), ["host.retire", "response"]);
-        assert_eq!(identities(&host), [host.context.0]);
-        assert_eq!(host.releases, 1);
+    fn host_retirement_and_v2_trace_bound() {
+        {
+            let mut host = host(b"abc");
+            assert_eq!(
+                host.abnormal_exit_cleanup(super::ExitClass::Trap),
+                super::CleanupObservation::Retired
+            );
+            assert_eq!(kinds(&host), ["host.retire", "response"]);
+            assert_eq!(identities(&host), [host.context.0]);
+            assert_eq!(host.releases, 1);
+        }
+        {
+            let scopes = usize::try_from(SCOPES).expect("the scope ceiling fits a usize");
+            assert!(
+                MAX_EVENTS_V2 >= 3 * scopes + 4,
+                "the v2 bound must hold the whole ceiling trace"
+            );
+        }
     }
 
     /// A recorded request reports the arguments the guest passed, signed. A refused negative or
@@ -1629,18 +1636,6 @@ mod ordered_trace_tests {
             );
             assert!(!host.events_truncated);
         }
-    }
-
-    /// The v2 bound is derived from the scope ceiling rather than guessed: the one trace that can
-    /// reach the ceiling needs three events per admitted read, the refused read's request and
-    /// refusal, and the guest release's request and response.
-    #[test]
-    fn the_v2_bound_exceeds_the_scope_ceiling_trace() {
-        let scopes = usize::try_from(SCOPES).expect("the scope ceiling fits a usize");
-        assert!(
-            MAX_EVENTS_V2 >= 3 * scopes + 4,
-            "the v2 bound must hold the whole ceiling trace"
-        );
     }
 
     /// #50: the v2 bound is large enough for the whole scope-ceiling trace, and a trace that
@@ -1849,22 +1844,37 @@ mod report_v2_tests {
     /// retirement retires exactly that identity, so the registration, not the retirement itself,
     /// says who may be retired. The v1 report is unchanged.
     #[test]
-    fn v2_reports_the_registered_owner_a_retirement_retires() {
-        let mut trapped = host(b"abc");
-        let registered = trapped.context.0;
-        let cleanup = trapped.abnormal_exit_cleanup(ExitClass::Trap);
-        let report = v2(&trapped, &cleanup);
-        assert!(
-            report.contains(&format!(r#""registration":{{"identity":{registered}}}"#)),
-            "{report}"
-        );
-        assert!(
-            report.contains(&format!(
-                r#""kind":"request","operation":"host.retire","identity":{registered}"#
-            )),
-            "{report}"
-        );
-        assert!(!v1(&trapped, &cleanup).contains("registration"));
+    fn v2_retirement_owner_and_outside_schema_results() {
+        {
+            let mut trapped = host(b"abc");
+            let registered = trapped.context.0;
+            let cleanup = trapped.abnormal_exit_cleanup(ExitClass::Trap);
+            let report = v2(&trapped, &cleanup);
+            assert!(
+                report.contains(&format!(r#""registration":{{"identity":{registered}}}"#)),
+                "{report}"
+            );
+            assert!(
+                report.contains(&format!(
+                    r#""kind":"request","operation":"host.retire","identity":{registered}"#
+                )),
+                "{report}"
+            );
+            assert!(!v1(&trapped, &cleanup).contains("registration"));
+        }
+        {
+            let returned = |bytes: Option<Vec<u8>>, reason: Option<&str>| Invocation {
+                label: String::new(),
+                bytes,
+                reason: reason.map(String::from),
+                rejected: reason.is_some(),
+            };
+            assert!(!outside_model(&returned(Some(vec![1, 2]), None), 2));
+            assert!(outside_model(&returned(Some(vec![1, 2]), None), 3));
+            assert!(!outside_model(&returned(None, Some("bounds-reject")), 2));
+            assert!(!outside_model(&returned(None, Some("invalid-handle")), 2));
+            assert!(outside_model(&returned(None, Some("timeout")), 2));
+        }
     }
 
     /// The v1 report keeps exactly its fields, in order, and its event encoding; only the v2 report
@@ -1932,23 +1942,6 @@ mod report_v2_tests {
                 "native_pins",
             ]
         );
-    }
-
-    /// RegionProtocol-v1's result schema is `ok` bytes of the requested length, `bounds-reject` or
-    /// `invalid-handle`; anything else a guest returns lies outside the model.
-    #[test]
-    fn results_outside_the_result_schema_are_outside_the_model() {
-        let returned = |bytes: Option<Vec<u8>>, reason: Option<&str>| Invocation {
-            label: String::new(),
-            bytes,
-            reason: reason.map(String::from),
-            rejected: reason.is_some(),
-        };
-        assert!(!outside_model(&returned(Some(vec![1, 2]), None), 2));
-        assert!(outside_model(&returned(Some(vec![1, 2]), None), 3));
-        assert!(!outside_model(&returned(None, Some("bounds-reject")), 2));
-        assert!(!outside_model(&returned(None, Some("invalid-handle")), 2));
-        assert!(outside_model(&returned(None, Some("timeout")), 2));
     }
 
     /// RA-CLEAN-02: the host admits every call until the requested number of reads is answered,

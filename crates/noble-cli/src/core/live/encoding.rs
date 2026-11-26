@@ -611,47 +611,45 @@ mod tests {
     }
 
     #[test]
-    fn rejects_non_text_and_unsupported_features() {
-        assert!(encode_live_checked(b"\0asm\x01\0\0\0").is_err());
-        assert!(encode_live_checked(b"\xff\xfe").is_err());
-        assert!(
-            encode_live_checked(b"(module (func (drop (v128.const i32x4 0 0 0 0))))")
-                .unwrap_err()
-                .as_str()
-                .contains("unsupported or invalid core Wasm")
-        );
-    }
-
-    #[test]
-    fn rejects_all_host_effect_imports() {
-        for wat in [
-            &b"(module (import \"noble\" \"test_emit\" (func (param i32 i32) (result i32))))"[..],
-            &b"(module (import \"foreign\" \"effect\" (func)))"[..],
-        ] {
-            let problem = encode_live_checked(wat).unwrap_err();
+    fn rejects_invalid_live_wasm_features_imports_and_sections() {
+        {
+            assert!(encode_live_checked(b"\0asm\x01\0\0\0").is_err());
+            assert!(encode_live_checked(b"\xff\xfe").is_err());
             assert!(
-                matches!(&problem, super::EncodeError::HostEffect(_)),
-                "{problem}"
+                encode_live_checked(b"(module (func (drop (v128.const i32x4 0 0 0 0))))")
+                    .unwrap_err()
+                    .as_str()
+                    .contains("unsupported or invalid core Wasm")
             );
         }
-    }
-
-    #[test]
-    fn rejects_instantiation_mutations_before_abi_completion() {
-        let start = encode_live_checked(b"(module (func) (start 0))").unwrap_err();
-        assert!(start.as_str().contains("start function"), "{start}");
-        let data = encode_live_checked(
-            b"(module (import \"noble\" \"memory\" (memory 16 16)) (data (i32.const 0) \"x\"))",
-        )
-        .unwrap_err();
-        assert!(data.as_str().contains("active Wasm data"), "{data}");
-        let element = encode_live_checked(
+        {
+            for wat in [
+                &b"(module (import \"noble\" \"test_emit\" (func (param i32 i32) (result i32))))"[..],
+                &b"(module (import \"foreign\" \"effect\" (func)))"[..],
+            ] {
+                let problem = encode_live_checked(wat).unwrap_err();
+                assert!(
+                    matches!(&problem, super::EncodeError::HostEffect(_)),
+                    "{problem}"
+                );
+            }
+        }
+        {
+            let start = encode_live_checked(b"(module (func) (start 0))").unwrap_err();
+            assert!(start.as_str().contains("start function"), "{start}");
+            let data = encode_live_checked(
+                b"(module (import \"noble\" \"memory\" (memory 16 16)) (data (i32.const 0) \"x\"))",
+            )
+            .unwrap_err();
+            assert!(data.as_str().contains("active Wasm data"), "{data}");
+            let element = encode_live_checked(
             b"(module (import \"noble\" \"table\" (table 16384 16384 funcref)) (func) (elem (i32.const 0) func 0))",
         )
         .unwrap_err();
-        assert!(
-            element.as_str().contains("active Wasm element"),
-            "{element}"
-        );
+            assert!(
+                element.as_str().contains("active Wasm element"),
+                "{element}"
+            );
+        }
     }
 }

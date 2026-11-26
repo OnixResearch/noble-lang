@@ -780,14 +780,69 @@ mod tests {
     }
 
     #[test]
-    fn a_well_formed_selection_binds_every_identity_and_verifies() {
-        let selection = require(selected(&document(HELPER_ROOT)));
-        let mut observed = observed();
-        assert!(verify(&selection, &observed).is_ok());
-        observed.record_tools(tools());
-        assert!(verify_tools(&selection, &tools()).is_ok());
-        assert_eq!(selection.helper_count, helper_rows().len() as u64);
-        assert_eq!(selection.opt_mode, "off");
+    fn selection_helper_digest_tool_record_and_cli_identity() {
+        {
+            let selection = require(selected(&document(HELPER_ROOT)));
+            let mut observed = observed();
+            assert!(verify(&selection, &observed).is_ok());
+            observed.record_tools(tools());
+            assert!(verify_tools(&selection, &tools()).is_ok());
+            assert_eq!(selection.helper_count, helper_rows().len() as u64);
+            assert_eq!(selection.opt_mode, "off");
+        }
+        {
+            let rows = [
+                (std::format!("{HELPER_ROOT}/a.wat"), ZERO.to_owned()),
+                (
+                    std::format!("{HELPER_ROOT}/b.wat"),
+                    "1111111111111111111111111111111111111111111111111111111111111111".to_owned(),
+                ),
+            ];
+            let expected = crate::workflow::intrinsic::sha256(
+                std::format!(
+                    "{HELPER_ROOT}/a.wat {ZERO}\n{HELPER_ROOT}/b.wat {}\n",
+                    rows[1].1
+                )
+                .as_bytes(),
+            );
+            assert_eq!(helper_set_digest(&rows), expected);
+        }
+        {
+            let tools = require(observe_tools(tool_record(true).as_bytes()));
+            assert_eq!(tools.node.sha256, ZERO);
+            let failure = require_refusal(observe_tools(tool_record(false).as_bytes()));
+            assert!(failure.message.contains("V8"), "{}", failure.message);
+            for (label, value) in [
+                (
+                    "unknown field",
+                    serde_json::json!({ "node": {}, "extra": 1 }),
+                ),
+                ("malformed", serde_json::json!({ "node": {} })),
+            ] {
+                let failure = require_refusal(observe_tools(value.to_string().as_bytes()));
+                assert_eq!(failure.code, super::CODE_SELECTION, "{label}");
+            }
+        }
+        {
+            let selected = super::super::toolchain::Selected {
+                lean_sha256: ZERO.to_owned(),
+                lean_version: crate::sandbox::PIN,
+                lean_commit: crate::sandbox::COMMIT,
+                library_blake3: ZERO.to_owned(),
+                library_files: 1,
+                library_bytes: 1,
+            };
+            let observed = require(observe(&selected));
+            let executable = std::fs::read("/proc/self/exe").expect("current exe");
+            assert_eq!(
+                observed.cli_sha256,
+                crate::workflow::intrinsic::sha256(&executable)
+            );
+            assert!(!observed.cli_path.is_empty());
+            assert_eq!(observed.helpers.len(), noble_wasm::assets::HELPERS.len());
+            assert_eq!(observed.lean_binary_sha256, ZERO);
+            assert_eq!(observed.lean_toolchain, crate::sandbox::PIN);
+        }
     }
 
     #[test]
@@ -971,25 +1026,6 @@ mod tests {
         }
     }
 
-    #[test]
-    fn the_helper_set_digest_is_the_documented_line_digest() {
-        let rows = [
-            (std::format!("{HELPER_ROOT}/a.wat"), ZERO.to_owned()),
-            (
-                std::format!("{HELPER_ROOT}/b.wat"),
-                "1111111111111111111111111111111111111111111111111111111111111111".to_owned(),
-            ),
-        ];
-        let expected = crate::workflow::intrinsic::sha256(
-            std::format!(
-                "{HELPER_ROOT}/a.wat {ZERO}\n{HELPER_ROOT}/b.wat {}\n",
-                rows[1].1
-            )
-            .as_bytes(),
-        );
-        assert_eq!(helper_set_digest(&rows), expected);
-    }
-
     fn tool_record(v8: bool) -> std::string::String {
         serde_json::json!({
             "node": { "path": NODE_PATH, "version": "v24.13.0", "sha256": ZERO,
@@ -998,45 +1034,5 @@ mod tests {
             "wasm_opt": { "path": WASM_OPT_PATH, "version": "wasm-opt version 125", "sha256": ZERO },
         })
         .to_string()
-    }
-
-    #[test]
-    fn the_worker_tool_record_must_be_the_exact_verified_shape() {
-        let tools = require(observe_tools(tool_record(true).as_bytes()));
-        assert_eq!(tools.node.sha256, ZERO);
-        let failure = require_refusal(observe_tools(tool_record(false).as_bytes()));
-        assert!(failure.message.contains("V8"), "{}", failure.message);
-        for (label, value) in [
-            (
-                "unknown field",
-                serde_json::json!({ "node": {}, "extra": 1 }),
-            ),
-            ("malformed", serde_json::json!({ "node": {} })),
-        ] {
-            let failure = require_refusal(observe_tools(value.to_string().as_bytes()));
-            assert_eq!(failure.code, super::CODE_SELECTION, "{label}");
-        }
-    }
-
-    #[test]
-    fn the_observed_cli_identity_is_the_running_executable() {
-        let selected = super::super::toolchain::Selected {
-            lean_sha256: ZERO.to_owned(),
-            lean_version: crate::sandbox::PIN,
-            lean_commit: crate::sandbox::COMMIT,
-            library_blake3: ZERO.to_owned(),
-            library_files: 1,
-            library_bytes: 1,
-        };
-        let observed = require(observe(&selected));
-        let executable = std::fs::read("/proc/self/exe").expect("current exe");
-        assert_eq!(
-            observed.cli_sha256,
-            crate::workflow::intrinsic::sha256(&executable)
-        );
-        assert!(!observed.cli_path.is_empty());
-        assert_eq!(observed.helpers.len(), noble_wasm::assets::HELPERS.len());
-        assert_eq!(observed.lean_binary_sha256, ZERO);
-        assert_eq!(observed.lean_toolchain, crate::sandbox::PIN);
     }
 }

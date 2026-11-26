@@ -338,30 +338,63 @@ mod tests {
     }
 
     #[test]
-    fn checked_i64_is_an_exclusive_compile_or_session_profile() -> Result<(), std::string::String> {
-        assert!(flags(&["compile", "expression.noble", "--checked-i64"])?.checked_i64);
-        assert!(flags(&["session", "--checked-i64"])?.checked_i64);
-        for arguments in [
-            &[
-                "compile",
-                "expression.noble",
-                "--checked-i64",
-                "--text-byte-cursor",
-            ][..],
-            &[
-                "compile",
-                "expression.noble",
-                "--checked-i64",
-                "--declared-modules",
-            ][..],
-            &["run", "expression.noble", "--checked-i64"][..],
-        ] {
-            if flags(arguments).is_ok() {
-                return Err(std::format!(
-                    "accepted incompatible checked-I64 flags: {arguments:?}"
-                ));
+    fn checked_i64_profile_and_declared_retention_defaults() -> Result<(), std::string::String> {
+        (|| -> Result<(), std::string::String> {
+            assert!(flags(&["compile", "expression.noble", "--checked-i64"])?.checked_i64);
+            assert!(flags(&["session", "--checked-i64"])?.checked_i64);
+            for arguments in [
+                &[
+                    "compile",
+                    "expression.noble",
+                    "--checked-i64",
+                    "--text-byte-cursor",
+                ][..],
+                &[
+                    "compile",
+                    "expression.noble",
+                    "--checked-i64",
+                    "--declared-modules",
+                ][..],
+                &["run", "expression.noble", "--checked-i64"][..],
+            ] {
+                if flags(arguments).is_ok() {
+                    return Err(std::format!(
+                        "accepted incompatible checked-I64 flags: {arguments:?}"
+                    ));
+                }
             }
-        }
+            Ok(())
+        })()?;
+        (|| -> Result<(), std::string::String> {
+            let original = flags(&[
+                "compile",
+                "expression.noble",
+                "--declared-modules",
+                "--text-byte-cursor",
+            ])?;
+            assert_eq!(original.limits.bytes, 65_536);
+            assert_eq!(original.retained_source_limit().bytes(), 65_536);
+
+            let lowered = flags(&[
+                "session",
+                "--framed",
+                "--declared-modules",
+                "--text-byte-cursor",
+                "--source-bytes",
+                "128",
+            ])?;
+            assert_eq!(lowered.limits.bytes, 128);
+            assert_eq!(lowered.retained_source_limit().bytes(), 128);
+            let zero = flags(&[
+                "session",
+                "--declared-modules",
+                "--text-byte-cursor",
+                "--source-bytes",
+                "0",
+            ])?;
+            assert_eq!(zero.retained_source_limit().bytes(), 0);
+            Ok(())
+        })()?;
         Ok(())
     }
 
@@ -436,39 +469,6 @@ mod tests {
                 ));
             }
         }
-        Ok(())
-    }
-
-    #[test]
-    fn declared_retention_defaults_to_selected_per_input_limit() -> Result<(), std::string::String>
-    {
-        let original = flags(&[
-            "compile",
-            "expression.noble",
-            "--declared-modules",
-            "--text-byte-cursor",
-        ])?;
-        assert_eq!(original.limits.bytes, 65_536);
-        assert_eq!(original.retained_source_limit().bytes(), 65_536);
-
-        let lowered = flags(&[
-            "session",
-            "--framed",
-            "--declared-modules",
-            "--text-byte-cursor",
-            "--source-bytes",
-            "128",
-        ])?;
-        assert_eq!(lowered.limits.bytes, 128);
-        assert_eq!(lowered.retained_source_limit().bytes(), 128);
-        let zero = flags(&[
-            "session",
-            "--declared-modules",
-            "--text-byte-cursor",
-            "--source-bytes",
-            "0",
-        ])?;
-        assert_eq!(zero.retained_source_limit().bytes(), 0);
         Ok(())
     }
 

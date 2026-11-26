@@ -488,42 +488,68 @@ mod tests {
     }
 
     #[test]
-    fn in_place_rewrite_with_unchanged_metadata_is_refused() -> Result<(), String> {
-        let scratch = TestScratch::new()?;
-        let source = scratch.0.join("input.noble");
-        std::fs::write(&source, b"1").map_err(|e| e.to_string())?;
+    fn in_place_rewrite_refusal_and_read_bounded_limits() -> Result<(), String> {
+        (|| -> Result<(), String> {
+            let scratch = TestScratch::new()?;
+            let source = scratch.0.join("input.noble");
+            std::fs::write(&source, b"1").map_err(|e| e.to_string())?;
 
-        let result = snapshot_with_hook(&source, 4096, || {
-            let mut file = std::fs::OpenOptions::new()
-                .write(true)
-                .open(&source)
-                .map_err(|e| e.to_string())?;
-            file.seek(StdSeekFrom::Start(0))
-                .map_err(|e| e.to_string())?;
-            file.write_all(b"2").map_err(|e| e.to_string())?;
-            file.sync_all().map_err(|e| e.to_string())?;
+            let result = snapshot_with_hook(&source, 4096, || {
+                let mut file = std::fs::OpenOptions::new()
+                    .write(true)
+                    .open(&source)
+                    .map_err(|e| e.to_string())?;
+                file.seek(StdSeekFrom::Start(0))
+                    .map_err(|e| e.to_string())?;
+                file.write_all(b"2").map_err(|e| e.to_string())?;
+                file.sync_all().map_err(|e| e.to_string())?;
+                Ok(())
+            });
+
+            let err = match result {
+                Ok(_) => return Err("expected in-place rewrite to be refused".to_owned()),
+                Err(err) => err,
+            };
+            if !err.contains("changed in place during the snapshot") {
+                return Err(format!("unexpected error diagnostic: {err}"));
+            }
+
+            let sealed = snapshot(&source, 4096)?;
+            let expected_seals =
+                SealFlags::WRITE | SealFlags::SHRINK | SealFlags::GROW | SealFlags::SEAL;
+            let observed = fs::fcntl_get_seals(&sealed._memfd).map_err(|e| e.to_string())?;
+            if !observed.contains(expected_seals) {
+                return Err("retained memfd lost expected seals".to_owned());
+            }
+            std::fs::write(&source, b"3").map_err(|e| e.to_string())?;
+            if &*sealed != b"2" {
+                return Err("retained SealedInput did not remain immutable".to_owned());
+            }
             Ok(())
-        });
+        })()?;
+        (|| -> Result<(), String> {
+            let fd = fs::memfd_create("noble-read-bounded-test", MemfdFlags::CLOEXEC)
+                .map_err(|e| e.to_string())?;
+            write_all(&fd, b"x")?;
+            let path = Path::new("/memfd-test");
 
-        let err = match result {
-            Ok(_) => return Err("expected in-place rewrite to be refused".to_owned()),
-            Err(err) => err,
-        };
-        if !err.contains("changed in place during the snapshot") {
-            return Err(format!("unexpected error diagnostic: {err}"));
-        }
+            fs::seek(&fd, SeekFrom::Start(0)).map_err(|e| e.to_string())?;
+            let ok = read_bounded(&fd, usize::MAX, path)?;
+            if ok != b"x" {
+                return Err(format!("unexpected bytes read with max=usize::MAX: {ok:?}"));
+            }
 
-        let sealed = snapshot(&source, 4096)?;
-        let expected_seals =
-            SealFlags::WRITE | SealFlags::SHRINK | SealFlags::GROW | SealFlags::SEAL;
-        let observed = fs::fcntl_get_seals(&sealed._memfd).map_err(|e| e.to_string())?;
-        if !observed.contains(expected_seals) {
-            return Err("retained memfd lost expected seals".to_owned());
-        }
-        std::fs::write(&source, b"3").map_err(|e| e.to_string())?;
-        if &*sealed != b"2" {
-            return Err("retained SealedInput did not remain immutable".to_owned());
-        }
+            fs::seek(&fd, SeekFrom::Start(0)).map_err(|e| e.to_string())?;
+            let err = match read_bounded(&fd, 0, path) {
+                Ok(_) => return Err("expected max=0 read_bounded to refuse".to_owned()),
+                Err(err) => err,
+            };
+            if !err.contains("exceeds 0 bytes") {
+                return Err(format!("unexpected max=0 diagnostic: {err}"));
+            }
+
+            Ok(())
+        })()?;
         Ok(())
     }
 
@@ -564,31 +590,6 @@ mod tests {
         });
         if sym_result.is_ok() {
             return Err("expected symlink substituted output dir to refuse".to_owned());
-        }
-
-        Ok(())
-    }
-
-    #[test]
-    fn read_bounded_handles_max_bounds_without_overflow() -> Result<(), String> {
-        let fd = fs::memfd_create("noble-read-bounded-test", MemfdFlags::CLOEXEC)
-            .map_err(|e| e.to_string())?;
-        write_all(&fd, b"x")?;
-        let path = Path::new("/memfd-test");
-
-        fs::seek(&fd, SeekFrom::Start(0)).map_err(|e| e.to_string())?;
-        let ok = read_bounded(&fd, usize::MAX, path)?;
-        if ok != b"x" {
-            return Err(format!("unexpected bytes read with max=usize::MAX: {ok:?}"));
-        }
-
-        fs::seek(&fd, SeekFrom::Start(0)).map_err(|e| e.to_string())?;
-        let err = match read_bounded(&fd, 0, path) {
-            Ok(_) => return Err("expected max=0 read_bounded to refuse".to_owned()),
-            Err(err) => err,
-        };
-        if !err.contains("exceeds 0 bytes") {
-            return Err(format!("unexpected max=0 diagnostic: {err}"));
         }
 
         Ok(())

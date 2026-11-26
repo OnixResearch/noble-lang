@@ -1511,27 +1511,45 @@ fn require_internal<T>(value: Option<T>, message: &str) -> Result<T, super::outp
 
 #[cfg(test)]
 mod tests {
-    fn to_err(error: impl std::fmt::Display) -> String {
-        error.to_string()
-    }
-
     #[test]
-    fn abi_json_matches_expected_core_exports_and_globals() -> Result<(), String> {
-        let abi: serde_json::Value = serde_json::from_str(super::ABI_JSON).map_err(to_err)?;
-        let exports = abi["exports"]
-            .as_object()
-            .ok_or("missing abi.json exports")?;
-        assert_eq!(exports.len(), super::CORE_EXPORTS.len());
-        for (name, _, _) in super::CORE_EXPORTS {
-            assert!(exports.contains_key(name), "missing export {name}");
-        }
-        let globals = abi["globals"]
-            .as_array()
-            .ok_or("missing abi.json globals")?;
-        assert_eq!(
-            globals.len(),
-            super::ABI_GLOBALS_I32.len() + super::ABI_GLOBALS_I64.len()
-        );
+    fn abi_json_and_store_limits_enforcement() -> Result<(), String> {
+        (|| -> Result<(), String> {
+            let abi: serde_json::Value =
+                serde_json::from_str(super::ABI_JSON).map_err(|e| e.to_string())?;
+            let exports = abi["exports"]
+                .as_object()
+                .ok_or("missing abi.json exports")?;
+            assert_eq!(exports.len(), super::CORE_EXPORTS.len());
+            for (name, _, _) in super::CORE_EXPORTS {
+                assert!(exports.contains_key(name), "missing export {name}");
+            }
+            let globals = abi["globals"]
+                .as_array()
+                .ok_or("missing abi.json globals")?;
+            assert_eq!(
+                globals.len(),
+                super::ABI_GLOBALS_I32.len() + super::ABI_GLOBALS_I64.len()
+            );
+            Ok(())
+        })()?;
+        (|| -> Result<(), String> {
+            let engine = super::build_wasmtime_engine().map_err(|failure| failure.message)?;
+            let bytes = wat::parse_str("(module)").map_err(|e| e.to_string())?;
+            let module = wasmtime::Module::new(&engine, &bytes).map_err(|e| e.to_string())?;
+            let limits = wasmtime::StoreLimitsBuilder::new().instances(1000).build();
+            let mut store = wasmtime::Store::new(&engine, limits);
+            store.limiter(|state| state);
+            store.set_fuel(1_000_000).map_err(|e| e.to_string())?;
+            for idx in 0..1000 {
+                wasmtime::Instance::new(&mut store, &module, &[])
+                    .map_err(|error| format!("instance {idx} failed: {error}"))?;
+            }
+            assert!(
+                wasmtime::Instance::new(&mut store, &module, &[]).is_err(),
+                "1001st instance in one Store must be refused by StoreLimits"
+            );
+            Ok(())
+        })()?;
         Ok(())
     }
 
@@ -1539,7 +1557,7 @@ mod tests {
     fn wasmtime_core_refuses_wasm_gc_start_section_and_bad_imports() -> Result<(), String> {
         let engine = super::build_wasmtime_engine().map_err(|failure| failure.message)?;
         let gc_wat = r#"(module (type $s (struct (field i32))) (func (export "f") (result i32) (i32.const 1)))"#;
-        let gc_bytes = wat::parse_str(gc_wat).map_err(to_err)?;
+        let gc_bytes = wat::parse_str(gc_wat).map_err(|e| e.to_string())?;
         assert!(
             super::validate_core_wasm(&gc_bytes).is_err(),
             "wasmparser Core validator must reject WasmGC modules"
@@ -1550,44 +1568,24 @@ mod tests {
         );
 
         let start_wat = r#"(module (func $init) (start $init))"#;
-        let start_bytes = wat::parse_str(start_wat).map_err(to_err)?;
+        let start_bytes = wat::parse_str(start_wat).map_err(|e| e.to_string())?;
         assert!(
             super::validate_core_wasm(&start_bytes).is_err(),
             "Core validator must reject start sections"
         );
 
         let bad_import_wat = r#"(module (import "foreign" "mem" (memory 16 16)))"#;
-        let bad_import_bytes = wat::parse_str(bad_import_wat).map_err(to_err)?;
+        let bad_import_bytes = wat::parse_str(bad_import_wat).map_err(|e| e.to_string())?;
         assert!(
             super::validate_core_wasm(&bad_import_bytes).is_err(),
             "Core validator must reject foreign imports"
         );
 
         let local_mem_wat = r#"(module (memory 16 16) (export "memory" (memory 0)))"#;
-        let local_mem_bytes = wat::parse_str(local_mem_wat).map_err(to_err)?;
+        let local_mem_bytes = wat::parse_str(local_mem_wat).map_err(|e| e.to_string())?;
         assert!(
             super::validate_core_wasm(&local_mem_bytes).is_err(),
             "Core validator must reject locally defined memory"
-        );
-        Ok(())
-    }
-
-    #[test]
-    fn store_limits_blocks_1001st_instance_in_one_store() -> Result<(), String> {
-        let engine = super::build_wasmtime_engine().map_err(|failure| failure.message)?;
-        let bytes = wat::parse_str("(module)").map_err(to_err)?;
-        let module = wasmtime::Module::new(&engine, &bytes).map_err(to_err)?;
-        let limits = wasmtime::StoreLimitsBuilder::new().instances(1000).build();
-        let mut store = wasmtime::Store::new(&engine, limits);
-        store.limiter(|state| state);
-        store.set_fuel(1_000_000).map_err(to_err)?;
-        for idx in 0..1000 {
-            wasmtime::Instance::new(&mut store, &module, &[])
-                .map_err(|error| format!("instance {idx} failed: {error}"))?;
-        }
-        assert!(
-            wasmtime::Instance::new(&mut store, &module, &[]).is_err(),
-            "1001st instance in one Store must be refused by StoreLimits"
         );
         Ok(())
     }

@@ -517,24 +517,60 @@ mod tests {
     }
 
     #[test]
-    fn a_non_utf8_file_name_is_refused() {
-        use std::os::unix::ffi::OsStrExt;
-        let root = scratch("nonutf8");
-        let library = root.join("lib");
-        std::fs::create_dir_all(&library).expect("create tree");
-        let lean = root.join("lean");
-        std::fs::write(&lean, b"binary").expect("write binary");
-        let name = std::ffi::OsStr::from_bytes(b"bad\xff.olean");
-        std::fs::write(library.join(name), b"alpha").expect("write unnamed");
-        let result = bind(&lean, &library);
-        assert!(result.is_err(), "a lossy name cannot bind exactly");
-        let Err(refused) = result else { return };
-        assert!(
-            refused.message.contains("must be UTF-8"),
-            "{}",
-            refused.message
-        );
-        std::fs::remove_dir_all(&root).expect("clean up");
+    fn non_utf8_symlink_and_file_budget_refusals() {
+        {
+            use std::os::unix::ffi::OsStrExt;
+            let root = scratch("nonutf8");
+            let library = root.join("lib");
+            std::fs::create_dir_all(&library).expect("create tree");
+            let lean = root.join("lean");
+            std::fs::write(&lean, b"binary").expect("write binary");
+            let name = std::ffi::OsStr::from_bytes(b"bad\xff.olean");
+            std::fs::write(library.join(name), b"alpha").expect("write unnamed");
+            let result = bind(&lean, &library);
+            assert!(result.is_err(), "a lossy name cannot bind exactly");
+            let Err(refused) = result else { return };
+            assert!(
+                refused.message.contains("must be UTF-8"),
+                "{}",
+                refused.message
+            );
+            std::fs::remove_dir_all(&root).expect("clean up");
+        }
+        {
+            let root = scratch("link");
+            let library = root.join("lib");
+            std::fs::create_dir_all(&library).expect("create tree");
+            let lean = root.join("lean");
+            std::fs::write(&lean, b"binary").expect("write binary");
+            std::fs::write(root.join("target"), b"x").expect("write target");
+            std::os::unix::fs::symlink(root.join("target"), library.join("link.olean"))
+                .expect("symlink");
+            let result = bind(&lean, &library);
+            assert!(result.is_err(), "symlink is refused");
+            let Err(refused) = result else { return };
+            assert!(refused.message.contains("symlinks"), "{}", refused.message);
+            std::fs::remove_dir_all(&root).expect("clean up");
+        }
+        {
+            let root = scratch("bound");
+            std::fs::create_dir_all(&root).expect("create root");
+            let path = root.join("big.olean");
+            std::fs::write(&path, b"12345").expect("write big");
+            let refused = super::read_bounded(&path, 4, "toolchain-binding");
+            assert!(refused.is_err(), "a file over the budget is refused");
+            let Err(failure) = refused else { return };
+            assert!(
+                failure.message.contains("over the remaining"),
+                "{}",
+                failure.message
+            );
+            let exact = super::read_bounded(&path, 5, "toolchain-binding");
+            assert!(exact.is_ok(), "a file exactly at the budget is allowed");
+            let Ok(bytes) = exact else { return };
+            assert_eq!(bytes.len(), 5);
+            std::fs::remove_dir_all(&root).expect("clean up");
+        }
     }
 
     /// Issue #120's counterexample: before the fix, `contract-\x80.olean` and
@@ -575,44 +611,6 @@ mod tests {
             std::panic!("UTF-8 names must bind");
         };
         assert_ne!(first, second, "distinct names keep distinct identities");
-        std::fs::remove_dir_all(&root).expect("clean up");
-    }
-
-    #[test]
-    fn a_symlink_in_the_tree_is_refused() {
-        let root = scratch("link");
-        let library = root.join("lib");
-        std::fs::create_dir_all(&library).expect("create tree");
-        let lean = root.join("lean");
-        std::fs::write(&lean, b"binary").expect("write binary");
-        std::fs::write(root.join("target"), b"x").expect("write target");
-        std::os::unix::fs::symlink(root.join("target"), library.join("link.olean"))
-            .expect("symlink");
-        let result = bind(&lean, &library);
-        assert!(result.is_err(), "symlink is refused");
-        let Err(refused) = result else { return };
-        assert!(refused.message.contains("symlinks"), "{}", refused.message);
-        std::fs::remove_dir_all(&root).expect("clean up");
-    }
-
-    #[test]
-    fn a_file_over_the_remaining_budget_is_refused_before_allocation() {
-        let root = scratch("bound");
-        std::fs::create_dir_all(&root).expect("create root");
-        let path = root.join("big.olean");
-        std::fs::write(&path, b"12345").expect("write big");
-        let refused = super::read_bounded(&path, 4, "toolchain-binding");
-        assert!(refused.is_err(), "a file over the budget is refused");
-        let Err(failure) = refused else { return };
-        assert!(
-            failure.message.contains("over the remaining"),
-            "{}",
-            failure.message
-        );
-        let exact = super::read_bounded(&path, 5, "toolchain-binding");
-        assert!(exact.is_ok(), "a file exactly at the budget is allowed");
-        let Ok(bytes) = exact else { return };
-        assert_eq!(bytes.len(), 5);
         std::fs::remove_dir_all(&root).expect("clean up");
     }
 }

@@ -1526,45 +1526,46 @@ mod tests {
     }
 
     #[test]
-    fn malformed_host_grant_refuses_before_authority_without_fake_attempts() -> Result<(), String> {
-        let mut evidence = ShellEvidence::default();
-        let rejected = execute_recording(&[], &[], &[], &[], &[], b"{", &mut evidence)
+    fn malformed_grant_and_unstarted_authority_settlement() -> Result<(), String> {
+        (|| -> Result<(), String> {
+            let mut evidence = ShellEvidence::default();
+            let rejected = execute_recording(&[], &[], &[], &[], &[], b"{", &mut evidence)
+                .err()
+                .ok_or("malformed host grant crossed authority boundary")?;
+            assert_eq!(rejected.context.outcome, "invalid-input");
+            let report = failure_report(&rejected, &evidence);
+            let reported: Value =
+                serde_json::from_str(&report.json).map_err(|error| error.to_string())?;
+            assert_eq!(reported["outcome"], "invalid-input");
+            assert_eq!(reported["protected_operation_attempts"], Value::Null);
+            assert_eq!(reported["successful_result_deliveries"], Value::Null);
+            assert_eq!(reported["native_send_bytes"], Value::Null);
+            Ok(())
+        })()?;
+        (|| -> Result<(), String> {
+            let mut send = pending_send()?;
+            let callback = send.admitted.callback;
+            drop(send.execution);
+            send.authority
+                .cancel_invocation()
+                .map_err(|error| format!("{error:?}"))?;
+            let rejected = retire_unstarted(
+                &mut send.tasks,
+                &mut send.authority,
+                &mut send.resources,
+                Some(send.borrowed.borrow.scope()),
+                send.admitted,
+            )
             .err()
-            .ok_or("malformed host grant crossed authority boundary")?;
-        assert_eq!(rejected.context.outcome, "invalid-input");
-        let report = failure_report(&rejected, &evidence);
-        let reported: Value =
-            serde_json::from_str(&report.json).map_err(|error| error.to_string())?;
-        assert_eq!(reported["outcome"], "invalid-input");
-        assert_eq!(reported["protected_operation_attempts"], Value::Null);
-        assert_eq!(reported["successful_result_deliveries"], Value::Null);
-        assert_eq!(reported["native_send_bytes"], Value::Null);
+            .ok_or("already-cancelled invocation did not reject failure settlement")?;
+            assert_eq!(rejected.context.outcome, "internal-failure");
+            retired(
+                &send.tasks,
+                &send.resources,
+                callback,
+                task::Failure::Cancelled,
+            )
+        })()?;
         Ok(())
-    }
-
-    #[test]
-    fn failed_unstarted_authority_settles_task_and_resource_independently() -> Result<(), String> {
-        let mut send = pending_send()?;
-        let callback = send.admitted.callback;
-        drop(send.execution);
-        send.authority
-            .cancel_invocation()
-            .map_err(|error| format!("{error:?}"))?;
-        let rejected = retire_unstarted(
-            &mut send.tasks,
-            &mut send.authority,
-            &mut send.resources,
-            Some(send.borrowed.borrow.scope()),
-            send.admitted,
-        )
-        .err()
-        .ok_or("already-cancelled invocation did not reject failure settlement")?;
-        assert_eq!(rejected.context.outcome, "internal-failure");
-        retired(
-            &send.tasks,
-            &send.resources,
-            callback,
-            task::Failure::Cancelled,
-        )
     }
 }

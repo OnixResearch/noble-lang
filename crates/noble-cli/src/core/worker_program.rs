@@ -2709,87 +2709,88 @@ mod tests {
     use noble_kernel::contracts::TEST_EMIT;
 
     #[test]
-    fn checked_wit_token_requires_exact_named_program_root() {
-        let retained = noble_contracts::source::RetainedSourceLimit::new(SOURCE_LIMITS.bytes)
-            .expect("selected Worker source limit");
-        let session = noble_contracts::source::ModuleSession::new(&[], retained).unwrap();
-        let module = session
-            .prepare(
-                b"module Worker@1 [ def plus [ 1 + ] export plus ]",
-                &[],
-                SOURCE_LIMITS,
-            )
-            .unwrap();
-        let owner = module.checked_program_owner("plus").unwrap();
-        let (session, committed) = session.commit(module);
-        committed.unwrap();
-        let exact = session
-            .prepare(b"Worker@1.plus", &[Ty::I64], SOURCE_LIMITS)
-            .unwrap();
-        assert!(exact.checked_program_interface(&owner).is_some());
-        let extended = session
-            .prepare(b"Worker@1.plus 1 drop", &[Ty::I64], SOURCE_LIMITS)
-            .unwrap();
-        assert!(
-            extended.checked_program_interface(&owner).is_none(),
-            "a source expression calling a named Program is not that Program"
-        );
-    }
-
-    #[test]
-    fn text_capture_is_runtime_bound_before_portable_export_or_import() {
-        let source = b"module Worker@1 [ def plus [ \"tag\" drop 1 + ] export plus ]";
-        let (mut store, root) = Store::prepare(source, "plus", &[Ty::I64], RUNTIME_REQUEST_WORK)
-            .expect("checked Text source");
-        let source_sha256 = crate::workflow::intrinsic::sha256(source);
-        let capture_sha256 = store.capture_digest().unwrap();
-        let denied = ExportGrant {
-            destination: "private",
-            source_sha256: &source_sha256,
-            capture_sha256: &crate::workflow::intrinsic::sha256(b"[]"),
-            allowed: true,
-        };
-        assert_eq!(
-            store.export(root, "private", &denied),
-            Err(ExportRefusal::Denied)
-        );
-        let grant = ExportGrant {
-            destination: "private",
-            source_sha256: &source_sha256,
-            capture_sha256: &capture_sha256,
-            allowed: true,
-        };
-        let encoded = store
-            .export(root, "private", &grant)
-            .expect("authorized runtime Text rebind");
-        let mut document: Value = serde_json::from_slice(&encoded).unwrap();
-        assert_eq!(document["captures"][0]["text_utf8"], "tag");
-        assert!(document["capture_binding_blake3"].as_str().is_some());
-        let (mut imported, selected) = Store::import(
-            &encoded,
-            None,
-            RUNTIME_REQUEST_WORK,
-            &mut AdmissionTrace::default(),
-        )
-        .expect("freshly attested Text package");
-        assert_eq!(
-            crate::core::worker_program_guest::execute(&mut imported, selected, 41, 1)
-                .unwrap()
-                .value,
-            42,
-            "imported Text must rebind before guest invocation"
-        );
-        document["captures"][0]["text_utf8"] = json!("forged");
-        let forged = serde_json::to_vec(&document).unwrap();
-        assert!(matches!(
-            Store::import(
-                &forged,
+    fn checked_wit_token_and_text_capture() {
+        {
+            let retained = noble_contracts::source::RetainedSourceLimit::new(SOURCE_LIMITS.bytes)
+                .expect("selected Worker source limit");
+            let session = noble_contracts::source::ModuleSession::new(&[], retained).unwrap();
+            let module = session
+                .prepare(
+                    b"module Worker@1 [ def plus [ 1 + ] export plus ]",
+                    &[],
+                    SOURCE_LIMITS,
+                )
+                .unwrap();
+            let owner = module.checked_program_owner("plus").unwrap();
+            let (session, committed) = session.commit(module);
+            committed.unwrap();
+            let exact = session
+                .prepare(b"Worker@1.plus", &[Ty::I64], SOURCE_LIMITS)
+                .unwrap();
+            assert!(exact.checked_program_interface(&owner).is_some());
+            let extended = session
+                .prepare(b"Worker@1.plus 1 drop", &[Ty::I64], SOURCE_LIMITS)
+                .unwrap();
+            assert!(
+                extended.checked_program_interface(&owner).is_none(),
+                "a source expression calling a named Program is not that Program"
+            );
+        }
+        {
+            let source = b"module Worker@1 [ def plus [ \"tag\" drop 1 + ] export plus ]";
+            let (mut store, root) =
+                Store::prepare(source, "plus", &[Ty::I64], RUNTIME_REQUEST_WORK)
+                    .expect("checked Text source");
+            let source_sha256 = crate::workflow::intrinsic::sha256(source);
+            let capture_sha256 = store.capture_digest().unwrap();
+            let denied = ExportGrant {
+                destination: "private",
+                source_sha256: &source_sha256,
+                capture_sha256: &crate::workflow::intrinsic::sha256(b"[]"),
+                allowed: true,
+            };
+            assert_eq!(
+                store.export(root, "private", &denied),
+                Err(ExportRefusal::Denied)
+            );
+            let grant = ExportGrant {
+                destination: "private",
+                source_sha256: &source_sha256,
+                capture_sha256: &capture_sha256,
+                allowed: true,
+            };
+            let encoded = store
+                .export(root, "private", &grant)
+                .expect("authorized runtime Text rebind");
+            let mut document: Value = serde_json::from_slice(&encoded).unwrap();
+            assert_eq!(document["captures"][0]["text_utf8"], "tag");
+            assert!(document["capture_binding_blake3"].as_str().is_some());
+            let (mut imported, selected) = Store::import(
+                &encoded,
                 None,
                 RUNTIME_REQUEST_WORK,
-                &mut AdmissionTrace::default()
-            ),
-            Err(Refusal::Invalid)
-        ));
+                &mut AdmissionTrace::default(),
+            )
+            .expect("freshly attested Text package");
+            assert_eq!(
+                crate::core::worker_program_guest::execute(&mut imported, selected, 41, 1)
+                    .unwrap()
+                    .value,
+                42,
+                "imported Text must rebind before guest invocation"
+            );
+            document["captures"][0]["text_utf8"] = json!("forged");
+            let forged = serde_json::to_vec(&document).unwrap();
+            assert!(matches!(
+                Store::import(
+                    &forged,
+                    None,
+                    RUNTIME_REQUEST_WORK,
+                    &mut AdmissionTrace::default()
+                ),
+                Err(Refusal::Invalid)
+            ));
+        }
     }
 
     #[test]
@@ -2961,52 +2962,52 @@ mod tests {
     }
 
     #[test]
-    fn forged_or_unchecked_named_program_cannot_become_a_builder_root() {
-        assert!(matches!(
-            Store::prepare(
-                b"module Worker@1 [ def plus [ 1 + ] ]",
-                "plus",
-                &[Ty::I64],
-                1_000_000
-            ),
-            Err(Refusal::Invalid)
-        ));
-        assert!(matches!(
-            Store::prepare(
-                b"module Worker@1 [ export plus def plus [ 1 + ] ]",
-                "plus",
-                &[Ty::Text],
-                1_000_000
-            ),
-            Err(Refusal::Invalid)
-        ));
-    }
-
-    #[test]
-    fn unissued_effect_witness_cannot_grant_package_export() {
-        let source = b"module Worker@1 [ export plus def plus [ 1 + ] ]";
-        assert!(
-            matches!(
-                Store::prepare(source, "plus", &[Ty::I64], 3),
+    fn forged_root_and_unissued_effect_witness() {
+        {
+            assert!(matches!(
+                Store::prepare(
+                    b"module Worker@1 [ def plus [ 1 + ] ]",
+                    "plus",
+                    &[Ty::I64],
+                    1_000_000
+                ),
+                Err(Refusal::Invalid)
+            ));
+            assert!(matches!(
+                Store::prepare(
+                    b"module Worker@1 [ export plus def plus [ 1 + ] ]",
+                    "plus",
+                    &[Ty::Text],
+                    1_000_000
+                ),
+                Err(Refusal::Invalid)
+            ));
+        }
+        {
+            let source = b"module Worker@1 [ export plus def plus [ 1 + ] ]";
+            assert!(
+                matches!(
+                    Store::prepare(source, "plus", &[Ty::I64], 3),
+                    Err(Refusal::Exhausted)
+                ),
+                "source checks cannot refresh an empty request meter"
+            );
+            let (mut pure, root) = Store::prepare(source, "plus", &[Ty::I64], RUNTIME_REQUEST_WORK)
+                .expect("pure source");
+            pure.work_left = 2;
+            let widened = pure
+                .adapt(root, &EffSet::from_ids(&[TEST_EMIT]))
+                .expect("type-level effect inclusion does not perform a host request");
+            assert_eq!(pure.recipe_nodes(), 1);
+            assert_eq!(pure.original(widened).unwrap().2, &EffSet::empty());
+            assert!(matches!(pure.package(widened), Err(Refusal::Unsupported)));
+            assert!(pure.adapt(root, &EffSet::empty()).is_ok());
+            assert!(matches!(
+                pure.adapt(root, &EffSet::empty()),
                 Err(Refusal::Exhausted)
-            ),
-            "source checks cannot refresh an empty request meter"
-        );
-        let (mut pure, root) =
-            Store::prepare(source, "plus", &[Ty::I64], RUNTIME_REQUEST_WORK).expect("pure source");
-        pure.work_left = 2;
-        let widened = pure
-            .adapt(root, &EffSet::from_ids(&[TEST_EMIT]))
-            .expect("type-level effect inclusion does not perform a host request");
-        assert_eq!(pure.recipe_nodes(), 1);
-        assert_eq!(pure.original(widened).unwrap().2, &EffSet::empty());
-        assert!(matches!(pure.package(widened), Err(Refusal::Unsupported)));
-        assert!(pure.adapt(root, &EffSet::empty()).is_ok());
-        assert!(matches!(
-            pure.adapt(root, &EffSet::empty()),
-            Err(Refusal::Exhausted)
-        ));
-        assert_eq!(pure.recipe_nodes(), 1);
+            ));
+            assert_eq!(pure.recipe_nodes(), 1);
+        }
     }
 
     #[test]
@@ -3249,40 +3250,62 @@ mod tests {
     }
 
     #[test]
-    fn program_reaching_a_dependency_module_is_never_exported() {
-        let mut trace = AdmissionTrace::default();
-        let mut session = RetainedSession::open(2).unwrap();
-        let dependency = session
-            .commit_module(
-                b"module Dep@1 [ export dec def dec [ \"tag\" drop 1 - ] ]",
-                &mut trace,
-            )
-            .unwrap();
-        session
-            .commit_import(b"import Dep@1 as dep", &mut trace)
-            .unwrap();
-        let root = session
-            .commit_module(
-                b"module Worker@1 [ export run def run [ dep.dec ] ]",
-                &mut trace,
-            )
-            .unwrap();
-        let (mut store, handle) = session
-            .admit(root, "run", &[Ty::I64], &[dependency], &mut trace)
-            .unwrap();
-        let source_sha256 = crate::workflow::intrinsic::sha256(&store.source);
-        let capture_sha256 = store.capture_digest().unwrap();
-        let grant = ExportGrant {
-            destination: "local-test",
-            source_sha256: &source_sha256,
-            capture_sha256: &capture_sha256,
-            allowed: true,
-        };
-        assert_eq!(
-            store.export(handle, "local-test", &grant),
-            Err(ExportRefusal::Refused(Refusal::Unsupported)),
-            "a package carries one root source and cannot describe the dependency module"
-        );
+    fn dependency_non_export_and_schema_budget() {
+        {
+            let mut trace = AdmissionTrace::default();
+            let mut session = RetainedSession::open(2).unwrap();
+            let dependency = session
+                .commit_module(
+                    b"module Dep@1 [ export dec def dec [ \"tag\" drop 1 - ] ]",
+                    &mut trace,
+                )
+                .unwrap();
+            session
+                .commit_import(b"import Dep@1 as dep", &mut trace)
+                .unwrap();
+            let root = session
+                .commit_module(
+                    b"module Worker@1 [ export run def run [ dep.dec ] ]",
+                    &mut trace,
+                )
+                .unwrap();
+            let (mut store, handle) = session
+                .admit(root, "run", &[Ty::I64], &[dependency], &mut trace)
+                .unwrap();
+            let source_sha256 = crate::workflow::intrinsic::sha256(&store.source);
+            let capture_sha256 = store.capture_digest().unwrap();
+            let grant = ExportGrant {
+                destination: "local-test",
+                source_sha256: &source_sha256,
+                capture_sha256: &capture_sha256,
+                allowed: true,
+            };
+            assert_eq!(
+                store.export(handle, "local-test", &grant),
+                Err(ExportRefusal::Refused(Refusal::Unsupported)),
+                "a package carries one root source and cannot describe the dependency module"
+            );
+        }
+        {
+            let consumed = |schema: &[u8]| {
+                let mut trace = AdmissionTrace::default();
+                Store::prepare_transition(
+                    WORKER_TRANSITION,
+                    "transition",
+                    schema,
+                    RUNTIME_REQUEST_WORK,
+                    &mut trace,
+                )
+                .unwrap();
+                trace.checking_work_shared.unwrap() - trace.checking_work_left.unwrap()
+            };
+            let commented = schema_text().replacen(
+                "opaque AttemptId I64 public",
+                &format!("# {}\n  opaque AttemptId I64 public", "c".repeat(20_000)),
+                1,
+            );
+            assert!(consumed(commented.as_bytes()) > consumed(WORKER_SCHEMA));
+        }
     }
 
     #[test]
@@ -3702,30 +3725,6 @@ mod tests {
             admit(WORKER_TRANSITION, crowded.as_bytes()).err(),
             Some(Refusal::Unsupported)
         );
-    }
-
-    /// The schema check draws from the same request budget as the root,
-    /// closure and invocation checks, so a longer schema leaves less of it.
-    #[test]
-    fn selected_schema_check_charges_the_shared_request_budget() {
-        let consumed = |schema: &[u8]| {
-            let mut trace = AdmissionTrace::default();
-            Store::prepare_transition(
-                WORKER_TRANSITION,
-                "transition",
-                schema,
-                RUNTIME_REQUEST_WORK,
-                &mut trace,
-            )
-            .unwrap();
-            trace.checking_work_shared.unwrap() - trace.checking_work_left.unwrap()
-        };
-        let commented = schema_text().replacen(
-            "opaque AttemptId I64 public",
-            &format!("# {}\n  opaque AttemptId I64 public", "c".repeat(20_000)),
-            1,
-        );
-        assert!(consumed(commented.as_bytes()) > consumed(WORKER_SCHEMA));
     }
 
     /// Equal data layout under different nominal identities never shares a

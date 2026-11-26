@@ -296,130 +296,128 @@ mod tests {
     }
 
     #[test]
-    fn a_selected_program_keeps_its_observation_epoch_and_names_dependencies() {
-        let stack = program(
-            serde_json::json!([literal("20"), { "invoke": "definition:7" }]),
-            serde_json::json!([]),
-        );
-        let inspected = report(&stack, "0", 9, "v8");
-        assert_eq!(inspected["outcome"], "selected");
-        assert_eq!(inspected["generation"], 9);
-        assert_eq!(
-            inspected["observed"]["source_epoch"], 3,
-            "observation epoch"
-        );
-        assert_eq!(inspected["observed"]["stack_handle"], 12);
-        assert_eq!(
-            inspected["program"]["dependencies"][0]["identity"]["value"],
-            "7"
-        );
-        assert_eq!(
-            inspected["program"]["dependencies"][0]["provenance"]["status"],
-            "unavailable-origin"
-        );
-        assert_eq!(inspected["evidence"]["status"], "not-checked");
-        assert_eq!(inspected["guest_requests"], 0);
-    }
-
-    #[test]
-    fn every_failed_selection_has_its_own_outcome() {
-        let stack = program(serde_json::json!([literal("1")]), serde_json::json!([]));
-        assert_eq!(report(&stack, "", 1, "v8")["outcome"], "path-malformed");
-        assert_eq!(report(&stack, "x", 1, "v8")["outcome"], "path-malformed");
-        assert_eq!(report(&stack, "4", 1, "v8")["outcome"], "out-of-range");
-        assert_eq!(
-            report(&stack, "0.7", 1, "v8")["outcome"],
-            "node-out-of-range"
-        );
-        assert_eq!(
-            report(&stack, "0.0", 1, "v8")["outcome"],
-            "node-not-a-quotation"
-        );
-        assert_eq!(
-            report(&serde_json::json!([]), "0", 1, "v8")["outcome"],
-            "no-observation"
-        );
-        let pair = serde_json::json!([{ "type": "Pair", "value": [] }]);
-        assert_eq!(
-            report(&pair, "0", 1, "v8")["outcome"],
-            "stack-entry-not-a-program"
-        );
-    }
-
-    #[test]
-    fn a_large_recipe_is_truncated_and_says_so() {
-        let recipe: Vec<serde_json::Value> = (0..(MAX_NODES + 5))
-            .map(|at| literal(at.to_string().as_str()))
-            .collect();
-        let witnesses: Vec<serde_json::Value> = (0..(MAX_WITNESSES + 1))
-            .map(|_| serde_json::json!({ "node": 0, "effects": [] }))
-            .collect();
-        let stack = program(
-            serde_json::Value::Array(recipe),
-            serde_json::Value::Array(witnesses),
-        );
-        let inspected = report(&stack, "0", 1, "v8");
-        assert_eq!(
-            inspected["program"]["recipe"].as_array().map(Vec::len),
-            Some(MAX_NODES)
-        );
-        assert_eq!(inspected["program"]["nodes"]["total"], MAX_NODES + 5);
-        let kinds: Vec<&str> = inspected["truncated"]
-            .as_array()
-            .expect("a truncation list")
-            .iter()
-            .filter_map(|entry| entry["kind"].as_str())
-            .collect();
-        assert!(kinds.contains(&"recipe-nodes"), "{kinds:?}");
-        assert!(kinds.contains(&"witnesses"), "{kinds:?}");
-    }
-
-    #[test]
-    fn a_nested_quotation_is_reachable_and_keeps_its_own_interface() {
-        let stack = program(
-            serde_json::json!([{
-                "quotation": [serde_json::json!({ "literal": { "type": "Bool", "value": true } })],
-                "interface": {
-                    "stack_in": { "values": [], "depth": 0 },
-                    "stack_out": { "values": [], "depth": 0 },
-                    "effects": ["test.emit"],
-                },
-                "witnesses": [],
-            }]),
-            serde_json::json!([]),
-        );
-        let inspected = report(&stack, "0.0", 1, "v8");
-        assert_eq!(inspected["outcome"], "selected");
-        assert_eq!(inspected["selection"]["node_path"], serde_json::json!([0]));
-        assert_eq!(
-            inspected["program"]["effects"],
-            serde_json::json!(["test.emit"])
-        );
-        assert_eq!(
-            inspected["program"]["recipe"],
-            serde_json::json!([{ "literal": { "type": "Bool", "value": true } }])
-        );
-    }
-
-    #[test]
-    fn an_over_deep_path_is_refused_rather_than_walked() {
-        let nested = serde_json::json!([{
-            "handle": 1,
-            "type": "Program",
-            "interface": serde_json::Value::Null,
-            "recipe": [],
-            "witnesses": [],
-        }]);
-        let stack = program(nested, serde_json::json!([]));
-        let mut path = std::string::String::from("0");
-        for _ in 0..10 {
-            path.push_str(".0");
+    fn selected_program_epoch_and_failed_selections() {
+        {
+            let stack = program(
+                serde_json::json!([literal("20"), { "invoke": "definition:7" }]),
+                serde_json::json!([]),
+            );
+            let inspected = report(&stack, "0", 9, "v8");
+            assert_eq!(inspected["outcome"], "selected");
+            assert_eq!(inspected["generation"], 9);
+            assert_eq!(
+                inspected["observed"]["source_epoch"], 3,
+                "observation epoch"
+            );
+            assert_eq!(inspected["observed"]["stack_handle"], 12);
+            assert_eq!(
+                inspected["program"]["dependencies"][0]["identity"]["value"],
+                "7"
+            );
+            assert_eq!(
+                inspected["program"]["dependencies"][0]["provenance"]["status"],
+                "unavailable-origin"
+            );
+            assert_eq!(inspected["evidence"]["status"], "not-checked");
+            assert_eq!(inspected["guest_requests"], 0);
         }
-        assert_eq!(
-            report(&stack, &path, 1, "v8")["outcome"],
-            "quotation-depth-bound"
-        );
-        let empty = program(serde_json::json!([]), serde_json::json!([]));
-        assert_eq!(report(&empty, "0", 1, "v8")["outcome"], "selected");
+        {
+            let stack = program(serde_json::json!([literal("1")]), serde_json::json!([]));
+            assert_eq!(report(&stack, "", 1, "v8")["outcome"], "path-malformed");
+            assert_eq!(report(&stack, "x", 1, "v8")["outcome"], "path-malformed");
+            assert_eq!(report(&stack, "4", 1, "v8")["outcome"], "out-of-range");
+            assert_eq!(
+                report(&stack, "0.7", 1, "v8")["outcome"],
+                "node-out-of-range"
+            );
+            assert_eq!(
+                report(&stack, "0.0", 1, "v8")["outcome"],
+                "node-not-a-quotation"
+            );
+            assert_eq!(
+                report(&serde_json::json!([]), "0", 1, "v8")["outcome"],
+                "no-observation"
+            );
+            let pair = serde_json::json!([{ "type": "Pair", "value": [] }]);
+            assert_eq!(
+                report(&pair, "0", 1, "v8")["outcome"],
+                "stack-entry-not-a-program"
+            );
+        }
+    }
+
+    #[test]
+    fn recipe_truncation_nested_quotation_and_depth_bound() {
+        {
+            let recipe: Vec<serde_json::Value> = (0..(MAX_NODES + 5))
+                .map(|at| literal(at.to_string().as_str()))
+                .collect();
+            let witnesses: Vec<serde_json::Value> = (0..(MAX_WITNESSES + 1))
+                .map(|_| serde_json::json!({ "node": 0, "effects": [] }))
+                .collect();
+            let stack = program(
+                serde_json::Value::Array(recipe),
+                serde_json::Value::Array(witnesses),
+            );
+            let inspected = report(&stack, "0", 1, "v8");
+            assert_eq!(
+                inspected["program"]["recipe"].as_array().map(Vec::len),
+                Some(MAX_NODES)
+            );
+            assert_eq!(inspected["program"]["nodes"]["total"], MAX_NODES + 5);
+            let kinds: Vec<&str> = inspected["truncated"]
+                .as_array()
+                .expect("a truncation list")
+                .iter()
+                .filter_map(|entry| entry["kind"].as_str())
+                .collect();
+            assert!(kinds.contains(&"recipe-nodes"), "{kinds:?}");
+            assert!(kinds.contains(&"witnesses"), "{kinds:?}");
+        }
+        {
+            let stack = program(
+                serde_json::json!([{
+                    "quotation": [serde_json::json!({ "literal": { "type": "Bool", "value": true } })],
+                    "interface": {
+                        "stack_in": { "values": [], "depth": 0 },
+                        "stack_out": { "values": [], "depth": 0 },
+                        "effects": ["test.emit"],
+                    },
+                    "witnesses": [],
+                }]),
+                serde_json::json!([]),
+            );
+            let inspected = report(&stack, "0.0", 1, "v8");
+            assert_eq!(inspected["outcome"], "selected");
+            assert_eq!(inspected["selection"]["node_path"], serde_json::json!([0]));
+            assert_eq!(
+                inspected["program"]["effects"],
+                serde_json::json!(["test.emit"])
+            );
+            assert_eq!(
+                inspected["program"]["recipe"],
+                serde_json::json!([{ "literal": { "type": "Bool", "value": true } }])
+            );
+        }
+        {
+            let nested = serde_json::json!([{
+                "handle": 1,
+                "type": "Program",
+                "interface": serde_json::Value::Null,
+                "recipe": [],
+                "witnesses": [],
+            }]);
+            let stack = program(nested, serde_json::json!([]));
+            let mut path = std::string::String::from("0");
+            for _ in 0..10 {
+                path.push_str(".0");
+            }
+            assert_eq!(
+                report(&stack, &path, 1, "v8")["outcome"],
+                "quotation-depth-bound"
+            );
+            let empty = program(serde_json::json!([]), serde_json::json!([]));
+            assert_eq!(report(&empty, "0", 1, "v8")["outcome"], "selected");
+        }
     }
 }

@@ -580,46 +580,46 @@ mod tests {
     }
 
     #[test]
-    fn rendered_lengths_match_the_rendering() {
-        let values = [
-            Value::I64(0),
-            Value::I64(-1),
-            Value::I64(i64::MIN),
-            Value::I64(i64::MAX),
-            Value::Bool(true),
-            Value::Bool(false),
-            Value::F32(f32::NAN.to_bits()),
-            Value::F32(1.5f32.to_bits()),
-        ];
-        for value in values {
-            let rendered = noble_ngraph::format::value::render(value);
-            assert_eq!(rendered_len(value), rendered.len(), "{rendered}");
+    fn rendered_lengths_and_source_revisions() {
+        {
+            let values = [
+                Value::I64(0),
+                Value::I64(-1),
+                Value::I64(i64::MIN),
+                Value::I64(i64::MAX),
+                Value::Bool(true),
+                Value::Bool(false),
+                Value::F32(f32::NAN.to_bits()),
+                Value::F32(1.5f32.to_bits()),
+            ];
+            for value in values {
+                let rendered = noble_ngraph::format::value::render(value);
+                assert_eq!(rendered_len(value), rendered.len(), "{rendered}");
+            }
+            for count in [0, 1, values.len()] {
+                let slice = &values[..count];
+                let bare = Line::normal("eval", "evaluation").with("vector", Json::Number(0));
+                let skeleton = bare.encoded_len();
+                let full = bare.with(
+                    "outputs",
+                    Json::Array(
+                        slice
+                            .iter()
+                            .map(|value| string(noble_ngraph::format::value::render(*value)))
+                            .collect(),
+                    ),
+                );
+                assert_eq!(skeleton + outputs_field_len(slice), full.encode().len());
+            }
         }
-        for count in [0, 1, values.len()] {
-            let slice = &values[..count];
-            let bare = Line::normal("eval", "evaluation").with("vector", Json::Number(0));
-            let skeleton = bare.encoded_len();
-            let full = bare.with(
-                "outputs",
-                Json::Array(
-                    slice
-                        .iter()
-                        .map(|value| string(noble_ngraph::format::value::render(*value)))
-                        .collect(),
-                ),
-            );
-            assert_eq!(skeleton + outputs_field_len(slice), full.encode().len());
+        {
+            assert!(is_commit(RECEIPT_SOURCE_COMMIT));
+            assert!(is_commit(INETS_COMMIT));
+            assert!(!is_commit(""));
+            assert!(!is_commit(&RECEIPT_SOURCE_COMMIT[..39]));
+            assert!(!is_commit(&RECEIPT_SOURCE_COMMIT.to_uppercase()));
+            assert!(!is_commit(&std::format!("{RECEIPT_SOURCE_COMMIT}-dirty")));
         }
-    }
-
-    #[test]
-    fn source_revisions_are_full_lowercase_commits() {
-        assert!(is_commit(RECEIPT_SOURCE_COMMIT));
-        assert!(is_commit(INETS_COMMIT));
-        assert!(!is_commit(""));
-        assert!(!is_commit(&RECEIPT_SOURCE_COMMIT[..39]));
-        assert!(!is_commit(&RECEIPT_SOURCE_COMMIT.to_uppercase()));
-        assert!(!is_commit(&std::format!("{RECEIPT_SOURCE_COMMIT}-dirty")));
     }
 
     #[test]

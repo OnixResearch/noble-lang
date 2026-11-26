@@ -3390,69 +3390,69 @@ mod tests {
     use super::{candidate_source, terminal_proposal_failure};
 
     #[test]
-    fn reifier_refuses_inconsistent_checked_invocation_metadata() {
-        let mut proposal = serde_json::json!({
-            "input_signature": "[I64]",
-            "output_signature": "[I64]",
-            "input_signature_id": 1,
-            "output_signature_id": 1,
-            "effects": 0,
-            "signatures": [
-                {"id": 1, "descriptor": "[I64]"},
-                {"id": 2, "descriptor": "[I64 I64]"}
-            ],
-            "events": [
-                {"kind":17,"value":"1"}, {"kind":18,"value":"1"},
-                {"kind":19,"value":"0"}, {"kind":1,"value":"2"},
-                {"kind":2,"value":"4"}, {"kind":20,"value":"2"},
-                {"kind":21,"value":"1"}, {"kind":22,"value":"0"}
-            ]
-        });
-        assert_eq!(
-            candidate_source("evolve", &proposal, 65_536).unwrap(),
-            b"def evolve [ 2 + ]"
-        );
-        proposal["events"][5]["value"] = serde_json::json!("1");
-        assert!(candidate_source("evolve", &proposal, 65_536)
-            .unwrap_err()
-            .contains("invocation signatures disagree"));
-        proposal["events"][5]["value"] = serde_json::json!("2");
-        proposal["events"][1]["value"] = serde_json::json!("2");
-        assert!(candidate_source("evolve", &proposal, 65_536)
-            .unwrap_err()
-            .contains("differs from checked Program interface"));
-    }
-
-    #[test]
-    fn poisoned_inspection_preserves_worker_trace_and_terminates() {
-        let original = serde_json::json!({
-            "outcome": "internal-failure",
-            "diagnostic": "immutable live proposal changed",
-            "session_state": "terminated-after-proposal-inspection-failure",
-            "request_trace": ["live.observe-generation:1", "live.propose:evolve:queued"],
-            "guest_requests": 2,
-        });
-        let failure = super::super::output::Failure::new(
-            super::super::output::ErrorContext {
-                stage: "wasm",
-                outcome: "internal-failure",
-            },
-            original.to_string(),
-        );
-        let terminal = terminal_proposal_failure(
-            &failure,
-            &serde_json::json!([{"type":"I64","value":"21"}]),
-            1,
-        )
-        .expect("terminal worker failure must remain terminal");
-        assert_eq!(terminal["diagnostic"], original["diagnostic"]);
-        assert_eq!(terminal["request_trace"], original["request_trace"]);
-        assert_eq!(terminal["guest_requests"], 2);
-        assert_eq!(terminal["completed_invocation_stack"][0]["value"], "21");
-        assert_eq!(
-            terminal["session_state"],
-            "terminated-after-proposal-inspection-failure"
-        );
+    fn reifier_metadata_and_poisoned_inspection() {
+        {
+            let mut proposal = serde_json::json!({
+                "input_signature": "[I64]",
+                "output_signature": "[I64]",
+                "input_signature_id": 1,
+                "output_signature_id": 1,
+                "effects": 0,
+                "signatures": [
+                    {"id": 1, "descriptor": "[I64]"},
+                    {"id": 2, "descriptor": "[I64 I64]"}
+                ],
+                "events": [
+                    {"kind":17,"value":"1"}, {"kind":18,"value":"1"},
+                    {"kind":19,"value":"0"}, {"kind":1,"value":"2"},
+                    {"kind":2,"value":"4"}, {"kind":20,"value":"2"},
+                    {"kind":21,"value":"1"}, {"kind":22,"value":"0"}
+                ]
+            });
+            assert_eq!(
+                candidate_source("evolve", &proposal, 65_536).unwrap(),
+                b"def evolve [ 2 + ]"
+            );
+            proposal["events"][5]["value"] = serde_json::json!("1");
+            assert!(candidate_source("evolve", &proposal, 65_536)
+                .unwrap_err()
+                .contains("invocation signatures disagree"));
+            proposal["events"][5]["value"] = serde_json::json!("2");
+            proposal["events"][1]["value"] = serde_json::json!("2");
+            assert!(candidate_source("evolve", &proposal, 65_536)
+                .unwrap_err()
+                .contains("differs from checked Program interface"));
+        }
+        {
+            let original = serde_json::json!({
+                "outcome": "internal-failure",
+                "diagnostic": "immutable live proposal changed",
+                "session_state": "terminated-after-proposal-inspection-failure",
+                "request_trace": ["live.observe-generation:1", "live.propose:evolve:queued"],
+                "guest_requests": 2,
+            });
+            let failure = super::super::output::Failure::new(
+                super::super::output::ErrorContext {
+                    stage: "wasm",
+                    outcome: "internal-failure",
+                },
+                original.to_string(),
+            );
+            let terminal = terminal_proposal_failure(
+                &failure,
+                &serde_json::json!([{"type":"I64","value":"21"}]),
+                1,
+            )
+            .expect("terminal worker failure must remain terminal");
+            assert_eq!(terminal["diagnostic"], original["diagnostic"]);
+            assert_eq!(terminal["request_trace"], original["request_trace"]);
+            assert_eq!(terminal["guest_requests"], 2);
+            assert_eq!(terminal["completed_invocation_stack"][0]["value"], "21");
+            assert_eq!(
+                terminal["session_state"],
+                "terminated-after-proposal-inspection-failure"
+            );
+        }
     }
 
     #[test]
