@@ -221,17 +221,71 @@ fn fmt_prefix_mid_num(prefix: &str, mid: &str, n: u64) -> String {
     s
 }
 
+const fn lean_sym_code(tag: u8) -> u32 {
+    match tag {
+        b'A' => 0x27E8,
+        b'B' => 0x27E9,
+        b'C' => 0x22A2,
+        b'D' => 0x00B7,
+        b'E' => 0x2200,
+        b'F' => 0x2208,
+        b'G' => 0x2227,
+        b'H' => 0x00AC,
+        b'I' => 0x2264,
+        b'J' => 0x2194,
+        b'K' => 0x2203,
+        b'L' => 0x2260,
+        b'M' => 0x2192,
+        b'N' => 0x03B1,
+        _ => 0,
+    }
+}
+
+fn push_lean(mut out: String, text: &str) -> String {
+    debug_assert!(text.is_ascii());
+    let bytes = text.as_bytes();
+    let mut i = 0usize;
+    while i < bytes.len() {
+        if bytes[i] == b'@'
+            && i.saturating_add(2) < bytes.len()
+            && bytes[i.saturating_add(1)] == b'U'
+        {
+            let code = lean_sym_code(bytes[i.saturating_add(2)]);
+            if let Some(ch) = char::from_u32(code) {
+                if code != 0 {
+                    out.push(ch);
+                    i = i.saturating_add(3);
+                    continue;
+                }
+            }
+        }
+        out.push(char::from(bytes[i]));
+        i = i.saturating_add(1);
+    }
+    debug_assert!(i == bytes.len());
+    out
+}
+
+fn lean_text(text: &str) -> String {
+    push_lean(String::with_capacity(text.len()), text)
+}
+
 #[expect(
     tigerstyle::ambiguous_params,
     reason = "Owner: noble-contracts; formatting delimiters and operands are ordered by Lean syntax"
 )]
 fn fmt_wrap2(open: &str, a: &str, mid: &str, b: &str, close: &str) -> String {
-    let mut s = String::from(open);
+    let cap = open
+        .len()
+        .saturating_add(a.len())
+        .saturating_add(mid.len())
+        .saturating_add(b.len())
+        .saturating_add(close.len());
+    let mut s = push_lean(String::with_capacity(cap), open);
     s.push_str(a);
-    s.push_str(mid);
+    s = push_lean(s, mid);
     s.push_str(b);
-    s.push_str(close);
-    s
+    push_lean(s, close)
 }
 
 #[expect(
@@ -877,7 +931,7 @@ fn emit_code_typed_step(
             crate::rendering::number(&mut step_expr, u64::from(target_slot));
             step_expr.push_str(") (s := st ++ ");
             step_expr = push_ty_list(step_expr, pfx)?;
-            step_expr.push_str(") rfl ⟨rfl, rfl, rfl, rfl⟩ (");
+            step_expr = push_lean(step_expr, ") rfl @UArfl, rfl, rfl, rfl@UB (");
             step_expr = push_call_target_prefix(step_expr, sub_prefix);
             crate::rendering::number(&mut step_expr, u64::from(target_slot));
             step_expr.push_str(" (st ++ ");
@@ -935,7 +989,7 @@ fn emit_code_typed_line(
     *out = next_out;
     out.push_str(") (by have h := (");
     out.push_str(&step_expr);
-    out.push_str("); simp at h ⊢; exact h) ?_\n");
+    out.push_str(&lean_text("); simp at h @UC; exact h) ?_\n"));
     *cur = next_cur;
     Ok(())
 }
@@ -1285,7 +1339,7 @@ fn emit_callee_subject_and_embedding(
                 if si != 0 {
                     out.push('\n');
                 }
-                out.push_str("    · exact calleeSubTyped_");
+                out = push_lean(out, "    @UD exact calleeSubTyped_");
                 crate::rendering::number(&mut out, ui as u64);
                 out.push('_');
                 crate::rendering::number(&mut out, u64::from(sub_slots[si]));
@@ -1347,7 +1401,10 @@ fn emit_callee_subject_and_embedding(
     if sub_slots.is_empty() {
         out.push_str("fun _ => rfl }\n");
     } else {
-        out.push_str("by\n        intro occ\n        split\n        · simp [calleeSubject_");
+        out = push_lean(
+            out,
+            "by\n        intro occ\n        split\n        @UD simp [calleeSubject_",
+        );
         crate::rendering::number(&mut out, ui as u64);
         out.push_str(", calleeEnv_");
         crate::rendering::number(&mut out, ui as u64);
@@ -1358,7 +1415,7 @@ fn emit_callee_subject_and_embedding(
             crate::rendering::number(&mut out, u64::from(sub_slots[si]));
             si += 1;
         }
-        out.push_str("]\n        · simp [calleeSubject_");
+        out = push_lean(out, "]\n        @UD simp [calleeSubject_");
         crate::rendering::number(&mut out, ui as u64);
         out.push_str(", calleeEnv_");
         crate::rendering::number(&mut out, ui as u64);
@@ -1371,10 +1428,10 @@ fn emit_callee_subject_and_embedding(
         }
         out.push_str("]; omega }\n");
     }
-    out.push_str("  placement := rfl\n  lookup := rfl\n  entryMatches := ⟨rfl, rfl, rfl, rfl⟩\n  body := rfl\n  input := rfl\n  output := rfl\n  origin := rfl\n");
+    out = push_lean(out, "  placement := rfl\n  lookup := rfl\n  entryMatches := @UArfl, rfl, rfl, rfl@UB\n  body := rfl\n  input := rfl\n  output := rfl\n  origin := rfl\n");
     out.push_str("theorem calleeBodies_");
     crate::rendering::number(&mut out, ui as u64);
-    out.push_str(" : ∀ row ∈ calleeSubject_");
+    out = push_lean(out, " : @UE row @UF calleeSubject_");
     crate::rendering::number(&mut out, ui as u64);
     out.push_str(".env.entries, Sequential row.body := ");
     if sub_slots.is_empty() {
@@ -1390,7 +1447,7 @@ fn emit_callee_subject_and_embedding(
             crate::rendering::number(&mut out, u64::from(sub_slots[si]));
             si += 1;
         }
-        out.push_str(", Sequential, Scalar] at hr ⊢\n  rcases hr with ");
+        out = push_lean(out, ", Sequential, Scalar] at hr @UC\n  rcases hr with ");
         let mut si = 0usize;
         while si < sub_slots.len() {
             if si != 0 {
@@ -1956,7 +2013,7 @@ pub(super) fn obligation(
                 if mi != 0 {
                     out.push('\n');
                 }
-                out.push_str("    · exact typed_entry_");
+                out = push_lean(out, "    @UD exact typed_entry_");
                 crate::rendering::number(&mut out, u64::from(metas[mi].slot));
                 out.push_str(" []");
                 mi += 1;
@@ -2270,12 +2327,12 @@ fn emit_prop3_lean_step(
 ) -> Result<(), Diagnostic> {
     match step {
         Prop3LeanStep::Text(Prop3LeanText::CloseParen) => out.push(')'),
-        Prop3LeanStep::Text(Prop3LeanText::AndSep) => out.push_str(" ∧ "),
+        Prop3LeanStep::Text(Prop3LeanText::AndSep) => out.push_str(&lean_text(" @UG ")),
         Prop3LeanStep::Visit(node) => match node {
             Prop3::True => out.push_str("True"),
             Prop3::False => out.push_str("False"),
             Prop3::Not(b) => {
-                out.push_str("(¬ ");
+                out.push_str(&lean_text("(@UH "));
                 work.push(Prop3LeanStep::Text(Prop3LeanText::CloseParen));
                 work.push(Prop3LeanStep::Visit(*b));
             }
@@ -2308,7 +2365,7 @@ fn emit_prop3_lean_step(
                 out.push_str("((");
                 let s1 = emit_term3_lean(core::mem::take(out), &l, bound_names, inputs, ghosts)?;
                 *out = s1;
-                out.push_str(").toInt ≤ (");
+                out.push_str(&lean_text(").toInt @UI ("));
                 let s2 = emit_term3_lean(core::mem::take(out), &r, bound_names, inputs, ghosts)?;
                 *out = s2;
                 out.push_str(").toInt)");
@@ -2349,7 +2406,7 @@ fn emit_statement3_lean(mut out: String, stmt: &Statement3) -> Result<String, Di
     while bi < binders.len() {
         let mut vname = String::from("bv_");
         crate::rendering::number(&mut vname, bi as u64);
-        out.push_str("(∀ (");
+        out = push_lean(out, "(@UE (");
         out.push_str(&vname);
         out.push_str(" : ");
         push_sort_lean_type_buf(&mut out, binders[bi].1);
@@ -2959,15 +3016,21 @@ fn emit_eval_prop3_iff_step(
     match step {
         EvalPropStep::Visit(node) => match node {
             Prop3::True => {
-                let mut p = String::from("⟨(rfl : NobleContracts.evaluate (.bool true) ");
+                let mut p = lean_text("@UA(rfl : NobleContracts.evaluate (.bool true) ");
                 p.push_str(ctx_expr);
-                p.push_str(" = some (NobleContracts.Value.bool true)), iff_true_tr⟩");
+                p = push_lean(
+                    p,
+                    " = some (NobleContracts.Value.bool true)), iff_true_tr@UB",
+                );
                 stack.push((p, String::from("true")));
             }
             Prop3::False => {
-                let mut p = String::from("⟨(rfl : NobleContracts.evaluate (.bool false) ");
+                let mut p = lean_text("@UA(rfl : NobleContracts.evaluate (.bool false) ");
                 p.push_str(ctx_expr);
-                p.push_str(" = some (NobleContracts.Value.bool false)), iff_false_tr⟩");
+                p = push_lean(
+                    p,
+                    " = some (NobleContracts.Value.bool false)), iff_false_tr@UB",
+                );
                 stack.push((p, String::from("false")));
             }
             Prop3::Not(b) => {
@@ -3017,11 +3080,14 @@ fn emit_eval_prop3_iff_step(
                     emit_eval_term3_ctx(r, Sort3::I64, ctx_expr, before_vals, after_vals)?;
                 let mut bval = String::from("(decide ((");
                 bval.push_str(&lv);
-                bval.push_str(if is_lt {
-                    ").toInt < ("
-                } else {
-                    ").toInt ≤ ("
-                });
+                bval = push_lean(
+                    bval,
+                    if is_lt {
+                        ").toInt < ("
+                    } else {
+                        ").toInt @UI ("
+                    },
+                );
                 bval.push_str(&rv);
                 bval.push_str(").toInt))");
                 let mut p = String::from(if is_lt { "(iff_lt " } else { "(iff_le " });
@@ -4343,10 +4409,6 @@ fn emit_seg_claim_step(
     })
 }
 
-#[expect(
-    clippy::single_char_add_str,
-    reason = "Owner: noble-contracts; Aeneas rejects non-ASCII char literals"
-)]
 fn emit_seg_claim_close(
     mut out: String,
     k: usize,
@@ -4354,7 +4416,7 @@ fn emit_seg_claim_close(
     produced_sorts: &[Sort3],
 ) -> String {
     let after_list = format_value_list(stack_exprs);
-    out.push_str("    ⟨");
+    out = push_lean(out, "    @UA");
     out.push_str(&after_list);
     out.push_str(", hfinal, ");
     out = emit_stack_typed(out, produced_sorts);
@@ -4366,8 +4428,8 @@ fn emit_seg_claim_close(
         out.push_str(", ");
         wi += 1;
     }
-    out.push_str("⟨hbefore_eq, rfl⟩");
-    out.push_str("⟩");
+    out = push_lean(out, "@UAhbefore_eq, rfl@UB");
+    out = push_lean(out, "@UB");
     out.push('\n');
     out
 }
@@ -4590,14 +4652,10 @@ fn emit_mc1_profile_code(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; emits fixed byte tags per segment opcode"
 )]
-#[expect(
-    clippy::single_char_add_str,
-    reason = "Owner: noble-contracts; Aeneas rejects non-ASCII char literals"
-)]
 fn emit_seg_profile_code(mut out: String, ops: &[SegOp]) -> String {
     let mut i = 0usize;
     while i < ops.len() {
-        out.push_str("⟨");
+        out = push_lean(out, "@UA");
         match &ops[i] {
             SegOp::LitI64(_) | SegOp::LitBool(_) => out.push_str("trivial"),
             SegOp::Word(0) => out.push_str("Or.inl rfl"),
@@ -4618,7 +4676,7 @@ fn emit_seg_profile_code(mut out: String, ops: &[SegOp]) -> String {
     out.push_str("True.intro");
     let mut c = 0usize;
     while c < ops.len() {
-        out.push_str("⟩");
+        out = push_lean(out, "@UB");
         c += 1;
     }
     out
@@ -4642,11 +4700,11 @@ fn emit_state_prop_pred(
     in_sorts: &[Sort3],
 ) -> Result<String, Diagnostic> {
     if k == 0 {
-        out.push_str("(fun s => s = input ∧ (NobleContracts.StackTyped input NamedV3Obligation.subject.input ∧ NobleContracts.Holds NamedV3Obligation.precondition input [] []))");
+        out = push_lean(out, "(fun s => s = input @UG (NobleContracts.StackTyped input NamedV3Obligation.subject.input @UG NobleContracts.Holds NamedV3Obligation.precondition input [] []))");
         return Ok(out);
     }
     if k == chunks.len() {
-        out.push_str("(fun s => NobleContracts.StackTyped s NamedV3Obligation.subject.output ∧ NobleContracts.Holds NamedV3Obligation.postcondition input s [])");
+        out = push_lean(out, "(fun s => NobleContracts.StackTyped s NamedV3Obligation.subject.output @UG NobleContracts.Holds NamedV3Obligation.postcondition input s [])");
         return Ok(out);
     }
     let (stack, stack_sorts, facts, ghosts) = chunk_post_state(chunks, k.saturating_sub(1));
@@ -4660,7 +4718,7 @@ fn emit_state_prop_pred(
     out.push_str("(fun s => ");
     let mut ii = 0usize;
     while ii < in_sorts.len() {
-        out.push_str("∃ (");
+        out = push_lean(out, "@UK (");
         out.push_str(&in_vars[ii]);
         out.push_str(" : ");
         push_sort_lean_type_buf(&mut out, in_sorts[ii]);
@@ -4669,7 +4727,7 @@ fn emit_state_prop_pred(
     }
     let mut gi = 0usize;
     while gi < ghosts.len() {
-        out.push_str("∃ (");
+        out = push_lean(out, "@UK (");
         out.push_str(&g_vars[gi].2);
         out.push_str(" : ");
         push_sort_lean_type_buf(&mut out, ghosts[gi].2);
@@ -4689,7 +4747,7 @@ fn emit_state_prop_pred(
         out.push_str(&in_vars[ii]);
         ii += 1;
     }
-    out.push_str("] ∧ (");
+    out = push_lean(out, "] @UG (");
     let mut outcome = Ok(());
     if facts.is_empty() {
         out.push_str("True");
@@ -4697,7 +4755,7 @@ fn emit_state_prop_pred(
         let mut fi = 0usize;
         while fi < facts.len() {
             if fi != 0 {
-                out.push_str(" ∧ ");
+                out = push_lean(out, " @UG ");
             }
             outcome = match emit_prop3_lean(
                 core::mem::take(&mut out),
@@ -4719,7 +4777,7 @@ fn emit_state_prop_pred(
         }
     }
     outcome?;
-    out.push_str(") ∧ s = [");
+    out = push_lean(out, ") @UG s = [");
     let mut outcome = Ok(());
     let mut si = 0usize;
     while si < stack.len() {
@@ -5100,7 +5158,7 @@ fn compute_seg_step_list(
 fn push_pv_binders(mut out: String, sorts: &[Sort3]) -> String {
     let mut si = 0usize;
     while si < sorts.len() {
-        out.push_str("∃ (pv_");
+        out = push_lean(out, "@UK (pv_");
         crate::rendering::number(&mut out, si as u64);
         out.push_str(" : ");
         push_sort_lean_type_buf(&mut out, sorts[si]);
@@ -5243,10 +5301,6 @@ fn step_trace_chunks(
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; emits bridge and join witnesses for one straight-line segment"
 )]
-#[expect(
-    clippy::single_char_add_str,
-    reason = "Owner: noble-contracts; Aeneas rejects non-ASCII char literals"
-)]
 fn emit_segment_chunk(
     mut out: String,
     seg: &SegmentSpec,
@@ -5287,7 +5341,7 @@ fn emit_segment_chunk(
     let cur_p = step_seg_p_vars(p_vars.clone(), &seg.ops)?;
     out.push_str("before = ");
     out.push_str(&format_value_list(&p_vars));
-    out.push_str(" ∧ after = ");
+    out = push_lean(out, " @UG after = ");
     out.push_str(&format_value_list(&cur_p));
     out.push_str(",\n");
     out = emit_segment_claim(out, seg)?;
@@ -5307,7 +5361,7 @@ fn emit_segment_chunk(
             state_expr: "s",
         },
     )?;
-    out.push_str("    ⟨[");
+    out = push_lean(out, "    @UA[");
     out = emit_term_values_csv(out, &seg.carried, &seg.carried_sorts, in_vars, g_vars)?;
     out.push_str("], [");
     out = emit_term_values_csv(out, &seg.consumed, &seg.consumed_sorts, in_vars, g_vars)?;
@@ -5315,7 +5369,7 @@ fn emit_segment_chunk(
     out.push_str("hs_eq");
     out.push_str(", True.intro, ");
     out = emit_stack_typed(out, &seg.consumed_sorts);
-    out.push_str("⟩");
+    out = push_lean(out, "@UB");
     out = emit_segment_join(out, SegmentJoinSpec { seg, ctx })?;
     Ok(out)
 }
@@ -5421,7 +5475,7 @@ fn emit_segment_join(mut out: String, spec: SegmentJoinSpec<'_>) -> Result<Strin
     out.push_str(" = [");
     let target_elems = collect_term_values(pre_stack_ref, pre_sorts_ref, in_vars, g_vars)?;
     out = push_csv_items(out, &target_elems);
-    out.push_str("] := Eq.trans (congrArg (carried ++ ·) hargs.symm) ");
+    out = push_lean(out, "] := Eq.trans (congrArg (carried ++ @UD) hargs.symm) ");
     out.push_str(choose_str(is_first, "hP_eq\n", "hs_eq\n"));
     out = emit_split_carried_match(
         out,
@@ -5495,10 +5549,6 @@ struct CallChunkArgs<'a> {
     tigerstyle::function_length,
     reason = "Owner: noble-contracts; emits complete `LiftedChain.cons` call record cleanly"
 )]
-#[expect(
-    clippy::single_char_add_str,
-    reason = "Owner: noble-contracts; Aeneas rejects non-ASCII char literals"
-)]
 fn emit_call_chunk(
     mut out: String,
     args: CallChunkArgs<'_>,
@@ -5556,7 +5606,7 @@ fn emit_call_chunk(
     out.push_str(&c_in_str);
     out.push_str(",\n  post := fun before after _ => NobleContracts.StackTyped before NamedV3Obligation.calleeSubject_");
     crate::rendering::number(&mut out, *occ_ui as u64);
-    out.push_str(".input ∧ NobleContracts.Holds ");
+    out = push_lean(out, ".input @UG NobleContracts.Holds ");
     out.push_str(&c_out_str);
     out.push_str(" before after [],\n  claim := fun tail before final hbefore hpre execution => Exists.elim (");
     let callee_goal = &trace.distinct_callees[call.callee_index];
@@ -5632,7 +5682,7 @@ fn emit_call_chunk(
     let mut arg_list = String::from("[");
     arg_list = emit_term_values_csv(arg_list, arg_terms, &callee_in_sorts, in_vars, g_vars)?;
     arg_list.push(']');
-    let ctx_bridge = fmt_wrap2("⟨", &arg_list, ", ", "[], []", "⟩");
+    let ctx_bridge = fmt_wrap2("@UA", &arg_list, ", ", "[], []", "@UB");
     let iff_bridge = emit_eval_prop3_iff(
         &call.callee_requires,
         &ctx_bridge,
@@ -5641,7 +5691,7 @@ fn emit_call_chunk(
         &arg_vals_only,
         &[],
     )?;
-    out.push_str("    ⟨[");
+    out = push_lean(out, "    @UA[");
     out = emit_term_values_csv(
         out,
         &pre_stack_ref[..split],
@@ -5659,7 +5709,7 @@ fn emit_call_chunk(
     out.push_str(&bridge_proof_expr);
     out.push_str("), ");
     out = emit_stack_typed(out, &callee_in_sorts);
-    out.push_str("⟩");
+    out = push_lean(out, "@UB");
     emit_call_join(
         out,
         CallJoinSpec {
@@ -5782,7 +5832,10 @@ fn emit_call_join(mut out: String, spec: CallJoinSpec<'_>) -> Result<String, Dia
     let ca_list = format_typed_res_list(callee_in_sorts, &ca_names);
     let target_elems = collect_term_values(pre_stack_ref, pre_sorts_ref, in_vars, g_vars)?;
     let eq_h_p = choose_str(is_first, "hP_eq", "hs_eq");
-    out.push_str("    let hcomb_cj := Eq.trans (congrArg (carried ++ ·) hargs_typed_eq.symm) ");
+    out = push_lean(
+        out,
+        "    let hcomb_cj := Eq.trans (congrArg (carried ++ @UD) hargs_typed_eq.symm) ",
+    );
     out.push_str(eq_h_p);
     out.push('\n');
     out = emit_split_carried_match(
@@ -5803,7 +5856,7 @@ fn emit_call_join(mut out: String, spec: CallJoinSpec<'_>) -> Result<String, Dia
     out.push_str("    let hargs_val : args = ");
     out.push_str(arg_list);
     out.push_str(" := Eq.trans hargs_typed_eq cj_exact\n");
-    let ctx_post = fmt_wrap2("⟨", arg_list, ", ", &res_list, ", []⟩");
+    let ctx_post = fmt_wrap2("@UA", arg_list, ", ", &res_list, ", []@UB");
     let iff_callee_post = emit_eval_prop3_iff(
         &call.callee_ensures,
         &ctx_post,
@@ -6527,7 +6580,7 @@ fn emit_term_norm_step(
                         fmt_wrap2(
                             "(decide_eq_false_of_ne (by decide : ",
                             &nl_lean,
-                            " ≠ ",
+                            " @UL ",
                             &nr_lean,
                             "))",
                         )
@@ -6635,12 +6688,10 @@ fn emit_prop_norm_step(
 ) -> Result<(), Diagnostic> {
     match step {
         NormPropIffStep::Visit(node) => match node {
-            Prop3::True => out.push((String::from("(Iff.rfl : True ↔ True)"), Prop3::True, true)),
-            Prop3::False => out.push((
-                String::from("(Iff.rfl : False ↔ False)"),
-                Prop3::False,
-                true,
-            )),
+            Prop3::True => out.push((lean_text("(Iff.rfl : True @UJ True)"), Prop3::True, true)),
+            Prop3::False => {
+                out.push((lean_text("(Iff.rfl : False @UJ False)"), Prop3::False, true))
+            }
             Prop3::Not(body) => {
                 work.push(NormPropIffStep::CombineNot);
                 work.push(NormPropIffStep::Visit(*body));
@@ -6675,7 +6726,7 @@ fn emit_prop_norm_step(
                     }
                     Prop3::False => {
                         let fold_iff = fmt_wrap2(
-                            "(iff_false_intro (by decide : ¬ (",
+                            "(iff_false_intro (by decide : @UH (",
                             &nl_lean,
                             " = ",
                             &nr_lean,
@@ -6702,7 +6753,7 @@ fn emit_prop_norm_step(
                                 ghosts,
                             )?;
                             out.push((
-                                fmt_wrap2("(Iff.rfl : ", &f_lean, " ↔ ", &f_lean, ")"),
+                                fmt_wrap2("(Iff.rfl : ", &f_lean, " @UJ ", &f_lean, ")"),
                                 folded,
                                 true,
                             ));
@@ -6742,7 +6793,7 @@ fn emit_prop_norm_step(
                     }
                     Prop3::False => {
                         let fold_iff = fmt_wrap2(
-                            "(iff_false_intro (by decide : ¬ ((",
+                            "(iff_false_intro (by decide : @UH ((",
                             &nl_lean,
                             ").toInt < (",
                             &nr_lean,
@@ -6769,7 +6820,7 @@ fn emit_prop_norm_step(
                                 ghosts,
                             )?;
                             out.push((
-                                fmt_wrap2("(Iff.rfl : ", &f_lean, " ↔ ", &f_lean, ")"),
+                                fmt_wrap2("(Iff.rfl : ", &f_lean, " @UJ ", &f_lean, ")"),
                                 folded,
                                 true,
                             ));
@@ -6796,7 +6847,7 @@ fn emit_prop_norm_step(
                         let fold_iff = fmt_wrap2(
                             "(iff_true_intro (by decide : (",
                             &nl_lean,
-                            ").toInt ≤ (",
+                            ").toInt @UI (",
                             &nr_lean,
                             ").toInt))",
                         );
@@ -6809,9 +6860,9 @@ fn emit_prop_norm_step(
                     }
                     Prop3::False => {
                         let fold_iff = fmt_wrap2(
-                            "(iff_false_intro (by decide : ¬ ((",
+                            "(iff_false_intro (by decide : @UH ((",
                             &nl_lean,
-                            ").toInt ≤ (",
+                            ").toInt @UI (",
                             &nr_lean,
                             ").toInt)))",
                         );
@@ -6836,7 +6887,7 @@ fn emit_prop_norm_step(
                                 ghosts,
                             )?;
                             out.push((
-                                fmt_wrap2("(Iff.rfl : ", &f_lean, " ↔ ", &f_lean, ")"),
+                                fmt_wrap2("(Iff.rfl : ", &f_lean, " @UJ ", &f_lean, ")"),
                                 folded,
                                 true,
                             ));
@@ -6893,7 +6944,7 @@ fn emit_prop_norm_step(
                         let w_lean =
                             emit_prop3_lean(String::new(), &wrapped, bound_names, inputs, ghosts)?;
                         out.push((
-                            fmt_wrap2("(Iff.rfl : ", &w_lean, " ↔ ", &w_lean, ")"),
+                            fmt_wrap2("(Iff.rfl : ", &w_lean, " @UJ ", &w_lean, ")"),
                             wrapped,
                             true,
                         ));
@@ -6957,7 +7008,7 @@ fn emit_prop_norm_step(
                 let r_lean =
                     emit_prop3_lean(String::new(), &res_prop, bound_names, inputs, ghosts)?;
                 out.push((
-                    fmt_wrap2("(Iff.rfl : ", &r_lean, " ↔ ", &r_lean, ")"),
+                    fmt_wrap2("(Iff.rfl : ", &r_lean, " @UJ ", &r_lean, ")"),
                     res_prop,
                     true,
                 ));
@@ -7047,10 +7098,6 @@ struct MidJoinSpec<'a> {
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; constructs nested existential witness for intermediate chunk boundary"
 )]
-#[expect(
-    clippy::single_char_add_str,
-    reason = "Owner: noble-contracts; Aeneas rejects non-ASCII char literals"
-)]
 fn emit_mid_join_body(mut out: String, spec: MidJoinSpec<'_>) -> String {
     let MidJoinSpec {
         in_vars,
@@ -7062,25 +7109,25 @@ fn emit_mid_join_body(mut out: String, spec: MidJoinSpec<'_>) -> String {
     out.push_str("    ");
     let mut ii = 0usize;
     while ii < n_in {
-        out.push_str("⟨");
+        out = push_lean(out, "@UA");
         out.push_str(&in_vars[ii]);
         out.push_str(", ");
         ii = ii.saturating_add(1);
     }
     let mut gi = 0usize;
     while gi < ghost_vars.len() {
-        out.push_str("⟨");
+        out = push_lean(out, "@UA");
         out.push_str(&ghost_vars[gi].2);
         out.push_str(", ");
         gi = gi.saturating_add(1);
     }
-    out.push_str("⟨hinput_eq, ");
+    out = push_lean(out, "@UAhinput_eq, ");
     if fact_vars.is_empty() {
         out.push_str("True.intro");
     } else {
         let mut fi = 0usize;
         while fi.saturating_add(1) < fact_vars.len() {
-            out.push_str("⟨");
+            out = push_lean(out, "@UA");
             out.push_str(&fact_vars[fi]);
             out.push_str(", ");
             fi = fi.saturating_add(1);
@@ -7088,17 +7135,17 @@ fn emit_mid_join_body(mut out: String, spec: MidJoinSpec<'_>) -> String {
         out.push_str(&fact_vars[fact_vars.len().saturating_sub(1)]);
         let mut c = 0usize;
         while c.saturating_add(1) < fact_vars.len() {
-            out.push_str("⟩");
+            out = push_lean(out, "@UB");
             c = c.saturating_add(1);
         }
     }
     out.push_str(", ");
     out.push_str(hres_subst_name);
-    out.push_str("⟩");
+    out = push_lean(out, "@UB");
     let mut c = 0usize;
     let total_binders = n_in.saturating_add(ghost_vars.len());
     while c < total_binders {
-        out.push_str("⟩");
+        out = push_lean(out, "@UB");
         c = c.saturating_add(1);
     }
     out.push('\n');
@@ -7224,7 +7271,7 @@ fn emit_final_join_body(
     }
     outcome_val?;
     out_list.push(']');
-    let ctx_join = fmt_wrap2("⟨", &in_list, ", ", &out_list, ", []⟩");
+    let ctx_join = fmt_wrap2("@UA", &in_list, ", ", &out_list, ", []@UB");
     let iff_post = emit_eval_prop3_iff(
         &trace.ensures,
         &ctx_join,
@@ -7335,9 +7382,9 @@ fn emit_unpack_pre_state(
         out.push_str(" [] [] := Eq.ndrec (motive := fun st => NobleContracts.Holds NamedV3Obligation.precondition st [] []) ");
         out.push_str(&h_pre_in);
         out.push_str(" f_input_eq\n");
-        let mut ctx0 = String::from("⟨");
+        let mut ctx0 = lean_text("@UA");
         ctx0.push_str(&in_list);
-        ctx0.push_str(", [], []⟩");
+        ctx0 = push_lean(ctx0, ", [], []@UB");
         let iff0 = emit_eval_prop3_iff(&trace.requires, &ctx0, in_sorts, &[], in_vars, &[])?;
         out.push_str("    let hfacts_all := (");
         out.push_str(&iff0);
@@ -7579,7 +7626,7 @@ pub(super) fn proof(
     } else {
         out.push_str("(\n");
     }
-    out.push_str(HELPERS_PRELUDE);
+    out = push_lean(out, HELPERS_PRELUDE);
     let seg_start_stack = super::collect_input_terms(in_sorts.len());
     let seg_start_sorts: Vec<Sort3> = in_sorts.clone();
     let cur_stack = seg_start_stack.clone();
@@ -7611,8 +7658,8 @@ pub(super) fn proof(
     out.push_str(
         "(fun tail before final hbefore hpre execution => Exists.elim (NobleContracts.NamedV3.liftedChainClaim NamedV3Obligation.subject ",
     );
-    out.push_str("(fun before => NobleContracts.StackTyped before NamedV3Obligation.subject.input ∧ NobleContracts.Holds NamedV3Obligation.precondition before [] []) ");
-    out.push_str("(fun before after => NobleContracts.StackTyped after NamedV3Obligation.subject.output ∧ NobleContracts.Holds NamedV3Obligation.postcondition before after []) ");
+    out = push_lean(out, "(fun before => NobleContracts.StackTyped before NamedV3Obligation.subject.input @UG NobleContracts.Holds NamedV3Obligation.precondition before [] []) ");
+    out = push_lean(out, "(fun before after => NobleContracts.StackTyped after NamedV3Obligation.subject.output @UG NobleContracts.Holds NamedV3Obligation.postcondition before after []) ");
     out.push_str("(fun input =>\n");
     out = emit_chunk_chain(
         out,
@@ -7626,7 +7673,7 @@ pub(super) fn proof(
     let root_eq = emit_root_chain_eq(&chunks);
     out.push_str(") (fun _ => ");
     out.push_str(&root_eq);
-    out.push_str(") (fun _ _ _ h => h.1) tail before final hbefore ⟨hbefore, hpre⟩ execution) (fun after hres_claim => Exists.intro after (And.intro hres_claim.1 (And.intro hres_claim.2.1 hres_claim.2.2.2))))");
+    out = push_lean(out, ") (fun _ _ _ h => h.1) tail before final hbefore @UAhbefore, hpre@UB execution) (fun after hres_claim => Exists.intro after (And.intro hres_claim.1 (And.intro hres_claim.2.1 hres_claim.2.2.2))))");
     out.push(')');
     let (next, outcome) = meter.charge(out.len(), goal.contract_span);
     *meter = next;
@@ -7661,73 +7708,73 @@ let eval_eq_bool {a b : NobleContracts.Term} {ctx : NobleContracts.Context} {ba 
     NobleContracts.evaluate (.eq a b) ctx =
       some (NobleContracts.Value.bool (@decide (NobleContracts.Value.bool ba = NobleContracts.Value.bool bb) (Classical.propDecidable _))) := by
   dsimp [NobleContracts.evaluate]; rw [ha, hb]
-let iff_true_tr : (true = true ↔ True) := Iff.intro (fun _ => True.intro) (fun _ => rfl)
-let iff_false_tr : (false = true ↔ False) := Iff.intro (fun h => Bool.false_ne_true h) False.elim
+let iff_true_tr : (true = true @UJ True) := Iff.intro (fun _ => True.intro) (fun _ => rfl)
+let iff_false_tr : (false = true @UJ False) := Iff.intro (fun h => Bool.false_ne_true h) False.elim
 let iff_eq_i64 {a b : NobleContracts.Term} {ctx : NobleContracts.Context} {va vb : BitVec 64}
     (ha : NobleContracts.evaluate a ctx = some (NobleContracts.Value.i64 va))
     (hb : NobleContracts.evaluate b ctx = some (NobleContracts.Value.i64 vb)) :
     NobleContracts.evaluate (.eq a b) ctx =
-      some (NobleContracts.Value.bool (@decide (NobleContracts.Value.i64 va = NobleContracts.Value.i64 vb) (Classical.propDecidable _))) ∧
-      (@decide (NobleContracts.Value.i64 va = NobleContracts.Value.i64 vb) (Classical.propDecidable _) = true ↔ va = vb) :=
-  ⟨eval_eq_i64 ha hb, Iff.trans (@decide_eq_true_iff _ (Classical.propDecidable _)) (Iff.intro NobleContracts.Value.i64.inj (congrArg NobleContracts.Value.i64))⟩
+      some (NobleContracts.Value.bool (@decide (NobleContracts.Value.i64 va = NobleContracts.Value.i64 vb) (Classical.propDecidable _))) @UG
+      (@decide (NobleContracts.Value.i64 va = NobleContracts.Value.i64 vb) (Classical.propDecidable _) = true @UJ va = vb) :=
+  @UAeval_eq_i64 ha hb, Iff.trans (@decide_eq_true_iff _ (Classical.propDecidable _)) (Iff.intro NobleContracts.Value.i64.inj (congrArg NobleContracts.Value.i64))@UB
 let iff_eq_bool {a b : NobleContracts.Term} {ctx : NobleContracts.Context} {ba bb : Bool}
     (ha : NobleContracts.evaluate a ctx = some (NobleContracts.Value.bool ba))
     (hb : NobleContracts.evaluate b ctx = some (NobleContracts.Value.bool bb)) :
     NobleContracts.evaluate (.eq a b) ctx =
-      some (NobleContracts.Value.bool (@decide (NobleContracts.Value.bool ba = NobleContracts.Value.bool bb) (Classical.propDecidable _))) ∧
-      (@decide (NobleContracts.Value.bool ba = NobleContracts.Value.bool bb) (Classical.propDecidable _) = true ↔ ba = bb) :=
-  ⟨eval_eq_bool ha hb, Iff.trans (@decide_eq_true_iff _ (Classical.propDecidable _)) (Iff.intro NobleContracts.Value.bool.inj (congrArg NobleContracts.Value.bool))⟩
+      some (NobleContracts.Value.bool (@decide (NobleContracts.Value.bool ba = NobleContracts.Value.bool bb) (Classical.propDecidable _))) @UG
+      (@decide (NobleContracts.Value.bool ba = NobleContracts.Value.bool bb) (Classical.propDecidable _) = true @UJ ba = bb) :=
+  @UAeval_eq_bool ha hb, Iff.trans (@decide_eq_true_iff _ (Classical.propDecidable _)) (Iff.intro NobleContracts.Value.bool.inj (congrArg NobleContracts.Value.bool))@UB
 let iff_lt {a b : NobleContracts.Term} {ctx : NobleContracts.Context} {va vb : BitVec 64}
     (ha : NobleContracts.evaluate a ctx = some (NobleContracts.Value.i64 va))
     (hb : NobleContracts.evaluate b ctx = some (NobleContracts.Value.i64 vb)) :
-    NobleContracts.evaluate (.lt a b) ctx = some (NobleContracts.Value.bool (decide (va.toInt < vb.toInt))) ∧
-      (decide (va.toInt < vb.toInt) = true ↔ va.toInt < vb.toInt) :=
-  ⟨(by dsimp [NobleContracts.evaluate]; rw [ha, hb]), decide_eq_true_iff⟩
+    NobleContracts.evaluate (.lt a b) ctx = some (NobleContracts.Value.bool (decide (va.toInt < vb.toInt))) @UG
+      (decide (va.toInt < vb.toInt) = true @UJ va.toInt < vb.toInt) :=
+  @UA(by dsimp [NobleContracts.evaluate]; rw [ha, hb]), decide_eq_true_iff@UB
 let iff_le {a b : NobleContracts.Term} {ctx : NobleContracts.Context} {va vb : BitVec 64}
     (ha : NobleContracts.evaluate a ctx = some (NobleContracts.Value.i64 va))
     (hb : NobleContracts.evaluate b ctx = some (NobleContracts.Value.i64 vb)) :
-    NobleContracts.evaluate (.le a b) ctx = some (NobleContracts.Value.bool (decide (va.toInt ≤ vb.toInt))) ∧
-      (decide (va.toInt ≤ vb.toInt) = true ↔ va.toInt ≤ vb.toInt) :=
-  ⟨(by dsimp [NobleContracts.evaluate]; rw [ha, hb]), decide_eq_true_iff⟩
+    NobleContracts.evaluate (.le a b) ctx = some (NobleContracts.Value.bool (decide (va.toInt @UI vb.toInt))) @UG
+      (decide (va.toInt @UI vb.toInt) = true @UJ va.toInt @UI vb.toInt) :=
+  @UA(by dsimp [NobleContracts.evaluate]; rw [ha, hb]), decide_eq_true_iff@UB
 let iff_not {a : NobleContracts.Term} {ctx : NobleContracts.Context} {ba : Bool} {P : Prop}
-    (h : NobleContracts.evaluate a ctx = some (NobleContracts.Value.bool ba) ∧ (ba = true ↔ P)) :
-    NobleContracts.evaluate (.not a) ctx = some (NobleContracts.Value.bool (!ba)) ∧ ((!ba) = true ↔ ¬ P) :=
-  ⟨(by dsimp [NobleContracts.evaluate]; rw [h.1]),
-   Iff.trans (Bool.casesOn (motive := fun (b : Bool) => ((!b) = true ↔ ¬ (b = true))) ba
+    (h : NobleContracts.evaluate a ctx = some (NobleContracts.Value.bool ba) @UG (ba = true @UJ P)) :
+    NobleContracts.evaluate (.not a) ctx = some (NobleContracts.Value.bool (!ba)) @UG ((!ba) = true @UJ @UH P) :=
+  @UA(by dsimp [NobleContracts.evaluate]; rw [h.1]),
+   Iff.trans (Bool.casesOn (motive := fun (b : Bool) => ((!b) = true @UJ @UH (b = true))) ba
      (Iff.intro (fun _ hn => Bool.false_ne_true hn) (fun _ => rfl))
-     (Iff.intro (fun hn => False.elim (Bool.false_ne_true hn)) (fun hn => False.elim (hn rfl)))) (not_congr h.2)⟩
+     (Iff.intro (fun hn => False.elim (Bool.false_ne_true hn)) (fun hn => False.elim (hn rfl)))) (not_congr h.2)@UB
 let iff_and {a b : NobleContracts.Term} {ctx : NobleContracts.Context} {ba bb : Bool} {P Q : Prop}
-    (hl : NobleContracts.evaluate a ctx = some (NobleContracts.Value.bool ba) ∧ (ba = true ↔ P))
-    (hr : NobleContracts.evaluate b ctx = some (NobleContracts.Value.bool bb) ∧ (bb = true ↔ Q)) :
-    NobleContracts.evaluate (.and a b) ctx = some (NobleContracts.Value.bool (ba && bb)) ∧ ((ba && bb) = true ↔ P ∧ Q) :=
-  ⟨(by dsimp [NobleContracts.evaluate]; rw [hl.1, hr.1]),
-   Iff.trans (Eq.to_iff (Bool.and_eq_true ba bb)) (and_congr hl.2 hr.2)⟩
+    (hl : NobleContracts.evaluate a ctx = some (NobleContracts.Value.bool ba) @UG (ba = true @UJ P))
+    (hr : NobleContracts.evaluate b ctx = some (NobleContracts.Value.bool bb) @UG (bb = true @UJ Q)) :
+    NobleContracts.evaluate (.and a b) ctx = some (NobleContracts.Value.bool (ba && bb)) @UG ((ba && bb) = true @UJ P @UG Q) :=
+  @UA(by dsimp [NobleContracts.evaluate]; rw [hl.1, hr.1]),
+   Iff.trans (Eq.to_iff (Bool.and_eq_true ba bb)) (and_congr hl.2 hr.2)@UB
 let holds_of_eval_iff {t : NobleContracts.Term} {before after : NobleContracts.Stack} {b : Bool} {P : Prop}
-    (h : NobleContracts.evaluate t ⟨before, after, []⟩ = some (NobleContracts.Value.bool b) ∧ (b = true ↔ P)) :
-    NobleContracts.Holds t before after [] ↔ P :=
+    (h : NobleContracts.evaluate t @UAbefore, after, []@UB = some (NobleContracts.Value.bool b) @UG (b = true @UJ P)) :
+    NobleContracts.Holds t before after [] @UJ P :=
   Iff.trans
     (Iff.trans
-      (Eq.ndrec (motive := fun (x : Option NobleContracts.Value) => x = some (NobleContracts.Value.bool true) ↔ some (NobleContracts.Value.bool b) = some (NobleContracts.Value.bool true)) Iff.rfl h.1.symm)
+      (Eq.ndrec (motive := fun (x : Option NobleContracts.Value) => x = some (NobleContracts.Value.bool true) @UJ some (NobleContracts.Value.bool b) = some (NobleContracts.Value.bool true)) Iff.rfl h.1.symm)
       (Iff.intro (fun hs => NobleContracts.Value.bool.inj (Option.some.inj hs)) (congrArg (fun (x : Bool) => (some (NobleContracts.Value.bool x) : Option NobleContracts.Value)))))
     h.2
 let unpack_i64 {P : Prop} (s : NobleContracts.Stack) (ts : List NobleContracts.Ty) (h : NobleContracts.StackTyped s (.i64 :: ts))
-    (k : ∀ (v : BitVec 64) (tl : NobleContracts.Stack), s = NobleContracts.Value.i64 v :: tl → NobleContracts.StackTyped tl ts → P) : P :=
+    (k : @UE (v : BitVec 64) (tl : NobleContracts.Stack), s = NobleContracts.Value.i64 v :: tl @UM NobleContracts.StackTyped tl ts @UM P) : P :=
   Exists.elim ((NobleContracts.stackTyped_cons_iff s .i64 ts).mp h) fun v h0 =>
   Exists.elim h0 fun tl h1 =>
   Exists.elim ((NobleContracts.hasType_i64_iff v).mp h1.2.1) fun n hn =>
   k n tl (Eq.trans h1.1 (congrArg (fun x => x :: tl) hn)) h1.2.2
 let unpack_bool {P : Prop} (s : NobleContracts.Stack) (ts : List NobleContracts.Ty) (h : NobleContracts.StackTyped s (.bool :: ts))
-    (k : ∀ (b : Bool) (tl : NobleContracts.Stack), s = NobleContracts.Value.bool b :: tl → NobleContracts.StackTyped tl ts → P) : P :=
+    (k : @UE (b : Bool) (tl : NobleContracts.Stack), s = NobleContracts.Value.bool b :: tl @UM NobleContracts.StackTyped tl ts @UM P) : P :=
   Exists.elim ((NobleContracts.stackTyped_cons_iff s .bool ts).mp h) fun v h0 =>
   Exists.elim h0 fun tl h1 =>
   Exists.elim ((NobleContracts.hasType_bool_iff v).mp h1.2.1) fun b hb =>
   k b tl (Eq.trans h1.1 (congrArg (fun x => x :: tl) hb)) h1.2.2
-let unpack_nil {P : Prop} (s : NobleContracts.Stack) (h : NobleContracts.StackTyped s []) (k : s = [] → P) : P :=
+let unpack_nil {P : Prop} (s : NobleContracts.Stack) (h : NobleContracts.StackTyped s []) (k : s = [] @UM P) : P :=
   k ((NobleContracts.stackTyped_nil_iff s).mp h)
-let append_split_step {α : Type} {P : Prop} (carried tail rhs : List α) (e : α)
+let append_split_step {@UN : Type} {P : Prop} (carried tail rhs : List @UN) (e : @UN)
     (h : carried ++ tail = e :: rhs) (h_lt : tail.length < (e :: rhs).length)
-    (k : ∀ (hd : α) (tl : List α), carried = hd :: tl → hd = e → tl ++ tail = rhs → P) : P :=
-  List.casesOn (motive := fun l => carried = l → P) carried
+    (k : @UE (hd : @UN) (tl : List @UN), carried = hd :: tl @UM hd = e @UM tl ++ tail = rhs @UM P) : P :=
+  List.casesOn (motive := fun l => carried = l @UM P) carried
     (fun hnil =>
       False.elim (Nat.lt_irrefl tail.length
         (Eq.ndrec (motive := fun n => tail.length < n) h_lt
@@ -7736,10 +7783,10 @@ let append_split_step {α : Type} {P : Prop} (carried tail rhs : List α) (e : �
       let hstep : hd :: (tl ++ tail) = e :: rhs := Eq.ndrec (motive := fun l => l ++ tail = e :: rhs) h hcons
       k hd tl hcons (List.cons.inj hstep).1 (List.cons.inj hstep).2)
     rfl
-let append_split_nil {α : Type} {P : Prop} (carried tail rhs : List α)
+let append_split_nil {@UN : Type} {P : Prop} (carried tail rhs : List @UN)
     (h : carried ++ tail = rhs) (h_eq : tail.length = rhs.length)
-    (k : carried = [] → tail = rhs → P) : P :=
-  List.casesOn (motive := fun l => carried = l → P) carried
+    (k : carried = [] @UM tail = rhs @UM P) : P :=
+  List.casesOn (motive := fun l => carried = l @UM P) carried
     (fun hnil => k hnil (Eq.ndrec (motive := fun l => l ++ tail = rhs) h hnil))
     (fun hd tl hcons =>
       let hlen : (hd :: tl).length + tail.length = rhs.length :=
@@ -7750,37 +7797,37 @@ let append_split_nil {α : Type} {P : Prop} (carried tail rhs : List α)
             (Nat.lt_add_of_pos_left (Nat.zero_lt_succ tl.length)) h_eq)
           hlen)))
     rfl
-let iff_not_true : (¬ True) ↔ False := Iff.intro (fun h => h True.intro) False.elim
-let iff_not_false : (¬ False) ↔ True := Iff.intro (fun _ => True.intro) (fun _ h => h)
-let iff_not_not {P : Prop} : (¬ ¬ P) ↔ P := Iff.intro Classical.byContradiction (fun hp hnp => hnp hp)
-let iff_and_false_l {P : Prop} : (False ∧ P) ↔ False := Iff.intro (fun h => h.1) False.elim
-let iff_and_false_r {P : Prop} : (P ∧ False) ↔ False := Iff.intro (fun h => h.2) False.elim
-let iff_and_true_l {P : Prop} : (True ∧ P) ↔ P := Iff.intro (fun h => h.2) (fun h => ⟨True.intro, h⟩)
-let iff_and_true_r {P : Prop} : (P ∧ True) ↔ P := Iff.intro (fun h => h.1) (fun h => ⟨h, True.intro⟩)
-let decide_eq_true_of_eq {α : Type} {a b : α} (h : a = b) :
+let iff_not_true : (@UH True) @UJ False := Iff.intro (fun h => h True.intro) False.elim
+let iff_not_false : (@UH False) @UJ True := Iff.intro (fun _ => True.intro) (fun _ h => h)
+let iff_not_not {P : Prop} : (@UH @UH P) @UJ P := Iff.intro Classical.byContradiction (fun hp hnp => hnp hp)
+let iff_and_false_l {P : Prop} : (False @UG P) @UJ False := Iff.intro (fun h => h.1) False.elim
+let iff_and_false_r {P : Prop} : (P @UG False) @UJ False := Iff.intro (fun h => h.2) False.elim
+let iff_and_true_l {P : Prop} : (True @UG P) @UJ P := Iff.intro (fun h => h.2) (fun h => @UATrue.intro, h@UB)
+let iff_and_true_r {P : Prop} : (P @UG True) @UJ P := Iff.intro (fun h => h.1) (fun h => @UAh, True.intro@UB)
+let decide_eq_true_of_eq {@UN : Type} {a b : @UN} (h : a = b) :
     (@decide (a = b) (Classical.propDecidable _)) = true :=
   @decide_eq_true (a = b) (Classical.propDecidable _) h
-let decide_eq_false_of_ne {α : Type} {a b : α} (h : a ≠ b) :
+let decide_eq_false_of_ne {@UN : Type} {a b : @UN} (h : a @UL b) :
     (@decide (a = b) (Classical.propDecidable _)) = false :=
   @decide_eq_false (a = b) (Classical.propDecidable _) h
 let eq_add_congr {a1 a2 b1 b2 : BitVec 64} (ha : a1 = a2) (hb : b1 = b2) : a1 + b1 = a2 + b2 :=
-  congr (congrArg (· + ·) ha) hb
+  congr (congrArg (@UD + @UD) ha) hb
 let eq_sub_congr {a1 a2 b1 b2 : BitVec 64} (ha : a1 = a2) (hb : b1 = b2) : a1 - b1 = a2 - b2 :=
-  congr (congrArg (· - ·) ha) hb
+  congr (congrArg (@UD - @UD) ha) hb
 let eq_mul_congr {a1 a2 b1 b2 : BitVec 64} (ha : a1 = a2) (hb : b1 = b2) : a1 * b1 = a2 * b2 :=
-  congr (congrArg (· * ·) ha) hb
-let eq_equals_congr {α : Type} {a1 a2 b1 b2 : α} (ha : a1 = a2) (hb : b1 = b2) :
+  congr (congrArg (@UD * @UD) ha) hb
+let eq_equals_congr {@UN : Type} {a1 a2 b1 b2 : @UN} (ha : a1 = a2) (hb : b1 = b2) :
     (@decide ((a1) = (b1)) (Classical.propDecidable _)) = (@decide ((a2) = (b2)) (Classical.propDecidable _)) :=
   congr (congrArg (fun x y => (@decide ((x) = (y)) (Classical.propDecidable _))) ha) hb
-let iff_eq_congr {α : Type} {a1 a2 b1 b2 : α} (ha : a1 = a2) (hb : b1 = b2) :
-    (a1 = b1) ↔ (a2 = b2) :=
+let iff_eq_congr {@UN : Type} {a1 a2 b1 b2 : @UN} (ha : a1 = a2) (hb : b1 = b2) :
+    (a1 = b1) @UJ (a2 = b2) :=
   Iff.intro (fun h => Eq.trans ha.symm (Eq.trans h hb)) (fun h => Eq.trans ha (Eq.trans h hb.symm))
 let iff_lt_congr {a1 a2 b1 b2 : BitVec 64} (ha : a1 = a2) (hb : b1 = b2) :
-    (a1.toInt < b1.toInt) ↔ (a2.toInt < b2.toInt) :=
-  Eq.ndrec (motive := fun x => (a1.toInt < b1.toInt) ↔ (x.toInt < b2.toInt))
-    (Eq.ndrec (motive := fun y => (a1.toInt < b1.toInt) ↔ (a1.toInt < y.toInt)) Iff.rfl hb) ha
+    (a1.toInt < b1.toInt) @UJ (a2.toInt < b2.toInt) :=
+  Eq.ndrec (motive := fun x => (a1.toInt < b1.toInt) @UJ (x.toInt < b2.toInt))
+    (Eq.ndrec (motive := fun y => (a1.toInt < b1.toInt) @UJ (a1.toInt < y.toInt)) Iff.rfl hb) ha
 let iff_le_congr {a1 a2 b1 b2 : BitVec 64} (ha : a1 = a2) (hb : b1 = b2) :
-    (a1.toInt ≤ b1.toInt) ↔ (a2.toInt ≤ b2.toInt) :=
-  Eq.ndrec (motive := fun x => (a1.toInt ≤ b1.toInt) ↔ (x.toInt ≤ b2.toInt))
-    (Eq.ndrec (motive := fun y => (a1.toInt ≤ b1.toInt) ↔ (a1.toInt ≤ y.toInt)) Iff.rfl hb) ha
+    (a1.toInt @UI b1.toInt) @UJ (a2.toInt @UI b2.toInt) :=
+  Eq.ndrec (motive := fun x => (a1.toInt @UI b1.toInt) @UJ (x.toInt @UI b2.toInt))
+    (Eq.ndrec (motive := fun y => (a1.toInt @UI b1.toInt) @UJ (a1.toInt @UI y.toInt)) Iff.rfl hb) ha
 "#;
