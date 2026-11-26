@@ -616,8 +616,13 @@ fn fold_eq_prop(left: Term3, right: Term3) -> Prop3 {
 fn fold_order_prop(left: Term3, right: Term3, is_strict: bool) -> Prop3 {
     match (&left, &right) {
         (Term3::I64(a), Term3::I64(b)) => {
-            let is_true = if is_strict { *a < *b } else { *a <= *b };
-            if is_true {
+            if is_strict {
+                if *a < *b {
+                    Prop3::True
+                } else {
+                    Prop3::False
+                }
+            } else if *a <= *b {
                 Prop3::True
             } else {
                 Prop3::False

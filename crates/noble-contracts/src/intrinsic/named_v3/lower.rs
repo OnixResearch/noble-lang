@@ -2061,14 +2061,14 @@ pub(super) fn obligation(
     );
     out.push_str("end NamedV3Obligation\n");
     let is_within_work = match u32::try_from(out.len()) {
-        Ok(len) => len <= limits.work,
+        Ok(len) => limits.work.checked_sub(len).is_some(),
         Err(_) => false,
     };
     let is_within_bytes = match (
         u64::try_from(out.len()),
         u64::from(limits.bytes).checked_mul(128),
     ) {
-        (Ok(len), Some(cap)) => len <= cap,
+        (Ok(len), Some(cap)) => cap.checked_sub(len).is_some(),
         _ => false,
     };
     if !is_within_work || !is_within_bytes {
