@@ -1,9 +1,9 @@
 {
   "schema": "noble-service-wire-refinement-inputs/v2",
   "extraction_receipt": "verification/m4/implementation.json.gz",
-  "extraction_receipt_sha256": "8fc17bf9c307fcab10829ef36dccf8b5b6c08fb28bd574656d48fbbd7a99c8b4",
+  "extraction_receipt_sha256": "53589c2d37f0a514066b3db957e5dccae86d640396773122132cece897f871ad",
   "extraction_lock": "verification/m4/extraction-lock.json.gz",
-  "extraction_lock_sha256": "e69774f84b442591e22c57fd8797fcfef514a062477692c55927fdb218dd6bd8",
+  "extraction_lock_sha256": "38ff1f515f506517da1651cdb2f8d32c268590e9c69efd0f8bb8daca41087bd9",
   "generated_inputs": {
     "proofs/m3/NobleKernel.lean": "bd411e329236cb36c38920ca57b4c810a40a30a71a7954f2529225ef0966d9ec",
     "proofs/m3/NobleKernel/Types.lean": "e2dbea748b5f0d3c72e92548bb73c260ff5915ec1c4c2c46cdfa4eef16911b35",
