@@ -17,7 +17,7 @@
   "documents": 16,
   "requirements": 645,
   "scenarios": 330,
-  "scenarios_executed": 266,
+  "scenarios_executed": 272,
   "open_test_design": 255,
   "proof_obligations": 30,
   "completed_proofs": 3,
@@ -2395,7 +2395,7 @@
     },
     {
       "file": ".cairn/changes/allocation-strategy-contract/tasks.md",
-      "sha256": "202da31240eb7868ac9b4a6c19bbb8219f34732b74a5edae58b7005b10e8be36"
+      "sha256": "478b2048b5b41925cc30f2947ac9312db3d78466fe9407f3482a084badf35842"
     },
     {
       "file": ".cairn/changes/artifact-correspondence-extension/design.md",
@@ -2435,11 +2435,11 @@
     },
     {
       "file": ".cairn/changes/bounded-wasm-correspondence/tasks.md",
-      "sha256": "bd8a134c940186583a5c87648ada1fed462f429a5751c62c8017686b4e586334"
+      "sha256": "08f38a11568a006d7766a7b9a0783cdd22a8ae31a9a5d3bdabafcb9d9787c628"
     },
     {
       "file": ".cairn/changes/c-backend/design.md",
-      "sha256": "b3d457ddb4d0bc213c4736d3387678afee8a49429443eadbecc5c6decf565dba"
+      "sha256": "3a144d482b5bdd75d754b0ddd08cd7ca69a0a41b78495260c6f9a5e1e7dad3f7"
     },
     {
       "file": ".cairn/changes/c-backend/proposal.md",
@@ -2475,7 +2475,7 @@
     },
     {
       "file": ".cairn/changes/c-backend/tasks.md",
-      "sha256": "049f4e2e5c5dafe94a93dcba5ca3efbed14bf05cf722f4f6472a172ea5170227"
+      "sha256": "e7302871c63fda0e3c011fed79c7df292803c2b445816d81ba2625f761dd3e15"
     },
     {
       "file": ".cairn/changes/calculator-v1/design.md",
@@ -2491,11 +2491,11 @@
     },
     {
       "file": ".cairn/changes/calculator-v1/tasks.md",
-      "sha256": "c9cb46bf258a132f9cf3ab1d0234437a7dbf75dd4a87225c544761da5d04174e"
+      "sha256": "6f6729d50c87ca6c30b83bbd988b7409fc3a7355e0aa6900d88f610e878bc9ab"
     },
     {
       "file": ".cairn/changes/cranelift-backend-evaluation/design.md",
-      "sha256": "8bded1cc52cb4e9b6865328cf80be36d10bf0b70ad145083aec480f970a1e034"
+      "sha256": "64d732b685568e61a95b8b665c644d9afa7c5e80de1c1b8367c3e00c5f0c83ad"
     },
     {
       "file": ".cairn/changes/cranelift-backend-evaluation/proposal.md",
@@ -2507,7 +2507,7 @@
     },
     {
       "file": ".cairn/changes/cranelift-backend-evaluation/tasks.md",
-      "sha256": "52451860331a19cb131450a8b53164ec27379479fb3b5a57fa49d564372bc7e4"
+      "sha256": "1873592c13a7b5705792384e1b2170204c8dc6dc75c6b854fcc64f5d05693127"
     },
     {
       "file": ".cairn/changes/gpu-offload-research/design.md",
@@ -2575,7 +2575,7 @@
     },
     {
       "file": ".cairn/changes/intrinsic-noble-proofs/specs/verification/spec.md",
-      "sha256": "f73dfce1ddd0e0da2441dbd7372e0ea80a74587793a8d689a5d2beaee440a89e"
+      "sha256": "bfc559ce5a6f21d1161eeb3dd4196bd15f8b25f599af569115433b011b418497"
     },
     {
       "file": ".cairn/changes/intrinsic-noble-proofs/tasks.md",
@@ -2635,7 +2635,7 @@
     },
     {
       "file": ".cairn/changes/ownership-lifetime-contract/tasks.md",
-      "sha256": "20cc373051ddfdadd2261439830a5c91536996735bff67215fe6466f932dab0a"
+      "sha256": "8ce7b1790b514904239fef4a8a7a30b4ed97e3a01bbfa5539f695cf81c7af44e"
     },
     {
       "file": ".cairn/changes/proof-automation-diagnostics/design.md",
@@ -2644,6 +2644,10 @@
     {
       "file": ".cairn/changes/proof-automation-diagnostics/proposal.md",
       "sha256": "1c91b050c5524f44777097de740ba8daa3c098bec06feec933bdc1e51da74f83"
+    },
+    {
+      "file": ".cairn/changes/proof-automation-diagnostics/review-proof-holes-staleness-2026-11-24.md",
+      "sha256": "91b9f7bb40ab7a5e1ec42d34093a52777a7777c627e8043a98ea23bd52b6fd30"
     },
     {
       "file": ".cairn/changes/proof-automation-diagnostics/review-refutation-template-2026-11-20.md",
@@ -2659,7 +2663,7 @@
     },
     {
       "file": ".cairn/changes/proof-automation-diagnostics/tasks.md",
-      "sha256": "8dd5cf8d3a42dfcdae0051a5c88adbc1b5ea956e062f617df68ef99ba7bf599e"
+      "sha256": "1bcbc9b107726eba08bd8a8e6f167928f5f5dfaffe4e7a109bab1a215ba4fe4a"
     },
     {
       "file": ".cairn/changes/resource-safe-wiring-laws/design.md",
@@ -2707,11 +2711,11 @@
     },
     {
       "file": ".cairn/changes/reusable-contract-calls/specs/verification/spec.md",
-      "sha256": "3c56308c0926a7c1eb1c75b7ee0beded36f87ba35a3b14244972035f3babbed8"
+      "sha256": "d5e884ab41ce4ef454a8700b63383c6610880cccd1bade35044561fa29790f49"
     },
     {
       "file": ".cairn/changes/reusable-contract-calls/tasks.md",
-      "sha256": "16c4e50d028796192d5b058c160067794547ae833bab82f94c96f20cff89fc4c"
+      "sha256": "ce8b5623e3e5e1d2bdd667018eb8753f040c30cfac5f9268121849595458b0c7"
     },
     {
       "file": ".cairn/MIGRATION.md",
@@ -2851,7 +2855,7 @@
     },
     {
       "file": "specs/conformance/calculator-cases.json",
-      "sha256": "2afc188ff6d2abca2d85b879e65235ee833ed7e72add24df68ea5c027a405202"
+      "sha256": "b61811794506687ccb548397938b619c333fec177834807205846db7df638734"
     },
     {
       "file": "specs/conformance/cases.json",
@@ -3094,12 +3098,20 @@
       "sha256": "cc0a1b4557ed338e62627a89865f89b112e5133f3e3e1fc30d60657885418881"
     },
     {
+      "file": "verification/c-backend/review-packet.md",
+      "sha256": "0f4250bc14d3c3c947c606981e66b1db3ea93261ebf87afb72de4832e199063e"
+    },
+    {
       "file": "verification/calculator-errors/README.md",
       "sha256": "0898507cc3c84d2036cc4c66145d96df0d848acd8f431e1575f5891c5a3deeda"
     },
     {
       "file": "verification/calculator-v1/budgets/README.md",
       "sha256": "ca569501d474ce70ce4d2c85a9d406e18ec85a0e74290ced6807b9538152ce0c"
+    },
+    {
+      "file": "verification/calculator-v1/budgets/review-2026-11-23.md",
+      "sha256": "360e893b06a2c55070df4bcb3ffe907d62d0d8f98fc386b351c1993202fc349e"
     },
     {
       "file": "verification/calculator-v1/calc-10-11-design.md",
@@ -3112,6 +3124,10 @@
     {
       "file": "verification/calculator-v1/calc-13-review.md",
       "sha256": "cf07fe0dab2282954fe24c942738694f4c853c88e4588a4bfc8fc45bfda4cdfc"
+    },
+    {
+      "file": "verification/calculator-v1/cases/README.md",
+      "sha256": "bc34bb7cb7b0de2552679ceefe6ea7e156bfbce8deebb2c63f141dd9fe2e08ae"
     },
     {
       "file": "verification/calculator-v1/committed-session/README.md",
@@ -3215,7 +3231,7 @@
     },
     {
       "file": "verification/extraction.md",
-      "sha256": "24a636803cf030d362be67a911bcd7558019407257e15f4bd2c89a2f47951100"
+      "sha256": "d2d6dc36f6dae12366a5e28508c0d0e0b3428ce91a61e86113d4878ed9cd92bc"
     },
     {
       "file": "verification/focus-elaboration/decision.md",
@@ -3571,7 +3587,7 @@
     },
     {
       "file": "verification/proof-automation-cases/README.md",
-      "sha256": "c1f2a97047d3a296824094672d111ce8d0e5083343654f151cddfbba72e0b3cc"
+      "sha256": "b78f8e99b62d6cc6a92cfcf112be2a83c483ba8f12439918feca357c62abfe68"
     },
     {
       "file": "verification/recurrent-weights/criteria.md",
