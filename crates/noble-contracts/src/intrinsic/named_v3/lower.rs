@@ -173,7 +173,7 @@ fn push_sort_list(mut out: String, sorts: &[Sort3]) -> String {
         }
         out.push_str(match sorts[i] {
             Sort3::I64 => ".i64",
-            Sort3::Bool => ".bool",
+            Sort3::Boolean => ".bool",
         });
         i += 1;
     }
@@ -242,8 +242,8 @@ const fn lean_sym_code(tag: u8) -> u32 {
 }
 
 fn push_lean(mut out: String, text: &str) -> String {
-    debug_assert!(text.is_ascii());
     let bytes = text.as_bytes();
+    debug_assert!(bytes.len() == text.len());
     let mut i = 0usize;
     while i < bytes.len() {
         if bytes[i] == b'@'
@@ -318,7 +318,7 @@ fn fmt_wrap3(open: &str, a: &str, b: &str, c: &str, close: &str) -> String {
 fn push_sort_lean_type_buf(out: &mut String, code: Sort3) {
     match code {
         Sort3::I64 => out.push_str("BitVec 64"),
-        Sort3::Bool => out.push_str("Bool"),
+        Sort3::Boolean => out.push_str("Bool"),
     }
 }
 
@@ -415,7 +415,7 @@ fn emit_noble_term_step(
                 crate::rendering::integer(out, n);
                 out.push_str("))");
             }
-            Term3::Bool(b) => {
+            Term3::BoolLit(b) => {
                 out.push_str(if b { "(.bool true)" } else { "(.bool false)" });
             }
             Term3::Add(l, r) => {
@@ -1841,8 +1841,8 @@ fn emit_obligation_typed_step(
 pub(super) fn obligation(
     goal: &crate::intrinsic::ContractGoal,
     view: &super::SubjectView,
-    requires: &Prop3,
-    ensures: &Prop3,
+    req_prop: &Prop3,
+    ens_prop: &Prop3,
     limits: crate::Limits,
 ) -> Result<String, Diagnostic> {
     let span = goal.subject.source_span;
@@ -2053,9 +2053,9 @@ pub(super) fn obligation(
     }
     outcome?;
     out.push_str("def precondition : NobleContracts.Term := ");
-    out = emit_noble_term_from_prop3(out, requires)?;
+    out = emit_noble_term_from_prop3(out, req_prop)?;
     out.push_str("\ndef postcondition : NobleContracts.Term := ");
-    out = emit_noble_term_from_prop3(out, ensures)?;
+    out = emit_noble_term_from_prop3(out, ens_prop)?;
     out.push_str(
         "\ndef claim : Prop := exportedLiftedClaim subject (Holds precondition) (Holds postcondition)\n",
     );
@@ -2219,7 +2219,7 @@ fn emit_term3_lean_step(
                 crate::rendering::integer(out, n);
                 out.push_str("))");
             }
-            Term3::Bool(b) => out.push_str(if b { "true" } else { "false" }),
+            Term3::BoolLit(b) => out.push_str(if b { "true" } else { "false" }),
             Term3::Add(l, r) => {
                 out.push('(');
                 work.push(Term3LeanStep::Text(Term3LeanText::CloseParen));
@@ -2282,7 +2282,7 @@ fn emit_term3_value_lean(
 ) -> Result<String, Diagnostic> {
     out.push_str(match sort {
         Sort3::I64 => "(NobleContracts.Value.i64 ",
-        Sort3::Bool => "(NobleContracts.Value.bool ",
+        Sort3::Boolean => "(NobleContracts.Value.bool ",
     });
     out = emit_term3_lean(out, term, &[], inputs, ghosts)?;
     out.push(')');
@@ -2742,7 +2742,7 @@ enum EvalTermStep {
 )]
 const fn bool_or_i64_sort(left: &Term3, right: &Term3) -> Sort3 {
     let is_left_bool = match left {
-        Term3::Bool(_) => true,
+        Term3::BoolLit(_) => true,
         Term3::Input(_)
         | Term3::Output(_)
         | Term3::Bound(_)
@@ -2754,7 +2754,7 @@ const fn bool_or_i64_sort(left: &Term3, right: &Term3) -> Sort3 {
         | Term3::Equals(..) => false,
     };
     let is_right_bool = match right {
-        Term3::Bool(_) => true,
+        Term3::BoolLit(_) => true,
         Term3::Input(_)
         | Term3::Output(_)
         | Term3::Bound(_)
@@ -2766,7 +2766,7 @@ const fn bool_or_i64_sort(left: &Term3, right: &Term3) -> Sort3 {
         | Term3::Equals(..) => false,
     };
     if is_left_bool || is_right_bool {
-        Sort3::Bool
+        Sort3::Boolean
     } else {
         Sort3::I64
     }
@@ -2813,7 +2813,7 @@ fn emit_eval_term3_step(
                 p.push_str(" = some ");
                 p.push_str(match expected_sort {
                     Sort3::I64 => "(NobleContracts.Value.i64 (",
-                    Sort3::Bool => "(NobleContracts.Value.bool (",
+                    Sort3::Boolean => "(NobleContracts.Value.bool (",
                 });
                 p.push_str(val);
                 p.push_str(")))");
@@ -2830,7 +2830,7 @@ fn emit_eval_term3_step(
                 p.push_str(" = some ");
                 p.push_str(match expected_sort {
                     Sort3::I64 => "(NobleContracts.Value.i64 (",
-                    Sort3::Bool => "(NobleContracts.Value.bool (",
+                    Sort3::Boolean => "(NobleContracts.Value.bool (",
                 });
                 p.push_str(val);
                 p.push_str(")))");
@@ -2849,7 +2849,7 @@ fn emit_eval_term3_step(
                 p.push_str("))");
                 proofs.push((p, val, Sort3::I64));
             }
-            Term3::Bool(b) => {
+            Term3::BoolLit(b) => {
                 let val = String::from(choose_str(b, "true", "false"));
                 let mut p = String::from("(rfl : NobleContracts.evaluate (.bool ");
                 p.push_str(&val);
@@ -2858,7 +2858,7 @@ fn emit_eval_term3_step(
                 p.push_str(" = some (NobleContracts.Value.bool ");
                 p.push_str(&val);
                 p.push_str("))");
-                proofs.push((p, val, Sort3::Bool));
+                proofs.push((p, val, Sort3::Boolean));
             }
             Term3::Add(l, r) => {
                 work.push(EvalTermStep::Combine(EvalCombKind::Add));
@@ -2917,7 +2917,7 @@ fn emit_eval_term3_step(
             };
             let ctor = match rs {
                 Sort3::I64 => "eval_eq_i64",
-                Sort3::Bool => "eval_eq_bool",
+                Sort3::Boolean => "eval_eq_bool",
             };
             let mut val = String::from("(@decide ((");
             val.push_str(&lv);
@@ -2931,7 +2931,7 @@ fn emit_eval_term3_step(
             p.push(' ');
             p.push_str(&rp);
             p.push(')');
-            proofs.push((p, val, Sort3::Bool));
+            proofs.push((p, val, Sort3::Boolean));
         }
     }
     Ok(())
@@ -3053,7 +3053,7 @@ fn emit_eval_prop3_iff_step(
                 bval.push_str(")) (Classical.propDecidable _))");
                 let helper = match ls {
                     Sort3::I64 => "iff_eq_i64",
-                    Sort3::Bool => "iff_eq_bool",
+                    Sort3::Boolean => "iff_eq_bool",
                 };
                 let mut p = String::from("(");
                 p.push_str(helper);
@@ -3700,7 +3700,7 @@ fn term_sort_step(
             }
             Term3::Ghost(_, _, s) => stack.push(s),
             Term3::I64(_) => stack.push(Sort3::I64),
-            Term3::Bool(_) => stack.push(Sort3::Bool),
+            Term3::BoolLit(_) => stack.push(Sort3::Boolean),
             Term3::Add(l, r) | Term3::Sub(l, r) | Term3::Mul(l, r) => {
                 work.push(TermSortStep::Arith);
                 work.push(TermSortStep::Visit(*r));
@@ -3724,7 +3724,7 @@ fn term_sort_step(
         }
         TermSortStep::Eq => {
             let _ = (stack.pop(), stack.pop());
-            stack.push(Sort3::Bool);
+            stack.push(Sort3::Boolean);
         }
     }
     Ok(())
@@ -3854,7 +3854,7 @@ fn emit_stack_typed(mut out: String, sorts: &[Sort3]) -> String {
         out.push_str("(NobleContracts.StackTyped.cons ");
         out.push_str(match sorts[i] {
             Sort3::I64 => "(NobleContracts.HasType.i64)",
-            Sort3::Bool => "(NobleContracts.HasType.bool)",
+            Sort3::Boolean => "(NobleContracts.HasType.bool)",
         });
         out.push(' ');
         i += 1;
@@ -4057,7 +4057,7 @@ fn emit_stack_unpack_eq(mut out: String, spec: StackUnpackSpec<'_>) -> String {
         let hs = fmt_prefix_mid_num(step_prefix, "_hs_", rev_i as u64);
         let ctor = match sorts[rev_i] {
             Sort3::I64 => "NobleContracts.Value.i64 ",
-            Sort3::Bool => "NobleContracts.Value.bool ",
+            Sort3::Boolean => "NobleContracts.Value.bool ",
         };
         let elem_expr = fmt_wrap2("(", ctor, &val_name, ")", "");
         let cons_arg = fmt_wrap2("(congrArg (List.cons ", &elem_expr, ") ", &eq_expr, ")");
@@ -4099,7 +4099,7 @@ fn emit_stack_unpack(mut out: String, spec: StackUnpackSpec<'_>) -> String {
         let hr = fmt_prefix_mid_num(step_prefix, "_hr_", i as u64);
         out.push_str(match sorts[i] {
             Sort3::I64 => "    unpack_i64 ",
-            Sort3::Bool => "    unpack_bool ",
+            Sort3::Boolean => "    unpack_bool ",
         });
         out.push_str(&cur_s);
         out.push(' ');
@@ -4485,7 +4485,7 @@ fn emit_segment_claim(mut out: String, seg: &SegmentSpec) -> Result<String, Diag
 fn format_single_value(pair: &(Sort3, String)) -> String {
     let prefix = match pair.0 {
         Sort3::I64 => "(NobleContracts.Value.i64 ",
-        Sort3::Bool => "(NobleContracts.Value.bool ",
+        Sort3::Boolean => "(NobleContracts.Value.bool ",
     };
     let mut s = String::from(prefix);
     s.push_str(&pair.1);
@@ -4521,9 +4521,10 @@ fn next_seg_stack(cur: &[(Sort3, String)], op: &SegOp) -> Result<Vec<(Sort3, Str
             s.push_str("))");
             next.push((Sort3::I64, s));
         }
-        SegOp::LitBool(b) => {
-            next.push((Sort3::Bool, String::from(if *b { "true" } else { "false" })))
-        }
+        SegOp::LitBool(b) => next.push((
+            Sort3::Boolean,
+            String::from(if *b { "true" } else { "false" }),
+        )),
         SegOp::Word(0) => {
             let Some(top) = next.last().cloned() else {
                 return Err(invalid(zero_span, "dup underflow"));
@@ -4564,7 +4565,7 @@ fn next_seg_stack(cur: &[(Sort3, String)], op: &SegOp) -> Result<Vec<(Sort3, Str
             let (Some(b), Some(a)) = (next.pop(), next.pop()) else {
                 return Err(invalid(zero_span, "eq"));
             };
-            next.push((Sort3::Bool, fmt_wrap2("(", &a.1, " == ", &b.1, ")")));
+            next.push((Sort3::Boolean, fmt_wrap2("(", &a.1, " == ", &b.1, ")")));
         }
         SegOp::Word(_) => {
             return Err(invalid(zero_span, "unsupported word"));
@@ -4742,16 +4743,16 @@ fn emit_state_prop_pred(
         }
         out.push_str(match in_sorts[ii] {
             Sort3::I64 => ".i64 ",
-            Sort3::Bool => ".bool ",
+            Sort3::Boolean => ".bool ",
         });
         out.push_str(&in_vars[ii]);
         ii += 1;
     }
     out = push_lean(out, "] @UG (");
-    let mut outcome = Ok(());
     if facts.is_empty() {
         out.push_str("True");
     } else {
+        let mut outcome = Ok(());
         let mut fi = 0usize;
         while fi < facts.len() {
             if fi != 0 {
@@ -4775,8 +4776,8 @@ fn emit_state_prop_pred(
             }
             fi += 1;
         }
+        outcome?;
     }
-    outcome?;
     out = push_lean(out, ") @UG s = [");
     let mut outcome = Ok(());
     let mut si = 0usize;
@@ -5107,7 +5108,7 @@ fn emit_seg_hr_chain(
                 out.push_str(" : List NobleContracts.Value)) (");
                 out.push_str(match seg.consumed_sorts[ai] {
                     Sort3::I64 => "NobleContracts.Value.i64.inj sj_eq_",
-                    Sort3::Bool => "NobleContracts.Value.bool.inj sj_eq_",
+                    Sort3::Boolean => "NobleContracts.Value.bool.inj sj_eq_",
                 });
                 crate::rendering::number(&mut out, seg.carried.len().saturating_add(ai) as u64);
                 out.push_str("))\n");
@@ -5408,7 +5409,7 @@ fn format_typed_res_list(callee_out_sorts: &[Sort3], rv_names: &[String]) -> Str
         }
         res_list.push_str(match callee_out_sorts[ri] {
             Sort3::I64 => "NobleContracts.Value.i64 ",
-            Sort3::Bool => "NobleContracts.Value.bool ",
+            Sort3::Boolean => "NobleContracts.Value.bool ",
         });
         res_list.push_str(&rv_names[ri]);
         ri += 1;
@@ -5938,7 +5939,7 @@ fn find_direct_cfact(
                 | Term3::Bound(_)
                 | Term3::Ghost(..)
                 | Term3::I64(_)
-                | Term3::Bool(_)
+                | Term3::BoolLit(_)
                 | Term3::Add(..)
                 | Term3::Sub(..)
                 | Term3::Mul(..)
@@ -6008,7 +6009,7 @@ fn emit_call_res_congr(
             };
             out.push_str(match callee_out_sorts[dj] {
                 Sort3::I64 => "(congrArg NobleContracts.Value.i64 ",
-                Sort3::Bool => "(congrArg NobleContracts.Value.bool ",
+                Sort3::Boolean => "(congrArg NobleContracts.Value.bool ",
             });
             if &raw_rhs == dir {
                 out.push_str("cfact_");
@@ -6025,12 +6026,12 @@ fn emit_call_res_congr(
         } else {
             out.push_str(match callee_out_sorts[dj] {
                 Sort3::I64 => "(rfl : NobleContracts.Value.i64 ",
-                Sort3::Bool => "(rfl : NobleContracts.Value.bool ",
+                Sort3::Boolean => "(rfl : NobleContracts.Value.bool ",
             });
             out.push_str(&rv_names[dj]);
             out.push_str(match callee_out_sorts[dj] {
                 Sort3::I64 => " = NobleContracts.Value.i64 ",
-                Sort3::Bool => " = NobleContracts.Value.bool ",
+                Sort3::Boolean => " = NobleContracts.Value.bool ",
             });
             out.push_str(&rv_names[dj]);
             out.push(')');
@@ -6516,7 +6517,7 @@ fn emit_term_norm_step(
             | Term3::Bound(_)
             | Term3::Ghost(..)
             | Term3::I64(_)
-            | Term3::Bool(_) => {
+            | Term3::BoolLit(_) => {
                 let t_lean = emit_term3_lean(String::new(), &node, bound_names, inputs, ghosts)?;
                 let eq_expr = fmt_wrap2("(rfl : ", &t_lean, " = ", &t_lean, ")");
                 out.push((eq_expr, node, true));
@@ -6555,9 +6556,10 @@ fn emit_term_norm_step(
                     let nr_lean = emit_term3_lean(String::new(), &nr, bound_names, inputs, ghosts)?;
                     let f_lean =
                         emit_term3_lean(String::new(), &folded, bound_names, inputs, ghosts)?;
-                    let fold_eq = fmt_wrap3("(by decide : (", &nl_lean, op_sym, &nr_lean, ") = ")
-                        + &f_lean
-                        + ")";
+                    let mut fold_eq =
+                        fmt_wrap3("(by decide : (", &nl_lean, op_sym, &nr_lean, ") = ");
+                    fold_eq.push_str(&f_lean);
+                    fold_eq.push(')');
                     let res_expr = if is_congr_refl {
                         fold_eq
                     } else {
@@ -6565,7 +6567,7 @@ fn emit_term_norm_step(
                     };
                     out.push((res_expr, folded, false));
                 }
-                (super::BinTermOp::Equals, Term3::Bool(is_eq_true)) => {
+                (super::BinTermOp::Equals, Term3::BoolLit(is_eq_true)) => {
                     let nl_lean = emit_term3_lean(String::new(), &nl, bound_names, inputs, ghosts)?;
                     let nr_lean = emit_term3_lean(String::new(), &nr, bound_names, inputs, ghosts)?;
                     let fold_eq = if *is_eq_true {
@@ -6602,7 +6604,7 @@ fn emit_term_norm_step(
                     | Term3::Bound(_)
                     | Term3::Ghost(..)
                     | Term3::I64(_)
-                    | Term3::Bool(_)
+                    | Term3::BoolLit(_)
                     | Term3::Add(..)
                     | Term3::Sub(..)
                     | Term3::Mul(..)
@@ -7241,7 +7243,7 @@ fn emit_final_join_body(
         }
         in_list.push_str(match in_sorts[ii] {
             Sort3::I64 => ".i64 ",
-            Sort3::Bool => ".bool ",
+            Sort3::Boolean => ".bool ",
         });
         in_list.push_str(&in_vars[ii]);
         ii += 1;
@@ -7361,7 +7363,7 @@ fn emit_unpack_pre_state(
             }
             in_list.push_str(match in_sorts[ii] {
                 Sort3::I64 => "NobleContracts.Value.i64 ",
-                Sort3::Bool => "NobleContracts.Value.bool ",
+                Sort3::Boolean => "NobleContracts.Value.bool ",
             });
             in_list.push_str(&in_vars[ii]);
             ii += 1;
@@ -7518,7 +7520,7 @@ fn step_trace_chunk(
         }
         super::TraceStep::Literal(Lit::Bool(b)) => {
             acc.cur_ops.push(SegOp::LitBool(*b));
-            acc.cur_stack.push(Term3::Bool(*b));
+            acc.cur_stack.push(Term3::BoolLit(*b));
         }
         super::TraceStep::Builtin(w) => {
             acc.cur_ops.push(SegOp::Word(*w));

@@ -3918,8 +3918,8 @@ fn check_obligation<'m>(
 }
 /// Check one obligation against the proofs available before it.
 #[expect(
-    tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+    tigerstyle::missing_const_fn,
+    reason = "Owner: noble-contracts; delegates to non-const proof checkers and state transitions"
 )]
 #[expect(
     tigerstyle::mutating_input_in_pure,
@@ -3930,6 +3930,45 @@ fn obligation_proof(
     available: &[Available],
     dependencies: &[ProofDependency],
     local: &[ProofObligation],
+    meter: &mut Meter<'_>,
+) -> Result<(CheckedProof, Option<Available>), Diagnostic> {
+    if let PendingGoal::Contract { contract } = &obligation.goal {
+        if obligation.revision == 3 && contract.revision == 3 {
+            advance!(*meter, meter.visit(0, obligation.span));
+            advance!(*meter, validated(&obligation.term, *meter, 0));
+            let checked = advance!(
+                *meter,
+                named_v3::check_contract(obligation, contract, dependencies, local, *meter)
+            );
+            return Ok((checked, None));
+        }
+    }
+    obligation_proof_no_rev3(obligation, available, meter)
+}
+enum DependencyFrame<'a> {
+    Enter {
+        dependency: &'a ProofDependency,
+        depth: u32,
+        parent: Option<&'a ProofDependency>,
+    },
+    Children {
+        dependency: &'a ProofDependency,
+        depth: u32,
+        next: usize,
+        start: usize,
+    },
+}
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the meter is the caller's owned transition state, written back through this borrow on every path"
+)]
+fn obligation_proof_no_rev3(
+    obligation: &ProofObligation,
+    available: &[Available],
     meter: &mut Meter<'_>,
 ) -> Result<(CheckedProof, Option<Available>), Diagnostic> {
     advance!(*meter, meter.visit(0, obligation.span));
@@ -3985,28 +4024,11 @@ fn obligation_proof(
                     *meter,
                     named_v2::check_contract(obligation, contract, *meter)
                 ),
-                3 => advance!(
-                    *meter,
-                    named_v3::check_contract(obligation, contract, dependencies, local, *meter)
-                ),
                 _ => return Err(reject(obligation.span, "unknown contract revision")),
             };
             Ok((checked, None))
         }
     }
-}
-enum DependencyFrame<'a> {
-    Enter {
-        dependency: &'a ProofDependency,
-        depth: u32,
-        parent: Option<&'a ProofDependency>,
-    },
-    Children {
-        dependency: &'a ProofDependency,
-        depth: u32,
-        next: usize,
-        start: usize,
-    },
 }
 fn check_dependency<'m>(
     dependency: &ProofDependency,
@@ -4035,20 +4057,16 @@ struct DependencyWalk<'a> {
     available: Vec<Available>,
     available_bound: usize,
 }
-/// Check a dependency after all of its prerequisites, depth first.
+/// Initialize bounded dependency walk state from validated limits.
 #[expect(
     tigerstyle::assertion_density,
-    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+    reason = "Owner: noble-contracts; initializes bounded dependency walk from validated limits"
 )]
-#[expect(
-    tigerstyle::mutating_input_in_pure,
-    reason = "Owner: noble-contracts; the meter is the caller's owned transition state, written back through this borrow on every path"
-)]
-fn dependency_proof(
-    dependency: &ProofDependency,
+fn init_dependency_walk<'a>(
+    dependency: &'a ProofDependency,
     allow_contracts: bool,
-    meter: &mut Meter<'_>,
-) -> Result<Available, Diagnostic> {
+    meter: &Meter<'_>,
+) -> Result<DependencyWalk<'a>, Diagnostic> {
     let bound = meter.tree_bounds.frames;
     let available_bound =
         usize::try_from(meter.limits.nodes).map_err(|_| exhausted(dependency.declaration.span))?;
@@ -4063,17 +4081,49 @@ fn dependency_proof(
         bound
     )
     .map_err(|()| exhausted(dependency.declaration.span))?;
-    let mut walk = DependencyWalk {
+    Ok(DependencyWalk {
         frames,
         active: WorkStack::new(),
         completed: None,
         allow_contracts,
         available: Vec::new(),
         available_bound,
-    };
+    })
+}
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the meter is the caller's owned transition state, written back through this borrow on every path"
+)]
+fn dependency_proof(
+    dependency: &ProofDependency,
+    allow_contracts: bool,
+    meter: &mut Meter<'_>,
+) -> Result<Available, Diagnostic> {
+    let mut walk = init_dependency_walk(dependency, allow_contracts, meter)?;
     let mut outcome = Ok(());
     while let Some(frame) = walk.frames.pop_bounded() {
         outcome = dependency_step(frame, &mut walk, meter);
+        if outcome.is_err() {
+            break;
+        }
+    }
+    outcome?;
+    walk.completed
+        .ok_or_else(|| exhausted(dependency.declaration.span))
+}
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the meter is the caller's owned transition state, written back through this borrow on every path"
+)]
+fn rev1_dependency_proof(
+    dependency: &ProofDependency,
+    allow_contracts: bool,
+    meter: &mut Meter<'_>,
+) -> Result<Available, Diagnostic> {
+    let mut walk = init_dependency_walk(dependency, allow_contracts, meter)?;
+    let mut outcome = Ok(());
+    while let Some(frame) = walk.frames.pop_bounded() {
+        outcome = rev1_dependency_step(frame, &mut walk, meter);
         if outcome.is_err() {
             break;
         }
@@ -4100,17 +4150,17 @@ fn dependency_proof(
     tigerstyle::mutating_input_in_pure,
     reason = "Owner: noble-contracts; the walk state and meter are locally owned by the dependency walk, borrowed only for one loop-free step"
 )]
-fn dependency_step<'a>(
+fn dependency_step_advance<'a>(
     frame: DependencyFrame<'a>,
     walk: &mut DependencyWalk<'a>,
     meter: &mut Meter<'_>,
-) -> Result<(), Diagnostic> {
+) -> Result<Option<(&'a ProofDependency, usize)>, Diagnostic> {
     let bound = meter.tree_bounds.frames;
     let DependencyWalk {
         frames,
         active,
         completed,
-        allow_contracts,
+        allow_contracts: _,
         available,
         available_bound,
     } = walk;
@@ -4166,6 +4216,7 @@ fn dependency_step<'a>(
                 bound
             )
             .map_err(|()| exhausted(dependency.declaration.span))?;
+            Ok(None)
         }
         DependencyFrame::Children {
             dependency,
@@ -4212,45 +4263,100 @@ fn dependency_step<'a>(
                     bound
                 )
                 .map_err(|()| exhausted(prerequisite.declaration.span))?;
-                return Ok(());
+                return Ok(None);
             }
-            let siblings = available
-                .get(start..)
-                .ok_or_else(|| exhausted(dependency.declaration.span))?;
-            let (_, closed) = advance!(
-                *meter,
-                check_obligation(
-                    &dependency.declaration,
-                    siblings,
-                    &dependency.dependencies,
-                    &[],
-                    *meter
-                )
-            );
-            available.truncate(start);
-            work_pop!(active);
-            let mut closed = match closed {
-                Some(closed) => closed,
-                // A revision-3 caller may depend on an accepted contract proof;
-                // its replay is the check itself, but it stays a non-proposition
-                // so no logical `use` can name it.
-                None if *allow_contracts => Available {
-                    name: dependency.declaration.name.clone(),
-                    goal: None,
-                    lean_term: String::new(),
-                },
-                None => {
-                    return Err(reject(
-                        dependency.declaration.span,
-                        "contract theorem dependency is not in the pure fragment",
-                    ))
-                }
-            };
-            closed.name = dependency.name.clone();
-            *completed = Some(closed);
+            Ok(Some((dependency, start)))
         }
     }
+}
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; pops active dependency and records completed output"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; updates dependency walk state upon node completion"
+)]
+fn finish_dependency_node(
+    dependency: &ProofDependency,
+    closed: Option<Available>,
+    walk: &mut DependencyWalk<'_>,
+    start: usize,
+) -> Result<(), Diagnostic> {
+    walk.available.truncate(start);
+    let active = &mut walk.active;
+    work_pop!(active);
+    let mut closed = match closed {
+        Some(closed) => closed,
+        // A revision-3 caller may depend on an accepted contract proof;
+        // its replay is the check itself, but it stays a non-proposition
+        // so no logical `use` can name it.
+        None if walk.allow_contracts => Available {
+            name: dependency.declaration.name.clone(),
+            goal: None,
+            lean_term: String::new(),
+        },
+        None => {
+            return Err(reject(
+                dependency.declaration.span,
+                "contract theorem dependency is not in the pure fragment",
+            ))
+        }
+    };
+    closed.name = dependency.name.clone();
+    walk.completed = Some(closed);
     Ok(())
+}
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the walk state and meter are locally owned by the dependency walk, borrowed only for one loop-free step"
+)]
+fn rev1_dependency_step<'a>(
+    frame: DependencyFrame<'a>,
+    walk: &mut DependencyWalk<'a>,
+    meter: &mut Meter<'_>,
+) -> Result<(), Diagnostic> {
+    let Some((dependency, start)) = dependency_step_advance(frame, walk, meter)? else {
+        return Ok(());
+    };
+    let siblings = walk
+        .available
+        .get(start..)
+        .ok_or_else(|| exhausted(dependency.declaration.span))?;
+    let (_, closed) = obligation_proof_no_rev3(&dependency.declaration, siblings, meter)?;
+    finish_dependency_node(dependency, closed, walk, start)
+}
+#[expect(
+    tigerstyle::assertion_density,
+    reason = "Owner: noble-contracts; the invariants of this linear dispatcher are enforced by its callers and the contracts test suite"
+)]
+#[expect(
+    tigerstyle::mutating_input_in_pure,
+    reason = "Owner: noble-contracts; the walk state and meter are locally owned by the dependency walk, borrowed only for one loop-free step"
+)]
+fn dependency_step<'a>(
+    frame: DependencyFrame<'a>,
+    walk: &mut DependencyWalk<'a>,
+    meter: &mut Meter<'_>,
+) -> Result<(), Diagnostic> {
+    let Some((dependency, start)) = dependency_step_advance(frame, walk, meter)? else {
+        return Ok(());
+    };
+    let siblings = walk
+        .available
+        .get(start..)
+        .ok_or_else(|| exhausted(dependency.declaration.span))?;
+    let (_, closed) = advance!(
+        *meter,
+        check_obligation(
+            &dependency.declaration,
+            siblings,
+            &dependency.dependencies,
+            &[],
+            *meter
+        )
+    );
+    finish_dependency_node(dependency, closed, walk, start)
 }
 /// Whether `dependency` is a private declaration earlier in its parent's own
 /// module source.
@@ -5556,47 +5662,6 @@ mod form_impl_tests {
         forms
     }
 
-    #[test]
-    fn debug_matches_the_derived_rendering() {
-        for form in samples() {
-            let expected = mirrored(&form);
-            assert_eq!(format!("{form:?}"), format!("{expected:?}"));
-            assert_eq!(format!("{form:#?}"), format!("{expected:#?}"));
-            assert_eq!(format!("{form:4?}"), format!("{expected:4?}"));
-            assert_eq!(format!("{:?}", form.kind), format!("{:?}", expected.kind));
-            assert_eq!(format!("{:#?}", form.kind), format!("{:#?}", expected.kind));
-        }
-    }
-
-    #[test]
-    fn equality_matches_the_derived_relation() {
-        let forms = samples();
-        for left in &forms {
-            for right in &forms {
-                let is_expected = mirrored(left) == mirrored(right);
-                assert_eq!(left == right, is_expected);
-                assert_eq!(left != right, !is_expected);
-                assert_eq!(
-                    left.kind == right.kind,
-                    mirrored(left).kind == mirrored(right).kind
-                );
-            }
-        }
-    }
-
-    #[test]
-    fn clone_is_an_equal_independent_deep_copy() {
-        for form in samples() {
-            let mut copy = form.clone();
-            assert_eq!(mirrored(&copy), mirrored(&form));
-            assert_eq!(copy.kind.clone(), form.kind);
-            if let FormKind::List(items) = &mut copy.kind {
-                items.push(atom("z", 9));
-                assert_ne!(copy, form);
-            }
-        }
-    }
-
     fn mirrored_dependency(dependency: &super::ProofDependency) -> mirror::ProofDependency {
         mirror::ProofDependency {
             name: dependency.name.clone(),
@@ -5660,24 +5725,64 @@ mod form_impl_tests {
     }
 
     #[test]
-    fn dependency_debug_matches_the_derived_rendering() {
-        for dependency in dependency_samples() {
-            let expected = mirrored_dependency(&dependency);
-            assert_eq!(format!("{dependency:?}"), format!("{expected:?}"));
-            assert_eq!(format!("{dependency:#?}"), format!("{expected:#?}"));
+    fn impls_match_derived() {
+        // debug_matches_the_derived_rendering
+        {
+            for form in samples() {
+                let expected = mirrored(&form);
+                assert_eq!(format!("{form:?}"), format!("{expected:?}"));
+                assert_eq!(format!("{form:#?}"), format!("{expected:#?}"));
+                assert_eq!(format!("{form:4?}"), format!("{expected:4?}"));
+                assert_eq!(format!("{:?}", form.kind), format!("{:?}", expected.kind));
+                assert_eq!(format!("{:#?}", form.kind), format!("{:#?}", expected.kind));
+            }
         }
-    }
-
-    #[test]
-    fn dependency_clone_is_an_equal_independent_deep_copy() {
-        for dependency in dependency_samples() {
-            let mut copy = dependency.clone();
-            assert_eq!(
-                format!("{:?}", mirrored_dependency(&copy)),
-                format!("{:?}", mirrored_dependency(&dependency))
-            );
-            copy.dependencies.push(dependency.clone());
-            assert_ne!(format!("{copy:?}"), format!("{dependency:?}"));
+        // equality_matches_the_derived_relation
+        {
+            let forms = samples();
+            for left in &forms {
+                for right in &forms {
+                    let is_expected = mirrored(left) == mirrored(right);
+                    assert_eq!(left == right, is_expected);
+                    assert_eq!(left != right, !is_expected);
+                    assert_eq!(
+                        left.kind == right.kind,
+                        mirrored(left).kind == mirrored(right).kind
+                    );
+                }
+            }
+        }
+        // clone_is_an_equal_independent_deep_copy
+        {
+            for form in samples() {
+                let mut copy = form.clone();
+                assert_eq!(mirrored(&copy), mirrored(&form));
+                assert_eq!(copy.kind.clone(), form.kind);
+                if let FormKind::List(items) = &mut copy.kind {
+                    items.push(atom("z", 9));
+                    assert_ne!(copy, form);
+                }
+            }
+        }
+        // dependency_debug_matches_the_derived_rendering
+        {
+            for dependency in dependency_samples() {
+                let expected = mirrored_dependency(&dependency);
+                assert_eq!(format!("{dependency:?}"), format!("{expected:?}"));
+                assert_eq!(format!("{dependency:#?}"), format!("{expected:#?}"));
+            }
+        }
+        // dependency_clone_is_an_equal_independent_deep_copy
+        {
+            for dependency in dependency_samples() {
+                let mut copy = dependency.clone();
+                assert_eq!(
+                    format!("{:?}", mirrored_dependency(&copy)),
+                    format!("{:?}", mirrored_dependency(&dependency))
+                );
+                copy.dependencies.push(dependency.clone());
+                assert_ne!(format!("{copy:?}"), format!("{dependency:?}"));
+            }
         }
     }
 }
@@ -5783,41 +5888,6 @@ mod proposition_impl_tests {
         ]
     }
 
-    #[test]
-    fn equality_matches_the_derived_relation() {
-        let props = samples();
-        for left in &props {
-            for right in &props {
-                let is_expected = mirrored(left) == mirrored(right);
-                assert_eq!(left == right, is_expected);
-                assert_eq!(left != right, !is_expected);
-            }
-        }
-        let sorts = [
-            Sort::Codes,
-            Sort::Value(Code::I64),
-            Sort::Value(Code::Bool),
-            Sort::Premise(Box::new(Proposition::Eq(Code::I64, 0, 0))),
-        ];
-        for left in &sorts {
-            for right in &sorts {
-                assert_eq!(left == right, mirrored_sort(left) == mirrored_sort(right));
-            }
-        }
-    }
-
-    #[test]
-    fn clone_is_an_equal_deep_copy() {
-        for prop in samples() {
-            let copy = prop.clone();
-            assert_eq!(mirrored(&copy), mirrored(&prop));
-            if let Proposition::Pi(_, sort, _) = &prop {
-                let sort_copy = sort.clone();
-                assert_eq!(mirrored_sort(&sort_copy), mirrored_sort(sort));
-            }
-        }
-    }
-
     /// An atom spanning the one pre-order position `start`.
     fn word(text: &str, start: u32) -> super::Form {
         super::Form {
@@ -5890,287 +5960,317 @@ mod proposition_impl_tests {
         }
     }
 
-    /// The proof walk keeps unwinding after a refused intro body: the intro
-    /// still charges its wrapper, and a failing charge replaces the refusal.
-    /// Expected values are those of the closure-based walk this replaces.
-    #[test]
-    fn intro_charges_its_wrapper_after_a_refused_body() {
-        let batch = pure_batch(reflexive_term("y"));
-        let refusal = |work| {
-            super::check_batch(&batch, limits(work))
-                .err()
-                .map(|error| (error.kind, error.span, error.message))
-        };
-        let exhausted = |start, end| {
-            Some((
-                crate::DiagnosticKind::Exhausted,
-                crate::Span { start, end },
-                alloc::string::String::from("proof size, depth or work limit exhausted"),
-            ))
-        };
-        assert_eq!(refusal(57), exhausted(12, 15));
-        assert_eq!(refusal(58), exhausted(10, 18));
-        assert_eq!(refusal(66), exhausted(10, 18));
-        assert_eq!(
-            refusal(67),
-            Some((
-                crate::DiagnosticKind::Invalid,
-                crate::Span { start: 17, end: 18 },
-                alloc::string::String::from("unbound refl value"),
-            ))
-        );
-    }
+    /// Consolidated unit tests for pure proofs, binder shapes, and lowered renderings.
 
-    /// An accepted pure proof reports exactly the work the original walk charged.
     #[test]
-    fn accepted_pure_proof_reports_its_exact_work() {
-        let batch = pure_batch(reflexive_term("x"));
-        let budgets = super::ProofBudgets::from_limits(limits(1000));
-        let checked = super::check_batch_with_budgets(&batch, limits(1000), budgets);
-        let summary = checked.map(|(proofs, work)| {
-            let terms: Vec<_> = proofs
-                .iter()
-                .map(|proof| (proof.lean_term.clone(), proof.claim.clone()))
-                .collect();
-            (terms, work.normalization, work.substitution, work.total)
-        });
-        assert_eq!(
-            summary.ok(),
-            Some((
-                vec![(
-                    alloc::string::String::from("(fun (v0 : El .i64) => (Eq.refl v0))"),
-                    alloc::string::String::from("(∀ (v0 : El .i64), v0 = v0)"),
-                )],
-                10,
+    #[expect(
+        tigerstyle::function_length,
+        reason = "Owner: noble-contracts; consolidated unit test assertions to stay within workspace item budget"
+    )]
+    fn pure_and_rendering_impls() {
+        // equality_matches_the_derived_relation
+        {
+            let props = samples();
+            for left in &props {
+                for right in &props {
+                    let is_expected = mirrored(left) == mirrored(right);
+                    assert_eq!(left == right, is_expected);
+                    assert_eq!(left != right, !is_expected);
+                }
+            }
+            let sorts = [
+                Sort::Codes,
+                Sort::Value(Code::I64),
+                Sort::Value(Code::Bool),
+                Sort::Premise(Box::new(Proposition::Eq(Code::I64, 0, 0))),
+            ];
+            for left in &sorts {
+                for right in &sorts {
+                    assert_eq!(left == right, mirrored_sort(left) == mirrored_sort(right));
+                }
+            }
+        }
+        // clone_is_an_equal_deep_copy
+        {
+            for prop in samples() {
+                let copy = prop.clone();
+                assert_eq!(mirrored(&copy), mirrored(&prop));
+                if let Proposition::Pi(_, sort, _) = &prop {
+                    let sort_copy = sort.clone();
+                    assert_eq!(mirrored_sort(&sort_copy), mirrored_sort(sort));
+                }
+            }
+        }
+        // intro_charges_its_wrapper_after_a_refused_body
+        {
+            let batch = pure_batch(reflexive_term("y"));
+            let refusal = |work| {
+                super::check_batch(&batch, limits(work))
+                    .err()
+                    .map(|error| (error.kind, error.span, error.message))
+            };
+            let exhausted = |start, end| {
+                Some((
+                    crate::DiagnosticKind::Exhausted,
+                    crate::Span { start, end },
+                    alloc::string::String::from("proof size, depth or work limit exhausted"),
+                ))
+            };
+            assert_eq!(refusal(57), exhausted(12, 15));
+            assert_eq!(refusal(58), exhausted(10, 18));
+            assert_eq!(refusal(66), exhausted(10, 18));
+            assert_eq!(
+                refusal(67),
+                Some((
+                    crate::DiagnosticKind::Invalid,
+                    crate::Span { start: 17, end: 18 },
+                    alloc::string::String::from("unbound refl value"),
+                ))
+            );
+        }
+        // accepted_pure_proof_reports_its_exact_work
+        {
+            let batch = pure_batch(reflexive_term("x"));
+            let budgets = super::ProofBudgets::from_limits(limits(1000));
+            let checked = super::check_batch_with_budgets(&batch, limits(1000), budgets);
+            let summary = checked.map(|(proofs, work)| {
+                let terms: Vec<_> = proofs
+                    .iter()
+                    .map(|proof| (proof.lean_term.clone(), proof.claim.clone()))
+                    .collect();
+                (terms, work.normalization, work.substitution, work.total)
+            });
+            assert_eq!(
+                summary.ok(),
+                Some((
+                    vec![(
+                        alloc::string::String::from("(fun (v0 : El .i64) => (Eq.refl v0))"),
+                        alloc::string::String::from("(∀ (v0 : El .i64), v0 = v0)"),
+                    )],
+                    10,
+                    0,
+                    83,
+                ))
+            );
+            assert!(super::check_batch(&batch, limits(82)).is_err());
+        }
+        // replace_all_matches_str_replace
+        {
+            for text in [
+                "",
+                "__N__",
+                "a__N__b__N__c",
+                "____N__",
+                "__N_",
+                "__N____N__",
+                "\u{e9}__N__\u{e9}",
+                "no marker",
+            ] {
+                assert_eq!(
+                    super::replace_all(text, "__N__", "-7"),
+                    text.replace("__N__", "-7")
+                );
+            }
+            let term = super::lower_unary_add(-7);
+            assert!(term.contains("(.i64 -7)"));
+            assert!(!term.contains("__N__"));
+        }
+        // decimal_matches_the_display_rendering
+        {
+            for value in [
                 0,
-                83,
-            ))
-        );
-        assert!(super::check_batch(&batch, limits(82)).is_err());
-    }
-
-    #[test]
-    fn replace_all_matches_str_replace() {
-        for text in [
-            "",
-            "__N__",
-            "a__N__b__N__c",
-            "____N__",
-            "__N_",
-            "__N____N__",
-            "\u{e9}__N__\u{e9}",
-            "no marker",
-        ] {
-            assert_eq!(
-                super::replace_all(text, "__N__", "-7"),
-                text.replace("__N__", "-7")
-            );
-        }
-        let term = super::lower_unary_add(-7);
-        assert!(term.contains("(.i64 -7)"));
-        assert!(!term.contains("__N__"));
-    }
-
-    #[test]
-    fn decimal_matches_the_display_rendering() {
-        for value in [
-            0,
-            1,
-            9,
-            10,
-            11,
-            99,
-            100,
-            101,
-            4_096,
-            65_535,
-            1_000_000,
-            4_294_967_295,
-            usize::MAX,
-        ] {
-            assert_eq!(super::decimal(value), alloc::format!("{value}"));
-        }
-    }
-
-    /// The format-free lowered texts are byte for byte the `format!` texts
-    /// they replaced, up to the widest binder index.
-    #[test]
-    fn lowered_texts_match_the_formatted_renderings() {
-        let indices = [0, 1, 9, 10, 4_096, usize::MAX];
-        for index in indices {
-            assert_eq!(super::variable(index), alloc::format!("v{index}"));
-            assert_eq!(
-                super::refl_text(index),
-                alloc::format!("(Eq.refl v{index})")
-            );
-            for other in indices {
-                assert_eq!(
-                    super::equation_text(index, other),
-                    alloc::format!("v{index} = v{other}")
-                );
+                1,
+                9,
+                10,
+                11,
+                99,
+                100,
+                101,
+                4_096,
+                65_535,
+                1_000_000,
+                4_294_967_295,
+                usize::MAX,
+            ] {
+                assert_eq!(super::decimal(value), alloc::format!("{value}"));
             }
-            for (sort_text, body) in [("El .i64", "(Eq.refl v0)"), ("", ""), ("PureTyCode", "{}")] {
+        }
+        // lowered_texts_match_the_formatted_renderings
+        {
+            let indices = [0, 1, 9, 10, 4_096, usize::MAX];
+            for index in indices {
+                assert_eq!(super::variable(index), alloc::format!("v{index}"));
                 assert_eq!(
-                    super::intro_text(index, sort_text, body),
-                    alloc::format!("(fun (v{index} : {sort_text}) => {body})")
+                    super::refl_text(index),
+                    alloc::format!("(Eq.refl v{index})")
                 );
-            }
-            let (premise, equality_lean) = ("(h v0)", "(Eq.refl v1)");
-            for (code, motive) in [(".i64", "v1 = v2"), ("", ""), ("v3", "{x}")] {
-                assert_eq!(
+                for other in indices {
+                    assert_eq!(
+                        super::equation_text(index, other),
+                        alloc::format!("v{index} = v{other}")
+                    );
+                }
+                for (sort_text, body) in
+                    [("El .i64", "(Eq.refl v0)"), ("", ""), ("PureTyCode", "{}")]
+                {
+                    assert_eq!(
+                        super::intro_text(index, sort_text, body),
+                        alloc::format!("(fun (v{index} : {sort_text}) => {body})")
+                    );
+                }
+                let (premise, equality_lean) = ("(h v0)", "(Eq.refl v1)");
+                for (code, motive) in [(".i64", "v1 = v2"), ("", ""), ("v3", "{x}")] {
+                    assert_eq!(
                     super::transport_text(index, code, motive, premise, equality_lean),
                     alloc::format!(
                         "(Eq.ndrec (motive := fun (v{index} : El {}) => {}) {premise} {equality_lean})",
                         code, motive
                     )
                 );
+                }
             }
-        }
-        for (lowered, expression) in [
-            ("f", "x"),
-            ("", ""),
-            ("(g v0)", "(\u{2200} (v1 : El .i64), v1 = v1)"),
-        ] {
-            assert_eq!(
-                super::application_text(lowered, expression),
-                alloc::format!("({lowered} {expression})")
-            );
-        }
-    }
-
-    /// Variable codes and sorts and equations lower to the `format!` texts
-    /// they replaced.
-    #[test]
-    fn lean_variable_leaves_match_the_formatted_renderings() {
-        let span = crate::Span { start: 0, end: 1 };
-        let bounds = super::TreeBounds::new(limits(1000));
-        assert!(bounds.is_some());
-        let Some(bounds) = bounds else { return };
-        for index in [0, 1, 10, usize::MAX] {
-            assert_eq!(
-                super::lean_code(&Code::Variable(index), span, bounds).ok(),
-                Some(alloc::format!("v{index}"))
-            );
-            assert_eq!(
-                super::lean_sort(&Sort::Value(Code::Variable(index)), span, bounds).ok(),
-                Some(alloc::format!("El v{index}"))
-            );
-            for other in [0, 7, usize::MAX] {
+            for (lowered, expression) in [
+                ("f", "x"),
+                ("", ""),
+                ("(g v0)", "(\u{2200} (v1 : El .i64), v1 = v1)"),
+            ] {
                 assert_eq!(
-                    super::lean_proposition(
-                        &Proposition::Eq(Code::I64, index, other),
-                        span,
-                        bounds
-                    )
-                    .ok(),
-                    Some(alloc::format!("v{index} = v{other}"))
+                    super::application_text(lowered, expression),
+                    alloc::format!("({lowered} {expression})")
                 );
             }
         }
-    }
-
-    #[test]
-    fn bytes_within_matches_bytes_all() {
-        for text in ["", "a-b_c", "a.b@c", "a b", "\u{e9}", "-", "A9"] {
-            for extra in [&b"-_"[..], &b"-_.@"[..]] {
-                let is_expected = text
-                    .bytes()
-                    .all(|b| b.is_ascii_alphanumeric() || extra.contains(&b));
-                assert_eq!(super::bytes_within(text, extra), is_expected);
+        // lean_variable_leaves_match_the_formatted_renderings
+        {
+            let span = crate::Span { start: 0, end: 1 };
+            let bounds = super::TreeBounds::new(limits(1000));
+            assert!(bounds.is_some());
+            let Some(bounds) = bounds else { return };
+            for index in [0, 1, 10, usize::MAX] {
+                assert_eq!(
+                    super::lean_code(&Code::Variable(index), span, bounds).ok(),
+                    Some(alloc::format!("v{index}"))
+                );
+                assert_eq!(
+                    super::lean_sort(&Sort::Value(Code::Variable(index)), span, bounds).ok(),
+                    Some(alloc::format!("El v{index}"))
+                );
+                for other in [0, 7, usize::MAX] {
+                    assert_eq!(
+                        super::lean_proposition(
+                            &Proposition::Eq(Code::I64, index, other),
+                            span,
+                            bounds
+                        )
+                        .ok(),
+                        Some(alloc::format!("v{index} = v{other}"))
+                    );
+                }
             }
         }
-    }
-
-    /// `stack_binder` finds the innermost binder of a name: the last spilled
-    /// one, else the last inline one, as the `rposition` scans it replaces.
-    #[test]
-    fn stack_binder_finds_the_innermost_binder() {
-        let mut stack = super::WorkStack::new();
-        let mut index = 0usize;
-        for _ in 0..10 {
-            for name in ["x", "y", "x", "z"] {
+        // bytes_within_matches_bytes_all
+        {
+            for text in ["", "a-b_c", "a.b@c", "a b", "\u{e9}", "-", "A9"] {
+                for extra in [&b"-_"[..], &b"-_.@"[..]] {
+                    let is_expected = text
+                        .bytes()
+                        .all(|b| b.is_ascii_alphanumeric() || extra.contains(&b));
+                    assert_eq!(super::bytes_within(text, extra), is_expected);
+                }
+            }
+        }
+        // stack_binder_finds_the_innermost_binder
+        {
+            let mut stack = super::WorkStack::new();
+            let mut index = 0usize;
+            for _ in 0..10 {
+                for name in ["x", "y", "x", "z"] {
+                    let binder = super::Binder {
+                        name: alloc::string::String::from(name),
+                        sort: Sort::Value(Code::Variable(index)),
+                    };
+                    assert!(stack.push_bounded(binder, 100).is_ok());
+                    index = index.saturating_add(1);
+                }
+            }
+            for name in ["x", "y", "z", "w"] {
+                let expected = match stack.spill.iter().rposition(|item| item.name == name) {
+                    Some(index) => stack.inline_len.checked_add(index),
+                    None => stack.inline[..stack.inline_len]
+                        .iter()
+                        .rposition(|item| item.as_ref().is_some_and(|binder| binder.name == name)),
+                };
+                let found = super::stack_binder(&stack, name).map(|(position, _)| position);
+                assert_eq!(found, expected);
+            }
+            let mut inline_only = super::WorkStack::new();
+            for name in ["a", "b", "a"] {
                 let binder = super::Binder {
                     name: alloc::string::String::from(name),
-                    sort: Sort::Value(Code::Variable(index)),
+                    sort: Sort::Codes,
                 };
-                assert!(stack.push_bounded(binder, 100).is_ok());
-                index = index.saturating_add(1);
+                assert!(inline_only.push_bounded(binder, 100).is_ok());
             }
-        }
-        for name in ["x", "y", "z", "w"] {
-            let expected = match stack.spill.iter().rposition(|item| item.name == name) {
-                Some(index) => stack.inline_len.checked_add(index),
-                None => stack.inline[..stack.inline_len]
-                    .iter()
-                    .rposition(|item| item.as_ref().is_some_and(|binder| binder.name == name)),
-            };
-            let found = super::stack_binder(&stack, name).map(|(position, _)| position);
-            assert_eq!(found, expected);
-        }
-        let mut inline_only = super::WorkStack::new();
-        for name in ["a", "b", "a"] {
-            let binder = super::Binder {
-                name: alloc::string::String::from(name),
-                sort: Sort::Codes,
-            };
-            assert!(inline_only.push_bounded(binder, 100).is_ok());
-        }
-        assert_eq!(
-            super::stack_binder(&inline_only, "a").map(|(at, _)| at),
-            Some(2)
-        );
-        assert_eq!(
-            super::stack_binder(&inline_only, "b").map(|(at, _)| at),
-            Some(1)
-        );
-        assert!(super::stack_binder(&inline_only, "c").is_none());
-    }
-
-    #[test]
-    fn stack_shape_matches_the_slice_patterns() {
-        let stack_zero =
-            || noble_kernel::shapes::Pattern::StackVar(noble_kernel::words::Variable(0));
-        let i64_pattern = || noble_kernel::shapes::Pattern::I64;
-        let samples = [
-            vec![stack_zero(), i64_pattern(), i64_pattern()],
-            vec![stack_zero(), i64_pattern()],
-            vec![
-                noble_kernel::shapes::Pattern::StackVar(noble_kernel::words::Variable(1)),
-                i64_pattern(),
-                i64_pattern(),
-            ],
-            vec![i64_pattern(), i64_pattern(), i64_pattern()],
-            vec![
-                stack_zero(),
-                i64_pattern(),
-                noble_kernel::shapes::Pattern::Bool,
-            ],
-            vec![stack_zero()],
-            vec![stack_zero(), i64_pattern(), i64_pattern(), i64_pattern()],
-            Vec::new(),
-        ];
-        for sample in &samples {
             assert_eq!(
-                super::is_stack_then_i64s(sample, 2),
-                matches!(
-                    sample.as_slice(),
-                    [
-                        noble_kernel::shapes::Pattern::StackVar(noble_kernel::words::Variable(0)),
-                        noble_kernel::shapes::Pattern::I64,
-                        noble_kernel::shapes::Pattern::I64
-                    ]
-                )
+                super::stack_binder(&inline_only, "a").map(|(at, _)| at),
+                Some(2)
             );
             assert_eq!(
-                super::is_stack_then_i64s(sample, 1),
-                matches!(
-                    sample.as_slice(),
-                    [
-                        noble_kernel::shapes::Pattern::StackVar(noble_kernel::words::Variable(0)),
-                        noble_kernel::shapes::Pattern::I64
-                    ]
-                )
+                super::stack_binder(&inline_only, "b").map(|(at, _)| at),
+                Some(1)
             );
+            assert!(super::stack_binder(&inline_only, "c").is_none());
+        }
+        // stack_shape_matches_the_slice_patterns
+        {
+            let stack_zero =
+                || noble_kernel::shapes::Pattern::StackVar(noble_kernel::words::Variable(0));
+            let i64_pattern = || noble_kernel::shapes::Pattern::I64;
+            let samples = [
+                vec![stack_zero(), i64_pattern(), i64_pattern()],
+                vec![stack_zero(), i64_pattern()],
+                vec![
+                    noble_kernel::shapes::Pattern::StackVar(noble_kernel::words::Variable(1)),
+                    i64_pattern(),
+                    i64_pattern(),
+                ],
+                vec![i64_pattern(), i64_pattern(), i64_pattern()],
+                vec![
+                    stack_zero(),
+                    i64_pattern(),
+                    noble_kernel::shapes::Pattern::Bool,
+                ],
+                vec![stack_zero()],
+                vec![stack_zero(), i64_pattern(), i64_pattern(), i64_pattern()],
+                Vec::new(),
+            ];
+            for sample in &samples {
+                assert_eq!(
+                    super::is_stack_then_i64s(sample, 2),
+                    matches!(
+                        sample.as_slice(),
+                        [
+                            noble_kernel::shapes::Pattern::StackVar(noble_kernel::words::Variable(
+                                0
+                            )),
+                            noble_kernel::shapes::Pattern::I64,
+                            noble_kernel::shapes::Pattern::I64
+                        ]
+                    )
+                );
+                assert_eq!(
+                    super::is_stack_then_i64s(sample, 1),
+                    matches!(
+                        sample.as_slice(),
+                        [
+                            noble_kernel::shapes::Pattern::StackVar(noble_kernel::words::Variable(
+                                0
+                            )),
+                            noble_kernel::shapes::Pattern::I64
+                        ]
+                    )
+                );
+            }
         }
     }
 }

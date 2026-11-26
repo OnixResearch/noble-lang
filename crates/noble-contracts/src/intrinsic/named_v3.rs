@@ -94,7 +94,7 @@ fn refined(span: Span, reason: Reason<'_>) -> Diagnostic {
 #[octet::sealed_enum]
 enum Sort3 {
     I64,
-    Bool,
+    Boolean,
 }
 
 impl Sort3 {
@@ -102,7 +102,7 @@ impl Sort3 {
         if str_eq(word, "I64") {
             Some(Self::I64)
         } else if str_eq(word, "Bool") {
-            Some(Self::Bool)
+            Some(Self::Boolean)
         } else {
             None
         }
@@ -111,7 +111,7 @@ impl Sort3 {
     const fn from_ty(ty: &noble_kernel::types::Ty) -> Option<Self> {
         match ty {
             noble_kernel::types::Ty::I64 => Some(Self::I64),
-            noble_kernel::types::Ty::Bool => Some(Self::Bool),
+            noble_kernel::types::Ty::Bool => Some(Self::Boolean),
             noble_kernel::types::Ty::Unit
             | noble_kernel::types::Ty::Text
             | noble_kernel::types::Ty::Syntax
@@ -132,7 +132,7 @@ impl Sort3 {
     const fn word(self) -> &'static str {
         match self {
             Self::I64 => "I64",
-            Self::Bool => "Bool",
+            Self::Boolean => "Bool",
         }
     }
 }
@@ -148,7 +148,7 @@ enum Term3 {
     Bound(usize),
     Ghost(u32, u32, Sort3),
     I64(i64),
-    Bool(bool),
+    BoolLit(bool),
     Add(Box<Term3>, Box<Term3>),
     Sub(Box<Term3>, Box<Term3>),
     Mul(Box<Term3>, Box<Term3>),
@@ -304,8 +304,8 @@ fn sort_step(
                 values.push(Sort3::I64);
                 true
             }
-            Term3::Bool(_) => {
-                values.push(Sort3::Bool);
+            Term3::BoolLit(_) => {
+                values.push(Sort3::Boolean);
                 true
             }
             Term3::Add(left, right) | Term3::Sub(left, right) | Term3::Mul(left, right) => {
@@ -330,7 +330,7 @@ fn sort_step(
         },
         SortStep::CombineEq => match (values.pop(), values.pop()) {
             (Some(right), Some(left)) if left == right => {
-                values.push(Sort3::Bool);
+                values.push(Sort3::Boolean);
                 true
             }
             _ => false,
@@ -382,7 +382,7 @@ fn mentions_output(term: &Term3) -> bool {
             | Term3::Bound(_)
             | Term3::Ghost(..)
             | Term3::I64(_)
-            | Term3::Bool(_) => {}
+            | Term3::BoolLit(_) => {}
         }
     }
     false
@@ -463,7 +463,7 @@ fn norm_term_step(step: NormTermStep, work: &mut Vec<NormTermStep>, out: &mut Ve
             | Term3::Bound(_)
             | Term3::Ghost(..)
             | Term3::I64(_)
-            | Term3::Bool(_) => out.push(node),
+            | Term3::BoolLit(_) => out.push(node),
         },
         NormTermStep::Combine(op) => {
             if let (Some(right), Some(left)) = (out.pop(), out.pop()) {
@@ -481,7 +481,7 @@ fn normalize_term(term: &Term3) -> Term3 {
     while let Some(step) = work.pop() {
         norm_term_step(step, &mut work, &mut out);
     }
-    out.pop().unwrap_or(Term3::Bool(false))
+    out.pop().unwrap_or(Term3::BoolLit(false))
 }
 
 fn fold_binary_term(op: BinTermOp, left: Term3, right: Term3) -> Term3 {
@@ -499,8 +499,8 @@ fn fold_binary_term(op: BinTermOp, left: Term3, right: Term3) -> Term3 {
             _ => Term3::Mul(Box::new(left), Box::new(right)),
         },
         BinTermOp::Equals => match (&left, &right) {
-            (Term3::I64(a), Term3::I64(b)) => Term3::Bool(a == b),
-            (Term3::Bool(a), Term3::Bool(b)) => Term3::Bool(a == b),
+            (Term3::I64(a), Term3::I64(b)) => Term3::BoolLit(a == b),
+            (Term3::BoolLit(a), Term3::BoolLit(b)) => Term3::BoolLit(a == b),
             _ => Term3::Equals(Box::new(left), Box::new(right)),
         },
     }
@@ -598,7 +598,7 @@ fn fold_eq_prop(left: Term3, right: Term3) -> Prop3 {
                 Prop3::False
             }
         }
-        (Term3::Bool(a), Term3::Bool(b)) => {
+        (Term3::BoolLit(a), Term3::BoolLit(b)) => {
             if a == b {
                 Prop3::True
             } else {
@@ -705,7 +705,7 @@ fn map_term_step(
                     out.push(map_bound_term(BoundLookup { index, level }, argument));
                 }
             },
-            Term3::Ghost(..) | Term3::I64(_) | Term3::Bool(_) => out.push(node),
+            Term3::Ghost(..) | Term3::I64(_) | Term3::BoolLit(_) => out.push(node),
             Term3::Add(left, right) => {
                 work.push(MapTermStep::Build(BinTermOp::Add));
                 work.push(MapTermStep::Visit(*right));
@@ -748,7 +748,7 @@ fn map_term(term: &Term3, mode: TermSubst<'_>) -> Term3 {
     while let Some(step) = work.pop() {
         map_term_step(step, mode, &mut work, &mut out);
     }
-    out.pop().unwrap_or(Term3::Bool(false))
+    out.pop().unwrap_or(Term3::BoolLit(false))
 }
 
 #[octet::sealed_enum]
@@ -962,10 +962,10 @@ fn parse_term_atom(text: &str, span: Span, scope: Scope<'_>) -> Result<Term3, Di
         return Ok(Term3::Output(index));
     }
     if text == "true" {
-        return Ok(Term3::Bool(true));
+        return Ok(Term3::BoolLit(true));
     }
     if text == "false" {
-        return Ok(Term3::Bool(false));
+        return Ok(Term3::BoolLit(false));
     }
     match text.parse::<i64>() {
         Ok(value) => Ok(Term3::I64(value)),
@@ -2599,7 +2599,7 @@ fn callee_differs(
         return Some("callee source span");
     };
     match contract.subject.module_source.get(start..end) {
-        Some(body) if body == contract.subject.definition_source => {}
+        Some(body) if body == contract.subject.definition_source.as_slice() => {}
         Some(_) | None => return Some("callee definition source"),
     }
     callee_interface_differs(contract)
@@ -2854,9 +2854,9 @@ fn is_direct_output_eq(prop: &Prop3, index: usize) -> bool {
     tigerstyle::assertion_density,
     reason = "Owner: noble-contracts; scans ensures conjuncts for direct output term"
 )]
-fn direct_output(ensures: &Prop3, index: usize, arguments: &[Term3]) -> Option<Term3> {
+fn direct_output(ens_prop: &Prop3, index: usize, arguments: &[Term3]) -> Option<Term3> {
     let mut conjuncts: Vec<Prop3> = Vec::new();
-    collect_conjuncts_owned(ensures, &mut conjuncts);
+    collect_conjuncts_owned(ens_prop, &mut conjuncts);
     let mut pos = 0;
     let mut found: Option<usize> = None;
     while pos < conjuncts.len() && found.is_none() {
@@ -3308,7 +3308,7 @@ struct CallStepInfo {
 )]
 fn collect_callee_outputs(
     state: &State,
-    ensures: &Prop3,
+    ens_prop: &Prop3,
     callee_outputs: &[(String, Sort3)],
     arguments: &[Term3],
     span: Span,
@@ -3318,7 +3318,7 @@ fn collect_callee_outputs(
     let mut index = 0;
     while index < callee_outputs.len() {
         let code = callee_outputs[index].1;
-        match direct_output(ensures, index, arguments) {
+        match direct_output(ens_prop, index, arguments) {
             Some(term) => {
                 direct.push(Some(term.clone()));
                 results.push(term);
@@ -3841,10 +3841,7 @@ fn replay_step(
                         PendingGoal::Contract { .. } => true,
                         PendingGoal::Pure { .. } => false,
                     };
-                    let (next, outcome) =
-                        super::check_dependency(&dependency, has_contracts, *meter);
-                    *meter = next;
-                    outcome?;
+                    super::rev1_dependency_proof(&dependency, has_contracts, meter)?;
                     closure.push(identity);
                 }
                 3 => {
@@ -4579,7 +4576,7 @@ fn walk_node(
                 .push(TraceStep::Literal(noble_kernel::untrusted::Lit::I64(value)));
         }
         Step::Literal(noble_kernel::untrusted::Lit::Bool(value)) => {
-            push(&mut state.stack, Term3::Bool(value), span)?;
+            push(&mut state.stack, Term3::BoolLit(value), span)?;
             accum
                 .steps
                 .push(TraceStep::Literal(noble_kernel::untrusted::Lit::Bool(
