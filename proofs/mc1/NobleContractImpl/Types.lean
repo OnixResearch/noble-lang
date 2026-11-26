@@ -3093,15 +3093,22 @@ structure intrinsic.elaborate.ElaborationRecord where
   explicit : String
 
 /-- [noble_contracts::intrinsic::ProofWork]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 578:0-582:1
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 593:0-597:1
     Visibility: public -/
 structure intrinsic.ProofWork where
   normalization : Std.U32
   substitution : Std.U32
   total : Std.U32
 
+/-- [noble_contracts::intrinsic::ProofImportBinding]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 340:0-343:1
+    Visibility: public -/
+structure intrinsic.ProofImportBinding where
+  «alias» : String
+  owner : Std.U64
+
 /-- [noble_contracts::intrinsic::NamedUseOrigin]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 319:0-334:1
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 323:0-338:1
     Visibility: public -/
 structure intrinsic.NamedUseOrigin where
   definition : noble_kernel.contracts.Definition
@@ -3118,7 +3125,7 @@ structure intrinsic.NamedUseOrigin where
   candidate_node : noble_kernel.untrusted.NodeId
 
 /-- [noble_contracts::intrinsic::NamedImportBinding]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 312:0-317:1
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 316:0-321:1
     Visibility: public -/
 structure intrinsic.NamedImportBinding where
   «alias» : String
@@ -3126,7 +3133,7 @@ structure intrinsic.NamedImportBinding where
   module_index : Std.Usize
 
 /-- [noble_contracts::intrinsic::ResolvedSourceModule]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 304:0-310:1
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 308:0-314:1
     Visibility: public -/
 structure intrinsic.ResolvedSourceModule where
   module : String
@@ -3135,7 +3142,7 @@ structure intrinsic.ResolvedSourceModule where
   owner : Std.U64
 
 /-- [noble_contracts::intrinsic::SubjectBinding]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 336:0-358:1
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 345:0-369:1
     Visibility: public -/
 structure intrinsic.SubjectBinding where
   module : String
@@ -3145,6 +3152,7 @@ structure intrinsic.SubjectBinding where
   definition_source : alloc.vec.Vec Std.U8
   source_dependencies : alloc.vec.Vec intrinsic.ResolvedSourceModule
   named_imports : alloc.vec.Vec intrinsic.NamedImportBinding
+  proof_imports : alloc.vec.Vec intrinsic.ProofImportBinding
   named_uses : alloc.vec.Vec intrinsic.NamedUseOrigin
   definition_identity : Std.U64
   definition_ordinal : Std.U32
@@ -3158,13 +3166,13 @@ structure intrinsic.SubjectBinding where
 mutual
 
 /-- [noble_contracts::intrinsic::Form]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 21:0-24:1
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 25:0-28:1
     Visibility: public -/
 inductive intrinsic.Form where
 | mk : intrinsic.FormKind → Span → intrinsic.Form
 
 /-- [noble_contracts::intrinsic::FormKind]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 26:0-29:1
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 30:0-33:1
     Visibility: public -/
 @[discriminant isize]
 inductive intrinsic.FormKind where
@@ -3188,7 +3196,7 @@ theorem intrinsic.Form.span._simpLemma_ (kind : intrinsic.FormKind) (span :
   Span) : (intrinsic.Form.mk kind span).span = span := by rfl
 
 /-- [noble_contracts::intrinsic::ContractGoal]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 360:0-369:1
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 371:0-380:1
     Visibility: public -/
 structure intrinsic.ContractGoal where
   contract_name : String
@@ -3201,7 +3209,7 @@ structure intrinsic.ContractGoal where
   ensures : intrinsic.Form
 
 /-- [noble_contracts::intrinsic::PendingGoal]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 371:0-374:1
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 382:0-385:1
     Visibility: public -/
 @[discriminant isize]
 inductive intrinsic.PendingGoal where
@@ -3209,7 +3217,7 @@ inductive intrinsic.PendingGoal where
 | Contract : intrinsic.ContractGoal → intrinsic.PendingGoal
 
 /-- [noble_contracts::intrinsic::ProofObligation]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 376:0-384:1
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 387:0-395:1
     Visibility: public -/
 structure intrinsic.ProofObligation where
   «name» : String
@@ -3228,27 +3236,27 @@ structure intrinsic.elaborate.Elaborated where
   work : intrinsic.ProofWork
 
 /-- [noble_contracts::intrinsic::TreeBounds]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 600:0-603:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 615:0-618:1 -/
 structure intrinsic.TreeBounds where
   frames : Std.Usize
   bytes : Std.Usize
 
 /-- [noble_contracts::intrinsic::ProofBudgets]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 565:0-568:1
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 580:0-583:1
     Visibility: public -/
 structure intrinsic.ProofBudgets where
   normalization_work : Std.U32
   substitution_work : Std.U32
 
 /-- [noble_contracts::intrinsic::MeterConfig]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 641:0-645:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 656:0-660:1 -/
 structure intrinsic.MeterConfig where
   budgets : intrinsic.ProofBudgets
   limits : Limits
   tree_bounds : intrinsic.TreeBounds
 
 /-- [noble_contracts::intrinsic::Meter]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 634:0-640:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 649:0-655:1 -/
 structure intrinsic.IntrinsicMeter where
   nodes : Std.U32
   work : Std.U32
@@ -3257,7 +3265,7 @@ structure intrinsic.IntrinsicMeter where
   config : intrinsic.MeterConfig
 
 /-- [noble_contracts::intrinsic::ProofDependency]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 385:0-397:1
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 396:0-408:1
     Visibility: public -/
 inductive intrinsic.ProofDependency where
 | mk :
@@ -3472,14 +3480,14 @@ theorem intrinsic.ProofDependency.checker_revision._simpLemma_ («name» :
     checker_revision := by rfl
 
 /-- [noble_contracts::intrinsic::CopyFrame]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 103:0-108:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 107:0-112:1 -/
 @[discriminant isize]
 inductive intrinsic.CopyFrame where
 | Forms : Slice intrinsic.Form → intrinsic.CopyFrame
 | Close : Span → intrinsic.CopyFrame
 
 /-- [noble_contracts::intrinsic::WorkStack]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 898:0-903:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 932:0-937:1 -/
 structure intrinsic.WorkStack (T : Type _) where
   inline : Array (Option T) 32#usize
   inline_len : Std.Usize
@@ -3487,12 +3495,12 @@ structure intrinsic.WorkStack (T : Type _) where
   total : Std.Usize
 
 /-- [noble_contracts::intrinsic::{noble_contracts::intrinsic::WorkStack<T>}::push_bounded::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 928:59-928:80 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 962:59-962:80 -/
 @[reducible]
 def intrinsic.WorkStack.push_bounded.closure (T : Type _) := Std.Usize
 
 /-- [noble_contracts::intrinsic::{noble_contracts::intrinsic::WorkStack<T>}::new::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 907:41-907:49 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 941:41-941:49 -/
 @[reducible]
 def intrinsic.WorkStack.new.closure (T : Type _) := Unit
 
@@ -3712,12 +3720,12 @@ inductive source.declared.parsing.Member where
 def source.declared.verify_definition_origin_in_request.closure := Span
 
 /-- [noble_contracts::source::declared::parsing::token_slots::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 534:17-539:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 535:17-540:9 -/
 @[reducible]
 def source.declared.parsing.token_slots.closure_1 := Unit
 
 /-- [noble_contracts::source::declared::parsing::token_slots::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 533:13-533:54 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing.rs', lines 534:13-534:54 -/
 @[reducible]
 def source.declared.parsing.token_slots.closure := Std.Usize
 
@@ -3791,7 +3799,7 @@ def source.declared.parsing.name.closure := Unit
 def source.declared.parsing.logical_name.closure := Unit
 
 /-- [noble_contracts::source::declared::parsing::members::proof::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 408:69-408:87 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 417:69-417:87 -/
 @[reducible]
 def source.declared.parsing.members.proof.closure := Unit
 
@@ -3828,17 +3836,17 @@ inductive source.declared.parsing.logic.Logical where
 def source.declared.parsing.logic.parse.closure := Unit
 
 /-- [noble_contracts::source::declared::parsing::members::revision::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 141:69-143:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 141:69-146:5 -/
 @[reducible]
 def source.declared.parsing.members.revision.closure := source.lexer.Token
 
 /-- [noble_contracts::source::declared::parsing::members::contract::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 303:62-303:80 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 306:62-306:80 -/
 @[reducible]
 def source.declared.parsing.members.contract.closure := Unit
 
 /-- [noble_contracts::source::declared::parsing::members::binding::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 232:46-232:72 -/
+    Source: 'crates/noble-contracts/src/source/declared/parsing/members.rs', lines 235:46-235:72 -/
 @[reducible]
 def source.declared.parsing.members.binding.closure := String
 
@@ -3853,62 +3861,62 @@ def source.declared.parsing.body.definition_step.closure := Span
 def source.declared.parsing.members.collect_body.closure := Span
 
 /-- [noble_contracts::intrinsic::recipe_shape_differs::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4361:59-4361:87 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4947:59-4947:87 -/
 @[reducible]
 def intrinsic.recipe_shape_differs.closure := Std.U32
 
 /-- [noble_contracts::intrinsic::prepare_checked_contract::{closure#5}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4169:17-4169:86 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4755:17-4755:86 -/
 @[reducible]
 def intrinsic.prepare_checked_contract.closure_5 := intrinsic.SubjectBinding
 
 /-- [noble_contracts::intrinsic::prepare_checked_contract::{closure#4}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4167:20-4167:90 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4753:20-4753:90 -/
 @[reducible]
 def intrinsic.prepare_checked_contract.closure_4 := Span
 
 /-- [noble_contracts::intrinsic::prepare_checked_contract::{closure#3}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4163:17-4163:76 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4749:17-4749:76 -/
 @[reducible]
 def intrinsic.prepare_checked_contract.closure_3 := Span
 
 /-- [noble_contracts::intrinsic::prepare_checked_contract::{closure#2}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4161:17-4161:76 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4747:17-4747:76 -/
 @[reducible]
 def intrinsic.prepare_checked_contract.closure_2 := Span
 
 /-- [noble_contracts::intrinsic::prepare_checked_contract::{closure#1}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4130:64-4135:5 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4716:64-4721:5 -/
 @[reducible]
 def intrinsic.prepare_checked_contract.closure_1 := intrinsic.SubjectBinding
 
 /-- [noble_contracts::intrinsic::prepare_checked_contract::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4061:56-4061:92 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4647:56-4647:92 -/
 @[reducible]
 def intrinsic.prepare_checked_contract.closure := intrinsic.ContractGoal
 
 /-- [noble_contracts::intrinsic::mc1_step::{closure#3}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4031:25-4031:50 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4617:25-4617:50 -/
 @[reducible]
 def intrinsic.mc1_step.closure_3 := intrinsic.Form
 
 /-- [noble_contracts::intrinsic::mc1_step::{closure#2}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4029:25-4029:50 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4615:25-4615:50 -/
 @[reducible]
 def intrinsic.mc1_step.closure_2 := intrinsic.Form
 
 /-- [noble_contracts::intrinsic::mc1_step::{closure#1}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4027:55-4027:78 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4613:55-4613:78 -/
 @[reducible]
 def intrinsic.mc1_step.closure_1 := intrinsic.Form
 
 /-- [noble_contracts::intrinsic::mc1_step::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4013:37-4013:62 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4599:37-4599:62 -/
 @[reducible]
 def intrinsic.mc1_step.closure := intrinsic.Form
 
 /-- [noble_contracts::intrinsic::Mc1Frame]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3945:0-3948:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4531:0-4534:1 -/
 @[discriminant isize]
 inductive intrinsic.Mc1Frame where
 | Enter : intrinsic.Form → Std.U32 → intrinsic.Mc1Frame
@@ -3919,32 +3927,32 @@ inductive intrinsic.Mc1Frame where
   intrinsic.Mc1Frame
 
 /-- [noble_contracts::intrinsic::deeper::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 597:36-597:54 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 612:36-612:54 -/
 @[reducible]
 def intrinsic.deeper.closure := Span
 
 /-- [noble_contracts::intrinsic::mc1_text::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3961:69-3961:94 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4547:69-4547:94 -/
 @[reducible]
 def intrinsic.mc1_text.closure := intrinsic.Form
 
 /-- [noble_contracts::intrinsic::elaborate::render_step::{closure#2}]
-    Source: 'crates/noble-contracts/src/intrinsic/elaborate.rs', lines 3935:25-3935:70 -/
+    Source: 'crates/noble-contracts/src/intrinsic/elaborate.rs', lines 3942:25-3942:70 -/
 @[reducible]
 def intrinsic.elaborate.render_step.closure_2 := intrinsic.Form
 
 /-- [noble_contracts::intrinsic::elaborate::render_step::{closure#1}]
-    Source: 'crates/noble-contracts/src/intrinsic/elaborate.rs', lines 3932:25-3932:70 -/
+    Source: 'crates/noble-contracts/src/intrinsic/elaborate.rs', lines 3939:25-3939:70 -/
 @[reducible]
 def intrinsic.elaborate.render_step.closure_1 := intrinsic.Form
 
 /-- [noble_contracts::intrinsic::elaborate::render_step::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic/elaborate.rs', lines 3914:33-3914:78 -/
+    Source: 'crates/noble-contracts/src/intrinsic/elaborate.rs', lines 3921:33-3921:78 -/
 @[reducible]
 def intrinsic.elaborate.render_step.closure := intrinsic.Form
 
 /-- [noble_contracts::intrinsic::elaborate::render_form::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic/elaborate.rs', lines 3867:17-3867:62 -/
+    Source: 'crates/noble-contracts/src/intrinsic/elaborate.rs', lines 3874:17-3874:62 -/
 @[reducible]
 def intrinsic.elaborate.render_form.closure := intrinsic.Form
 
@@ -3994,12 +4002,22 @@ def intrinsic.elaborate.rewrite_exec_literal.closure := intrinsic.Form
 def intrinsic.elaborate.contract_rule.closure := intrinsic.ProofObligation
 
 /-- [noble_contracts::intrinsic::proposition::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2112:24-2115:9 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2332:24-2335:9 -/
 @[reducible]
 def intrinsic.proposition.closure := intrinsic.Form
 
+/-- [noble_contracts::intrinsic::Term]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 816:0-822:1 -/
+@[discriminant isize]
+inductive intrinsic.Term where
+| Variable : Std.Usize → intrinsic.Term
+| I64 : Std.I64 → intrinsic.Term
+| Add : intrinsic.Term → intrinsic.Term → intrinsic.Term
+| Sub : intrinsic.Term → intrinsic.Term → intrinsic.Term
+| Mul : intrinsic.Term → intrinsic.Term → intrinsic.Term
+
 /-- [noble_contracts::intrinsic::Code]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 785:0-794:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 800:0-809:1 -/
 @[discriminant isize]
 inductive intrinsic.Code where
 | UnitCode : intrinsic.Code
@@ -4014,7 +4032,7 @@ inductive intrinsic.Code where
 mutual
 
 /-- [noble_contracts::intrinsic::Sort]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 802:0-806:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 830:0-834:1 -/
 @[discriminant isize]
 inductive intrinsic.Sort where
 | Codes : intrinsic.Sort
@@ -4022,7 +4040,7 @@ inductive intrinsic.Sort where
 | Premise : intrinsic.Proposition → intrinsic.Sort
 
 /-- [noble_contracts::intrinsic::Proposition]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 809:0-812:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 837:0-841:1 -/
 @[discriminant isize]
 inductive intrinsic.Proposition where
 | Pi :
@@ -4031,11 +4049,16 @@ inductive intrinsic.Proposition where
   intrinsic.Proposition →
   intrinsic.Proposition
 | Eq : intrinsic.Code → Std.Usize → Std.Usize → intrinsic.Proposition
+| EqTerm :
+  intrinsic.Code →
+  intrinsic.Term →
+  intrinsic.Term →
+  intrinsic.Proposition
 
 end
 
 /-- [noble_contracts::intrinsic::Rewritten]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1190:0-1194:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1261:0-1265:1 -/
 @[discriminant isize]
 inductive intrinsic.Rewritten where
 | Code : intrinsic.Code → intrinsic.Rewritten
@@ -4043,62 +4066,22 @@ inductive intrinsic.Rewritten where
 | Proposition : intrinsic.Proposition → intrinsic.Rewritten
 
 /-- [noble_contracts::intrinsic::assemble_parsed::{closure#2}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1998:49-1998:65 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2218:49-2218:65 -/
 @[reducible]
 def intrinsic.assemble_parsed.closure_2 := Span
 
 /-- [noble_contracts::intrinsic::assemble_parsed::{closure#1}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1981:25-1981:50 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2201:25-2201:50 -/
 @[reducible]
 def intrinsic.assemble_parsed.closure_1 := intrinsic.Form
 
 /-- [noble_contracts::intrinsic::assemble_parsed::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1977:28-1977:51 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2197:28-2197:51 -/
 @[reducible]
 def intrinsic.assemble_parsed.closure := intrinsic.Form
 
-/-- [noble_contracts::intrinsic::assemble_parsed::{closure#15}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
-@[reducible]
-def intrinsic.assemble_parsed.closure_15 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::assemble_parsed::{closure#14}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
-@[reducible]
-def intrinsic.assemble_parsed.closure_14 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::assemble_parsed::{closure#11}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
-@[reducible]
-def intrinsic.assemble_parsed.closure_11 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::assemble_parsed::{closure#10}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
-@[reducible]
-def intrinsic.assemble_parsed.closure_10 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::assemble_parsed::{closure#9}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
-@[reducible]
-def intrinsic.assemble_parsed.closure_9 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::assemble_parsed::{closure#8}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
-@[reducible]
-def intrinsic.assemble_parsed.closure_8 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::assemble_parsed::{closure#4}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
-@[reducible]
-def intrinsic.assemble_parsed.closure_4 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::assemble_parsed::{closure#3}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
-@[reducible]
-def intrinsic.assemble_parsed.closure_3 := intrinsic.Form
-
 /-- [noble_contracts::intrinsic::ParseFrame]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1515:0-1531:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1658:0-1674:1 -/
 @[discriminant isize]
 inductive intrinsic.ParseFrame where
 | Code : intrinsic.Form → Std.U32 → intrinsic.ParseFrame
@@ -4114,120 +4097,45 @@ inductive intrinsic.ParseFrame where
 | EqAfterCode : intrinsic.Form → intrinsic.Form → intrinsic.ParseFrame
 
 /-- [noble_contracts::intrinsic::Binder]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1163:0-1166:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1231:0-1234:1 -/
 structure intrinsic.Binder where
   «name» : String
   sort : intrinsic.Sort
 
 /-- [noble_contracts::intrinsic::ParseStacks]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1620:0-1624:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1763:0-1767:1 -/
 structure intrinsic.ParseStacks where
   frames : intrinsic.WorkStack intrinsic.ParseFrame
   values : intrinsic.WorkStack intrinsic.Rewritten
   «local» : intrinsic.WorkStack intrinsic.Binder
 
-/-- [noble_contracts::intrinsic::assemble_parsed::{closure#16}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
+/-- [noble_contracts::intrinsic::parse_term::{closure}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2080:28-2080:80 -/
 @[reducible]
-def intrinsic.assemble_parsed.closure_16 := Span
-
-/-- [noble_contracts::intrinsic::assemble_parsed::{closure#13}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
-@[reducible]
-def intrinsic.assemble_parsed.closure_13 := Span
-
-/-- [noble_contracts::intrinsic::assemble_parsed::{closure#12}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
-@[reducible]
-def intrinsic.assemble_parsed.closure_12 := Span
-
-/-- [noble_contracts::intrinsic::assemble_parsed::{closure#7}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
-@[reducible]
-def intrinsic.assemble_parsed.closure_7 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::assemble_parsed::{closure#6}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
-@[reducible]
-def intrinsic.assemble_parsed.closure_6 := Span
-
-/-- [noble_contracts::intrinsic::assemble_parsed::{closure#5}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
-@[reducible]
-def intrinsic.assemble_parsed.closure_5 := Span
+def intrinsic.parse_term.closure := intrinsic.Form
 
 /-- [noble_contracts::intrinsic::parse_equality::{closure#1}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1865:20-1865:67 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2028:20-2028:67 -/
 @[reducible]
 def intrinsic.parse_equality.closure_1 := intrinsic.Form
 
 /-- [noble_contracts::intrinsic::parse_equality::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1859:20-1859:66 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2022:20-2022:66 -/
 @[reducible]
 def intrinsic.parse_equality.closure := intrinsic.Form
 
-/-- [noble_contracts::intrinsic::parse_equality::{closure#2}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
-@[reducible]
-def intrinsic.parse_equality.closure_2 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::parse_proposition::{closure#3}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
-@[reducible]
-def intrinsic.parse_proposition.closure_3 := Slice intrinsic.Form
-
-/-- [noble_contracts::intrinsic::parse_proposition::{closure#2}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
-@[reducible]
-def intrinsic.parse_proposition.closure_2 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::parse_proposition::{closure#1}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
-@[reducible]
-def intrinsic.parse_proposition.closure_1 := Slice intrinsic.Form
-
-/-- [noble_contracts::intrinsic::parse_proposition::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
-@[reducible]
-def intrinsic.parse_proposition.closure := intrinsic.Form
-
 /-- [noble_contracts::intrinsic::parse_code::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1723:32-1723:78 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1866:32-1866:78 -/
 @[reducible]
 def intrinsic.parse_code.closure := intrinsic.Form
 
-/-- [noble_contracts::intrinsic::parse_code::{closure#5}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
-@[reducible]
-def intrinsic.parse_code.closure_5 := Slice intrinsic.Form
-
-/-- [noble_contracts::intrinsic::parse_code::{closure#4}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
-@[reducible]
-def intrinsic.parse_code.closure_4 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::parse_code::{closure#3}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
-@[reducible]
-def intrinsic.parse_code.closure_3 := Slice intrinsic.Form
-
-/-- [noble_contracts::intrinsic::parse_code::{closure#2}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
-@[reducible]
-def intrinsic.parse_code.closure_2 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::parse_code::{closure#1}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
-@[reducible]
-def intrinsic.parse_code.closure_1 := intrinsic.Form
-
 /-- [noble_contracts::intrinsic::parse_tree::{closure#1}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1654:43-1654:61 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1797:43-1797:61 -/
 @[reducible]
 def intrinsic.parse_tree.closure_1 := Span
 
 /-- [noble_contracts::intrinsic::parse_tree::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1638:44-1638:64 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1781:44-1781:64 -/
 @[reducible]
 def intrinsic.parse_tree.closure := Span
 
@@ -4420,201 +4328,77 @@ inductive intrinsic.elaborate.FinishFrame where
 def intrinsic.elaborate.finish_forest.closure := Span
 
 /-- [noble_contracts::intrinsic::sort::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2084:24-2087:9 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2304:24-2307:9 -/
 @[reducible]
 def intrinsic.sort.closure := intrinsic.Form
 
 /-- [noble_contracts::intrinsic::Argument]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1510:0-1514:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1652:0-1657:1 -/
 @[discriminant isize]
 inductive intrinsic.Argument where
 | Code : intrinsic.Code → intrinsic.Argument
 | Value : Std.Usize → intrinsic.Argument
+| Term : intrinsic.Term → intrinsic.Argument
 | Premise : intrinsic.Argument
 
 /-- [noble_contracts::intrinsic::replace_index::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1505:40-1505:58 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1647:40-1647:58 -/
 @[reducible]
 def intrinsic.replace_index.closure := Span
 
-/-- [noble_contracts::intrinsic::VariableRewrite]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1423:0-1428:1 -/
-@[discriminant isize]
-inductive intrinsic.VariableRewrite where
-| Index : Std.Usize → intrinsic.VariableRewrite
-| Argument : intrinsic.Code → intrinsic.VariableRewrite
+/-- [noble_contracts::intrinsic::rewrite_term::{closure#1}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1584:48-1584:66 -/
+@[reducible]
+def intrinsic.rewrite_term.closure_1 := Span
+
+/-- [noble_contracts::intrinsic::rewrite_term::{closure}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1578:51-1578:69 -/
+@[reducible]
+def intrinsic.rewrite_term.closure := Span
 
 /-- [noble_contracts::intrinsic::Rewrite]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1174:0-1177:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1244:0-1247:1 -/
 @[discriminant isize]
 inductive intrinsic.Rewrite where
 | Shift : Std.Usize → intrinsic.Rewrite
 | Replace : Std.Usize → intrinsic.Argument → intrinsic.Rewrite
 
+/-- [noble_contracts::intrinsic::VariableRewrite]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1510:0-1515:1 -/
+@[discriminant isize]
+inductive intrinsic.VariableRewrite where
+| Index : Std.Usize → intrinsic.VariableRewrite
+| Argument : intrinsic.Code → intrinsic.VariableRewrite
+
 /-- [noble_contracts::intrinsic::rewrite_step::{closure#3}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1405:55-1405:73 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1480:55-1480:73 -/
 @[reducible]
 def intrinsic.rewrite_step.closure_3 := Span
 
 /-- [noble_contracts::intrinsic::rewrite_step::{closure#2}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1404:54-1404:72 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1479:54-1479:72 -/
 @[reducible]
 def intrinsic.rewrite_step.closure_2 := Span
 
 /-- [noble_contracts::intrinsic::rewrite_step::{closure#1}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1347:76-1347:94 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1418:76-1418:94 -/
 @[reducible]
 def intrinsic.rewrite_step.closure_1 := Span
 
 /-- [noble_contracts::intrinsic::rewrite_step::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1345:59-1345:77 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1416:59-1416:77 -/
 @[reducible]
 def intrinsic.rewrite_step.closure := Span
 
 /-- [noble_contracts::intrinsic::RewriteScope]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1251:0-1255:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1322:0-1326:1 -/
 structure intrinsic.RewriteScope where
   mode : intrinsic.Rewrite
   span : Span
   bound : Std.Usize
 
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#30}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_30 := Span
-
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#29}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_29 := Span
-
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#28}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_28 := Span
-
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#27}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_27 := Span
-
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#26}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_26 := Span
-
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#25}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_25 := Span
-
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#15}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_15 := Span
-
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#14}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_14 := Span
-
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#13}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_13 := Span
-
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#12}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_12 := Span
-
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#11}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_11 := Span
-
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#10}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1202:51-1202:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_10 := Span
-
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#24}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_24 := Span
-
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#23}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_23 := Span
-
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#22}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_22 := Span
-
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#21}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_21 := Span
-
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#20}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_20 := Span
-
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#19}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_19 := Span
-
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#18}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_18 := Span
-
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#17}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_17 := Span
-
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#16}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_16 := Span
-
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#9}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_9 := Span
-
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#8}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_8 := Span
-
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#7}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_7 := Span
-
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#6}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_6 := Span
-
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#5}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_5 := Span
-
-/-- [noble_contracts::intrinsic::rewrite_step::{closure#4}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
-@[reducible]
-def intrinsic.rewrite_step.closure_4 := Span
-
 /-- [noble_contracts::intrinsic::RewriteFrame]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1178:0-1189:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1248:0-1260:1 -/
 @[discriminant isize]
 inductive intrinsic.RewriteFrame where
 | Code : intrinsic.Code → Bool → intrinsic.RewriteFrame
@@ -4627,14 +4411,10 @@ inductive intrinsic.RewriteFrame where
 | Premise : intrinsic.RewriteFrame
 | Pi : Std.Usize → intrinsic.RewriteFrame
 | Eq : Std.Usize → Std.Usize → intrinsic.RewriteFrame
-
-/-- [noble_contracts::intrinsic::rewrite_prop::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1197:51-1197:72 -/
-@[reducible]
-def intrinsic.rewrite_prop.closure := Span
+| EqTerm : intrinsic.Term → intrinsic.Term → intrinsic.RewriteFrame
 
 /-- [noble_contracts::intrinsic::code::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2061:24-2064:9 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2281:24-2284:9 -/
 @[reducible]
 def intrinsic.code.closure := intrinsic.Form
 
@@ -4647,12 +4427,12 @@ inductive intrinsic.elaborate.ArgTerm where
 | Premise : intrinsic.elaborate.ArgTerm
 
 /-- [noble_contracts::intrinsic::elaborate::inst_ty::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic/elaborate.rs', lines 3988:36-3988:77 -/
+    Source: 'crates/noble-contracts/src/intrinsic/elaborate.rs', lines 3995:36-3995:77 -/
 @[reducible]
 def intrinsic.elaborate.inst_ty.closure := Span
 
 /-- [noble_contracts::intrinsic::elaborate::inst_prop::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic/elaborate.rs', lines 3956:28-3956:78 -/
+    Source: 'crates/noble-contracts/src/intrinsic/elaborate.rs', lines 3963:28-3963:78 -/
 @[reducible]
 def intrinsic.elaborate.inst_prop.closure := Span
 
@@ -4938,16 +4718,17 @@ def intrinsic.named_v2.statement.closure_1 := Unit
 def intrinsic.named_v2.statement.closure := Std.U32
 
 /-- [noble_contracts::intrinsic::ProofKind]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 549:0-553:1
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 560:0-568:1
     Visibility: public -/
 @[discriminant isize]
 inductive intrinsic.ProofKind where
 | Pure : intrinsic.ProofKind
 | Contract : intrinsic.ProofKind
 | NamedContract : intrinsic.ProofKind
+| NamedV3Contract : intrinsic.ProofKind
 
 /-- [noble_contracts::intrinsic::CheckedProof]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 555:0-562:1
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 570:0-577:1
     Visibility: public -/
 structure intrinsic.CheckedProof where
   «name» : String
@@ -4957,360 +4738,1171 @@ structure intrinsic.CheckedProof where
   model_revision : String
   checker_revision : String
 
-/-- [noble_contracts::intrinsic::ListPair]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 228:0-231:1 -/
-structure intrinsic.ListPair where
-  left : Slice intrinsic.Form
-  right : Slice intrinsic.Form
+/-- [noble_contracts::intrinsic::named_v3::Sort3]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 95:0-98:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.Sort3 where
+| I64 : intrinsic.named_v3.Sort3
+| Boolean : intrinsic.named_v3.Sort3
+
+/-- [noble_contracts::intrinsic::named_v3::Term3]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 145:0-156:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.Term3 where
+| Input : Std.Usize → intrinsic.named_v3.Term3
+| Output : Std.Usize → intrinsic.named_v3.Term3
+| Bound : Std.Usize → intrinsic.named_v3.Term3
+| Ghost :
+  Std.U32 →
+  Std.U32 →
+  intrinsic.named_v3.Sort3 →
+  intrinsic.named_v3.Term3
+| I64 : Std.I64 → intrinsic.named_v3.Term3
+| BoolLit : Bool → intrinsic.named_v3.Term3
+| Add :
+  intrinsic.named_v3.Term3 →
+  intrinsic.named_v3.Term3 →
+  intrinsic.named_v3.Term3
+| Sub :
+  intrinsic.named_v3.Term3 →
+  intrinsic.named_v3.Term3 →
+  intrinsic.named_v3.Term3
+| Mul :
+  intrinsic.named_v3.Term3 →
+  intrinsic.named_v3.Term3 →
+  intrinsic.named_v3.Term3
+| Equals :
+  intrinsic.named_v3.Term3 →
+  intrinsic.named_v3.Term3 →
+  intrinsic.named_v3.Term3
+
+/-- [noble_contracts::intrinsic::named_v3::lower::TermTermStep]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 372:0-376:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.lower.TermTermStep where
+| Visit : intrinsic.named_v3.Term3 → intrinsic.named_v3.lower.TermTermStep
+| CloseParen : intrinsic.named_v3.lower.TermTermStep
+| Space : intrinsic.named_v3.lower.TermTermStep
+
+/-- [noble_contracts::intrinsic::named_v3::Prop3]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 161:0-169:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.Prop3 where
+| True : intrinsic.named_v3.Prop3
+| False : intrinsic.named_v3.Prop3
+| Not : intrinsic.named_v3.Prop3 → intrinsic.named_v3.Prop3
+| And :
+  intrinsic.named_v3.Prop3 →
+  intrinsic.named_v3.Prop3 →
+  intrinsic.named_v3.Prop3
+| Eq :
+  intrinsic.named_v3.Term3 →
+  intrinsic.named_v3.Term3 →
+  intrinsic.named_v3.Prop3
+| Lt :
+  intrinsic.named_v3.Term3 →
+  intrinsic.named_v3.Term3 →
+  intrinsic.named_v3.Prop3
+| Le :
+  intrinsic.named_v3.Term3 →
+  intrinsic.named_v3.Term3 →
+  intrinsic.named_v3.Prop3
+
+/-- [noble_contracts::intrinsic::named_v3::lower::PropTermStep]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 475:0-479:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.lower.PropTermStep where
+| Visit : intrinsic.named_v3.Prop3 → intrinsic.named_v3.lower.PropTermStep
+| CloseParen : intrinsic.named_v3.lower.PropTermStep
+| Sep : intrinsic.named_v3.lower.PropTermStep
+
+/-- [noble_contracts::intrinsic::named_v3::lower::EntryMeta]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 562:0-569:1 -/
+structure intrinsic.named_v3.lower.EntryMeta where
+  slot : Std.U32
+  def_idx : Std.Usize
+  def_id : noble_kernel.contracts.Definition
+  origin_use_idx : Std.Usize
+  rank : Std.U32
+  deps : alloc.vec.Vec Std.U32
+
+/-- [noble_contracts::intrinsic::named_v3::lower::CodeTypedSpec]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 817:0-826:1 -/
+structure intrinsic.named_v3.lower.CodeTypedSpec where
+  thm_name : Str
+  env_name : Str
+  code_ref : Str
+  «def» : noble_kernel.execution.Definition
+  defs : Slice noble_kernel.execution.Definition
+  named_uses : Slice intrinsic.NamedUseOrigin
+  metas : Slice intrinsic.named_v3.lower.EntryMeta
+  span : Span
+
+/-- [noble_contracts::intrinsic::named_v3::lower::SubenvTypedSpec]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 1592:0-1602:1 -/
+structure intrinsic.named_v3.lower.SubenvTypedSpec where
+  ui : Std.Usize
+  env_name : Str
+  thm_name : Str
+  code_ref : Str
+  «def» : noble_kernel.execution.Definition
+  defs : Slice noble_kernel.execution.Definition
+  uses : Slice intrinsic.NamedUseOrigin
+  metas : Slice intrinsic.named_v3.lower.EntryMeta
+  span : Span
+
+/-- [noble_contracts::intrinsic::named_v3::SubjectView]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 3347:0-3355:1 -/
+structure intrinsic.named_v3.SubjectView where
+  inputs : alloc.vec.Vec (String × intrinsic.named_v3.Sort3)
+  outputs : alloc.vec.Vec (String × intrinsic.named_v3.Sort3)
+  input_codes : alloc.vec.Vec intrinsic.named_v3.Sort3
+  output_codes : alloc.vec.Vec intrinsic.named_v3.Sort3
+  selected_idx : Std.Usize
+  checked : noble_kernel.untrusted.Checked
+  occurrences : alloc.vec.Vec Std.Usize
+
+/-- [noble_contracts::intrinsic::named_v3::lower::Term3LeanText]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 2102:0-2109:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.lower.Term3LeanText where
+| CloseParen : intrinsic.named_v3.lower.Term3LeanText
+| AddSep : intrinsic.named_v3.lower.Term3LeanText
+| SubSep : intrinsic.named_v3.lower.Term3LeanText
+| MulSep : intrinsic.named_v3.lower.Term3LeanText
+| EqMid : intrinsic.named_v3.lower.Term3LeanText
+| EqClose : intrinsic.named_v3.lower.Term3LeanText
+
+/-- [noble_contracts::intrinsic::named_v3::lower::Term3LeanStep]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 2112:0-2115:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.lower.Term3LeanStep where
+| Visit : intrinsic.named_v3.Term3 → intrinsic.named_v3.lower.Term3LeanStep
+| Text :
+  intrinsic.named_v3.lower.Term3LeanText →
+  intrinsic.named_v3.lower.Term3LeanStep
+
+/-- [noble_contracts::intrinsic::named_v3::lower::Prop3LeanText]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 2293:0-2296:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.lower.Prop3LeanText where
+| CloseParen : intrinsic.named_v3.lower.Prop3LeanText
+| AndSep : intrinsic.named_v3.lower.Prop3LeanText
+
+/-- [noble_contracts::intrinsic::named_v3::lower::Prop3LeanStep]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 2299:0-2302:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.lower.Prop3LeanStep where
+| Visit : intrinsic.named_v3.Prop3 → intrinsic.named_v3.lower.Prop3LeanStep
+| Text :
+  intrinsic.named_v3.lower.Prop3LeanText →
+  intrinsic.named_v3.lower.Prop3LeanStep
+
+/-- [noble_contracts::intrinsic::named_v3::Statement3]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 175:0-182:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.Statement3 where
+| «Prop» : intrinsic.named_v3.Prop3 → intrinsic.named_v3.Statement3
+| Pi :
+  String →
+  intrinsic.named_v3.Sort3 →
+  intrinsic.named_v3.Statement3 →
+  intrinsic.named_v3.Statement3
+
+/-- [noble_contracts::intrinsic::prepare_contract::{closure}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4629:51-4629:75 -/
+@[reducible]
+def intrinsic.prepare_contract.closure := Unit
+
+/-- [noble_contracts::intrinsic::named_v3::ParsePropFrame]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 1052:0-1056:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.ParsePropFrame where
+| Visit : intrinsic.Form → Std.U32 → intrinsic.named_v3.ParsePropFrame
+| BuildNot : intrinsic.named_v3.ParsePropFrame
+| BuildAnd : intrinsic.named_v3.ParsePropFrame
+
+/-- [noble_contracts::intrinsic::named_v3::SortStep]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 246:0-250:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.SortStep where
+| Visit : intrinsic.named_v3.Term3 → intrinsic.named_v3.SortStep
+| CombineArith : intrinsic.named_v3.SortStep
+| CombineEq : intrinsic.named_v3.SortStep
+
+/-- [noble_contracts::intrinsic::named_v3::Scope]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 207:0-215:1 -/
+structure intrinsic.named_v3.Scope where
+  inputs : Slice (String × intrinsic.named_v3.Sort3)
+  outputs : Slice (String × intrinsic.named_v3.Sort3)
+  bound : Slice (String × intrinsic.named_v3.Sort3)
+  interface : Bool
+  allow_typed_eq : Bool
+
+/-- [noble_contracts::intrinsic::named_v3::BinTermOp]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 413:0-418:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.BinTermOp where
+| Add : intrinsic.named_v3.BinTermOp
+| Sub : intrinsic.named_v3.BinTermOp
+| Mul : intrinsic.named_v3.BinTermOp
+| Equals : intrinsic.named_v3.BinTermOp
+
+/-- [noble_contracts::intrinsic::named_v3::ParseTermFrame]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 851:0-854:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.ParseTermFrame where
+| Visit : intrinsic.Form → Std.U32 → intrinsic.named_v3.ParseTermFrame
+| Build : intrinsic.named_v3.BinTermOp → intrinsic.named_v3.ParseTermFrame
+
+/-- [noble_contracts::intrinsic::named_v3::ScopeMode]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 219:0-223:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.ScopeMode where
+| Assertion : intrinsic.named_v3.ScopeMode
+| Motive : intrinsic.named_v3.ScopeMode
+| Lemma : intrinsic.named_v3.ScopeMode
+
+/-- [noble_contracts::intrinsic::named_v3::lower::emit_prepared_expr::Step]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 2575:4-2578:5 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.lower.emit_prepared_expr.Step where
+| Visit : Std.U32 → intrinsic.named_v3.lower.emit_prepared_expr.Step
+| Text : Str → intrinsic.named_v3.lower.emit_prepared_expr.Step
+
+/-- [noble_contracts::intrinsic::named_v3::lower::EvalCombKind]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 2726:0-2730:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.lower.EvalCombKind where
+| Add : intrinsic.named_v3.lower.EvalCombKind
+| Sub : intrinsic.named_v3.lower.EvalCombKind
+| Mul : intrinsic.named_v3.lower.EvalCombKind
+
+/-- [noble_contracts::intrinsic::named_v3::lower::EvalTermStep]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 2733:0-2737:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.lower.EvalTermStep where
+| Visit :
+  intrinsic.named_v3.Term3 →
+  intrinsic.named_v3.Sort3 →
+  intrinsic.named_v3.lower.EvalTermStep
+| Combine :
+  intrinsic.named_v3.lower.EvalCombKind →
+  intrinsic.named_v3.lower.EvalTermStep
+| CombineEq : intrinsic.named_v3.lower.EvalTermStep
+
+/-- [noble_contracts::intrinsic::named_v3::lower::EvalPropStep]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 2976:0-2980:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.lower.EvalPropStep where
+| Visit : intrinsic.named_v3.Prop3 → intrinsic.named_v3.lower.EvalPropStep
+| CombineNot : intrinsic.named_v3.lower.EvalPropStep
+| CombineAnd : intrinsic.named_v3.lower.EvalPropStep
+
+/-- [noble_contracts::intrinsic::named_v3::Lemma]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 1316:0-1319:1 -/
+structure intrinsic.named_v3.Lemma where
+  reference : String
+  statement : intrinsic.named_v3.Statement3
+
+/-- [noble_contracts::intrinsic::named_v3::lower::ProofScope]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 3194:0-3202:1 -/
+structure intrinsic.named_v3.lower.ProofScope where
+  facts : Slice intrinsic.named_v3.Prop3
+  lemmas : Slice intrinsic.named_v3.Lemma
+  scope_inputs : Slice (String × intrinsic.named_v3.Sort3)
+  scope_outputs : Slice (String × intrinsic.named_v3.Sort3)
+  in_vars : Slice String
+  ghost_vars : Slice (Std.U32 × Std.U32 × String)
+  fact_vars : Slice String
+
+/-- [noble_contracts::intrinsic::named_v3::lower::PropProofStep]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 3205:0-3222:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.lower.PropProofStep where
+| Eval : intrinsic.Form → intrinsic.named_v3.lower.PropProofStep
+| Apply : intrinsic.Form → intrinsic.named_v3.lower.PropProofStep
+| SubstAfterEq :
+  String →
+  intrinsic.named_v3.Sort3 →
+  intrinsic.named_v3.Prop3 →
+  intrinsic.Form →
+  intrinsic.named_v3.lower.PropProofStep
+| SubstAfterPremise :
+  String →
+  intrinsic.named_v3.Sort3 →
+  intrinsic.named_v3.Prop3 →
+  intrinsic.named_v3.Term3 →
+  intrinsic.named_v3.Term3 →
+  String →
+  intrinsic.named_v3.lower.PropProofStep
+
+/-- [noble_contracts::intrinsic::named_v3::lower::PropProofState]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 3224:0-3229:1 -/
+structure intrinsic.named_v3.lower.PropProofState where
+  bound_defs : alloc.vec.Vec (String × intrinsic.named_v3.Sort3)
+  bound_names : alloc.vec.Vec String
+  work : alloc.vec.Vec intrinsic.named_v3.lower.PropProofStep
+  vals : alloc.vec.Vec (String × intrinsic.named_v3.Statement3)
+
+/-- [noble_contracts::intrinsic::named_v3::NormPropStep]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 510:0-514:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.NormPropStep where
+| Visit : intrinsic.named_v3.Prop3 → intrinsic.named_v3.NormPropStep
+| CombineNot : intrinsic.named_v3.NormPropStep
+| CombineAnd : intrinsic.named_v3.NormPropStep
+
+/-- [noble_contracts::intrinsic::named_v3::NormTermStep]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 421:0-424:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.NormTermStep where
+| Visit : intrinsic.named_v3.Term3 → intrinsic.named_v3.NormTermStep
+| Combine : intrinsic.named_v3.BinTermOp → intrinsic.named_v3.NormTermStep
+
+/-- [noble_contracts::intrinsic::named_v3::MapPropStep]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 760:0-764:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.MapPropStep where
+| Visit : intrinsic.named_v3.Prop3 → intrinsic.named_v3.MapPropStep
+| BuildNot : intrinsic.named_v3.MapPropStep
+| BuildAnd : intrinsic.named_v3.MapPropStep
+
+/-- [noble_contracts::intrinsic::named_v3::BoundLookup]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 660:0-663:1 -/
+structure intrinsic.named_v3.BoundLookup where
+  index : Std.Usize
+  level : Std.Usize
+
+/-- [noble_contracts::intrinsic::named_v3::TermSubst]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 649:0-658:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.TermSubst where
+| Interface :
+  Slice intrinsic.named_v3.Term3 →
+  Slice intrinsic.named_v3.Term3 →
+  intrinsic.named_v3.TermSubst
+| Binder :
+  Std.Usize →
+  intrinsic.named_v3.Term3 →
+  intrinsic.named_v3.TermSubst
+
+/-- [noble_contracts::intrinsic::named_v3::MapTermStep]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 642:0-645:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.MapTermStep where
+| Visit : intrinsic.named_v3.Term3 → intrinsic.named_v3.MapTermStep
+| Build : intrinsic.named_v3.BinTermOp → intrinsic.named_v3.MapTermStep
+
+/-- [noble_contracts::intrinsic::named_v3::lower::emit_norm_prop_iff::{closure}]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 7043:20-7043:82 -/
+@[reducible]
+def intrinsic.named_v3.lower.emit_norm_prop_iff.closure := Unit
+
+/-- [noble_contracts::intrinsic::named_v3::lower::NormPropIffStep]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 6653:0-6657:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.lower.NormPropIffStep where
+| Visit : intrinsic.named_v3.Prop3 → intrinsic.named_v3.lower.NormPropIffStep
+| CombineNot : intrinsic.named_v3.lower.NormPropIffStep
+| CombineAnd : intrinsic.named_v3.lower.NormPropIffStep
+
+/-- [noble_contracts::intrinsic::named_v3::lower::emit_term_norm_eq::{closure}]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 6649:20-6649:82 -/
+@[reducible]
+def intrinsic.named_v3.lower.emit_term_norm_eq.closure := Unit
+
+/-- [noble_contracts::intrinsic::named_v3::lower::NormTermEqStep]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 6460:0-6463:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.lower.NormTermEqStep where
+| Visit : intrinsic.named_v3.Term3 → intrinsic.named_v3.lower.NormTermEqStep
+| Combine :
+  intrinsic.named_v3.BinTermOp →
+  intrinsic.named_v3.lower.NormTermEqStep
+
+/-- [noble_contracts::intrinsic::named_v3::lower::SegOp]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 3632:0-3636:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.lower.SegOp where
+| LitI64 : Std.I64 → intrinsic.named_v3.lower.SegOp
+| LitBool : Bool → intrinsic.named_v3.lower.SegOp
+| Word : Std.U32 → intrinsic.named_v3.lower.SegOp
+
+/-- [noble_contracts::intrinsic::named_v3::lower::SegmentSpec]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 3638:0-3648:1 -/
+structure intrinsic.named_v3.lower.SegmentSpec where
+  ops : alloc.vec.Vec intrinsic.named_v3.lower.SegOp
+  carried : alloc.vec.Vec intrinsic.named_v3.Term3
+  carried_sorts : alloc.vec.Vec intrinsic.named_v3.Sort3
+  consumed : alloc.vec.Vec intrinsic.named_v3.Term3
+  consumed_sorts : alloc.vec.Vec intrinsic.named_v3.Sort3
+  produced_sorts : alloc.vec.Vec intrinsic.named_v3.Sort3
+  after_stack : alloc.vec.Vec intrinsic.named_v3.Term3
+  after_sorts : alloc.vec.Vec intrinsic.named_v3.Sort3
+  facts : alloc.vec.Vec intrinsic.named_v3.Prop3
+
+/-- [noble_contracts::intrinsic::named_v3::lower::Chunk]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 3651:0-3662:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.lower.Chunk where
+| Segment :
+  intrinsic.named_v3.lower.SegmentSpec →
+  intrinsic.named_v3.lower.Chunk
+| Call :
+  Std.Usize →
+  Std.Usize →
+  Std.Usize →
+  alloc.vec.Vec intrinsic.named_v3.Term3 →
+  alloc.vec.Vec intrinsic.named_v3.Sort3 →
+  alloc.vec.Vec intrinsic.named_v3.Prop3 →
+  alloc.vec.Vec (Std.U32 × Std.U32 × intrinsic.named_v3.Sort3) →
+  intrinsic.named_v3.lower.Chunk
+
+/-- [noble_contracts::intrinsic::named_v3::lower::TermSortStep]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 3665:0-3669:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.lower.TermSortStep where
+| Visit : intrinsic.named_v3.Term3 → intrinsic.named_v3.lower.TermSortStep
+| Arith : intrinsic.named_v3.lower.TermSortStep
+| Eq : intrinsic.named_v3.lower.TermSortStep
+
+/-- [noble_contracts::intrinsic::named_v3::lower::SegmentSpecInput]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 3770:0-3778:1 -/
+structure intrinsic.named_v3.lower.SegmentSpecInput where
+  ops : alloc.vec.Vec intrinsic.named_v3.lower.SegOp
+  before_stack : Slice intrinsic.named_v3.Term3
+  before_sorts : Slice intrinsic.named_v3.Sort3
+  after_stack : alloc.vec.Vec intrinsic.named_v3.Term3
+  facts : alloc.vec.Vec intrinsic.named_v3.Prop3
+  in_sorts : Slice intrinsic.named_v3.Sort3
+  ghost_sorts : Slice (Std.U32 × Std.U32 × intrinsic.named_v3.Sort3)
+
+/-- [noble_contracts::intrinsic::named_v3::lower::SplitCarriedMatchSpec]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 3871:0-3880:1 -/
+structure intrinsic.named_v3.lower.SplitCarriedMatchSpec where
+  eq_name : Str
+  carried_var : Str
+  tail_list : Str
+  carried_count : Std.Usize
+  args_count : Std.Usize
+  strip_args : Bool
+  target_elems : Slice String
+  var_prefix : Str
+
+/-- [noble_contracts::intrinsic::named_v3::lower::StackUnpackSpec]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 4024:0-4032:1 -/
+structure intrinsic.named_v3.lower.StackUnpackSpec where
+  hyp_name : Str
+  stack_expr : Str
+  sorts : Slice intrinsic.named_v3.Sort3
+  val_prefix : Str
+  val_names : Slice String
+  step_prefix : Str
+  eq_name : Str
+
+/-- [noble_contracts::intrinsic::named_v3::lower::SegClaimStepOut]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 4327:0-4331:1 -/
+structure intrinsic.named_v3.lower.SegClaimStepOut where
+  out : String
+  next_exec : String
+  next_stack : alloc.vec.Vec (intrinsic.named_v3.Sort3 × String)
+
+/-- [noble_contracts::intrinsic::named_v3::TraceStep]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 4019:0-4023:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.TraceStep where
+| Literal : noble_kernel.untrusted.Lit → intrinsic.named_v3.TraceStep
+| Builtin : Std.U32 → intrinsic.named_v3.TraceStep
+| Call : Std.Usize → intrinsic.named_v3.TraceStep
+
+/-- [noble_contracts::intrinsic::named_v3::CallTrace]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 4002:0-4016:1 -/
+structure intrinsic.named_v3.CallTrace where
+  occ_idx : Std.Usize
+  occ_slot : Std.U32
+  callee_index : Std.Usize
+  callee_inputs : alloc.vec.Vec (String × intrinsic.named_v3.Sort3)
+  callee_outputs : alloc.vec.Vec (String × intrinsic.named_v3.Sort3)
+  pre_stack : alloc.vec.Vec intrinsic.named_v3.Term3
+  pre_facts : alloc.vec.Vec intrinsic.named_v3.Prop3
+  bridge_form : intrinsic.Form
+  callee_requires : intrinsic.named_v3.Prop3
+  callee_ensures : intrinsic.named_v3.Prop3
+  direct_outputs : alloc.vec.Vec (Option intrinsic.named_v3.Term3)
+  post_stack : alloc.vec.Vec intrinsic.named_v3.Term3
+  post_facts : alloc.vec.Vec intrinsic.named_v3.Prop3
+
+/-- [noble_contracts::intrinsic::named_v3::LowerTrace]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 4025:0-4036:1 -/
+structure intrinsic.named_v3.LowerTrace where
+  view : intrinsic.named_v3.SubjectView
+  requires : intrinsic.named_v3.Prop3
+  ensures : intrinsic.named_v3.Prop3
+  initial_facts : alloc.vec.Vec intrinsic.named_v3.Prop3
+  steps : alloc.vec.Vec intrinsic.named_v3.TraceStep
+  calls : alloc.vec.Vec intrinsic.named_v3.CallTrace
+  distinct_callees : alloc.vec.Vec intrinsic.ContractGoal
+  lemmas : alloc.vec.Vec intrinsic.named_v3.Lemma
+  join_form : intrinsic.Form
+  final_stack : alloc.vec.Vec intrinsic.named_v3.Term3
+
+/-- [noble_contracts::intrinsic::named_v3::lower::ChunkStepCtx]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 4840:0-4855:1 -/
+structure intrinsic.named_v3.lower.ChunkStepCtx where
+  trace : intrinsic.named_v3.LowerTrace
+  limits : Limits
+  chunks : Slice intrinsic.named_v3.lower.Chunk
+  k : Std.Usize
+  is_first : Bool
+  is_last : Bool
+  in_sorts : Slice intrinsic.named_v3.Sort3
+  pre_ghosts : alloc.vec.Vec (Std.U32 × Std.U32 × intrinsic.named_v3.Sort3)
+  pre_facts_ref : Slice intrinsic.named_v3.Prop3
+  pre_stack_ref : alloc.vec.Vec intrinsic.named_v3.Term3
+  pre_sorts_ref : alloc.vec.Vec intrinsic.named_v3.Sort3
+  in_vars : alloc.vec.Vec String
+  g_vars : alloc.vec.Vec (Std.U32 × Std.U32 × String)
+  fact_vars : alloc.vec.Vec String
+
+/-- [noble_contracts::intrinsic::named_v3::lower::EmitChunkInput]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 4858:0-4863:1 -/
+structure intrinsic.named_v3.lower.EmitChunkInput where
+  trace : intrinsic.named_v3.LowerTrace
+  chunks : Slice intrinsic.named_v3.lower.Chunk
+  in_sorts : Slice intrinsic.named_v3.Sort3
+  limits : Limits
+
+/-- [noble_contracts::intrinsic::named_v3::lower::UnpackPreStateSpec]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 7301:0-7311:1 -/
+structure intrinsic.named_v3.lower.UnpackPreStateSpec where
+  trace : intrinsic.named_v3.LowerTrace
+  is_first : Bool
+  in_vars : Slice String
+  ghost_vars : Slice (Std.U32 × Std.U32 × String)
+  in_sorts : Slice intrinsic.named_v3.Sort3
+  n_ghosts : Std.Usize
+  n_facts : Std.Usize
+  hyp_name : Str
+  state_expr : Str
+
+/-- [noble_contracts::intrinsic::named_v3::lower::FinalJoinBodySpec]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 7157:0-7167:1 -/
+structure intrinsic.named_v3.lower.FinalJoinBodySpec where
+  trace : intrinsic.named_v3.LowerTrace
+  after_stack : Slice intrinsic.named_v3.Term3
+  after_sorts : Slice intrinsic.named_v3.Sort3
+  after_facts : Slice intrinsic.named_v3.Prop3
+  in_vars : Slice String
+  ghost_vars : Slice (Std.U32 × Std.U32 × String)
+  fact_vars : Slice String
+  in_sorts : Slice intrinsic.named_v3.Sort3
+  hres_subst_name : Str
+
+/-- [noble_contracts::intrinsic::named_v3::lower::MidJoinSpec]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 7091:0-7097:1 -/
+structure intrinsic.named_v3.lower.MidJoinSpec where
+  in_vars : Slice String
+  ghost_vars : Slice (Std.U32 × Std.U32 × String)
+  fact_vars : Slice String
+  n_in : Std.Usize
+  hres_subst_name : Str
+
+/-- [noble_contracts::intrinsic::named_v3::lower::CallSubstFactSpec]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 6051:0-6062:1 -/
+structure intrinsic.named_v3.lower.CallSubstFactSpec where
+  call : intrinsic.named_v3.CallTrace
+  cconj : Slice intrinsic.named_v3.Prop3
+  callee_out_sorts : Slice intrinsic.named_v3.Sort3
+  init_outs : Slice intrinsic.named_v3.Term3
+  subst_g_vars : Slice (Std.U32 × Std.U32 × String)
+  post_g_vars : Slice (Std.U32 × Std.U32 × String)
+  in_vars : Slice String
+  arg_terms : Slice intrinsic.named_v3.Term3
+  target_fact : Option intrinsic.named_v3.Prop3
+  ci : Std.Usize
+
+/-- [noble_contracts::intrinsic::named_v3::lower::CallJoinCloseSpec]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 5902:0-5918:1 -/
+structure intrinsic.named_v3.lower.CallJoinCloseSpec where
+  trace : intrinsic.named_v3.LowerTrace
+  call : intrinsic.named_v3.CallTrace
+  callee_out_sorts : Slice intrinsic.named_v3.Sort3
+  rv_names : Slice String
+  pre_g_vars : Slice (Std.U32 × Std.U32 × String)
+  in_vars : Slice String
+  fact_vars : Slice String
+  in_sorts : Slice intrinsic.named_v3.Sort3
+  arg_terms : Slice intrinsic.named_v3.Term3
+  new_ghosts : Slice (Std.U32 × Std.U32 × intrinsic.named_v3.Sort3)
+  after_stack : Slice intrinsic.named_v3.Term3
+  after_sorts : Slice intrinsic.named_v3.Sort3
+  after_facts : Slice intrinsic.named_v3.Prop3
+  split : Std.Usize
+  is_last : Bool
+
+/-- [noble_contracts::intrinsic::named_v3::lower::CallJoinSpec]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 5734:0-5748:1 -/
+structure intrinsic.named_v3.lower.CallJoinSpec where
+  call : intrinsic.named_v3.CallTrace
+  after_stack : Slice intrinsic.named_v3.Term3
+  after_sorts : Slice intrinsic.named_v3.Sort3
+  facts : Slice intrinsic.named_v3.Prop3
+  new_ghosts : Slice (Std.U32 × Std.U32 × intrinsic.named_v3.Sort3)
+  callee_in_sorts : Slice intrinsic.named_v3.Sort3
+  callee_out_sorts : Slice intrinsic.named_v3.Sort3
+  c_out_str : Str
+  arg_terms : Slice intrinsic.named_v3.Term3
+  arg_list : Str
+  arg_vals_only : Slice String
+  split : Std.Usize
+  ctx : intrinsic.named_v3.lower.ChunkStepCtx
+
+/-- [noble_contracts::intrinsic::named_v3::lower::CallChunkArgs]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 5534:0-5543:1 -/
+structure intrinsic.named_v3.lower.CallChunkArgs where
+  call_idx : Std.Usize
+  call : intrinsic.named_v3.CallTrace
+  occ_ui : Std.Usize
+  carried_len : Std.Usize
+  after_stack : Slice intrinsic.named_v3.Term3
+  after_sorts : Slice intrinsic.named_v3.Sort3
+  facts : Slice intrinsic.named_v3.Prop3
+  new_ghosts : Slice (Std.U32 × Std.U32 × intrinsic.named_v3.Sort3)
+
+/-- [noble_contracts::intrinsic::named_v3::lower::SegmentJoinSpec]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 5421:0-5424:1 -/
+structure intrinsic.named_v3.lower.SegmentJoinSpec where
+  seg : intrinsic.named_v3.lower.SegmentSpec
+  ctx : intrinsic.named_v3.lower.ChunkStepCtx
+
+/-- [noble_contracts::intrinsic::named_v3::lower::TraceChunkAccum]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3/lower.rs', lines 7463:0-7471:1 -/
+structure intrinsic.named_v3.lower.TraceChunkAccum where
+  chunks : alloc.vec.Vec intrinsic.named_v3.lower.Chunk
+  cur_ops : alloc.vec.Vec intrinsic.named_v3.lower.SegOp
+  seg_start_stack : alloc.vec.Vec intrinsic.named_v3.Term3
+  seg_start_sorts : alloc.vec.Vec intrinsic.named_v3.Sort3
+  cur_stack : alloc.vec.Vec intrinsic.named_v3.Term3
+  cur_facts : alloc.vec.Vec intrinsic.named_v3.Prop3
+  ghosts_so_far : alloc.vec.Vec (Std.U32 × Std.U32 ×
+    intrinsic.named_v3.Sort3)
+
+/-- [noble_contracts::intrinsic::named_v3::Reason]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 80:0-83:1 -/
+structure intrinsic.named_v3.Reason where
+  code : Str
+  detail : Str
+
+/-- [noble_contracts::intrinsic::named_v3::Value3]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 1310:0-1312:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.Value3 where
+| Statement : intrinsic.named_v3.Statement3 → intrinsic.named_v3.Value3
+
+/-- [noble_contracts::intrinsic::named_v3::ProofScope]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 1323:0-1328:1 -/
+structure intrinsic.named_v3.ProofScope where
+  facts : Slice intrinsic.named_v3.Prop3
+  lemmas : Slice intrinsic.named_v3.Lemma
+  contracts : Slice String
+  assignment : intrinsic.named_v3.Scope
+
+/-- [noble_contracts::intrinsic::named_v3::Rule3]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 1371:0-1375:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.Rule3 where
+| AddAssoc : intrinsic.named_v3.Rule3
+| AddComm : intrinsic.named_v3.Rule3
+| MulAdd : intrinsic.named_v3.Rule3
+
+/-- [noble_contracts::intrinsic::named_v3::InferFrame]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 1378:0-1400:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.InferFrame where
+| Eval : intrinsic.Form → Std.U32 → intrinsic.named_v3.InferFrame
+| Apply : intrinsic.Form → Span → Std.U32 → intrinsic.named_v3.InferFrame
+| SubstAfterEq :
+  alloc.vec.Vec (String × intrinsic.named_v3.Sort3) →
+  intrinsic.named_v3.Prop3 →
+  Std.Usize →
+  Span →
+  intrinsic.Form →
+  Std.U32 →
+  intrinsic.named_v3.InferFrame
+| SubstAfterPremise :
+  intrinsic.named_v3.Prop3 →
+  Std.Usize →
+  intrinsic.named_v3.Term3 →
+  intrinsic.named_v3.Term3 →
+  Span →
+  intrinsic.named_v3.InferFrame
+
+/-- [noble_contracts::intrinsic::named_v3::FormWrite]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 1979:0-1983:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.FormWrite where
+| Form : intrinsic.Form → Std.U32 → intrinsic.named_v3.FormWrite
+| Space : intrinsic.named_v3.FormWrite
+| Close : intrinsic.named_v3.FormWrite
+
+/-- [noble_contracts::intrinsic::named_v3::check_retained_dependencies::{closure}]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 2076:79-2081:5 -/
+@[reducible]
+def intrinsic.named_v3.check_retained_dependencies.closure :=
+  intrinsic.SubjectBinding
+
+/-- [noble_contracts::intrinsic::named_v3::CallRecord]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 2389:0-2402:1
+    Visibility: public -/
+structure intrinsic.named_v3.CallRecord where
+  ordinal : Std.U32
+  source_span : Span
+  callee_module : String
+  callee_version : Std.U32
+  callee_definition : String
+  callee_ordinal : Std.U32
+  callee_span : Span
+  specialization : Std.U32
+  proof : String
+  inputs : alloc.vec.Vec (String × Str)
+  outputs : alloc.vec.Vec (String × Str)
+
+/-- [noble_contracts::intrinsic::named_v3::Envelope]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 2406:0-2416:1
+    Visibility: public -/
+structure intrinsic.named_v3.Envelope where
+  module : String
+  version : Std.U32
+  definition : String
+  contract : String
+  occurrences : alloc.vec.Vec intrinsic.named_v3.CallRecord
+  closure : alloc.vec.Vec String
+  lemmas : alloc.vec.Vec String
+
+/-- [noble_contracts::intrinsic::named_v3::PreparedV3]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 2424:0-2427:1
+    Visibility: public -/
+structure intrinsic.named_v3.PreparedV3 where
+  claim : String
+  envelope : intrinsic.named_v3.Envelope
+
+/-- [noble_contracts::intrinsic::named_v3::CalleeSource]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 2450:0-2453:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.CalleeSource where
+| Dep : Std.Usize → intrinsic.named_v3.CalleeSource
+| Local : Std.Usize → intrinsic.named_v3.CalleeSource
+
+/-- [noble_contracts::intrinsic::named_v3::Callee]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 2455:0-2458:1 -/
+structure intrinsic.named_v3.Callee where
+  reference : String
+  source : intrinsic.named_v3.CalleeSource
+
+/-- [noble_contracts::intrinsic::named_v3::Step]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 2690:0-2694:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.Step where
+| Literal : noble_kernel.untrusted.Lit → intrinsic.named_v3.Step
+| Builtin : Std.U32 → intrinsic.named_v3.Step
+| Call : Std.Usize → intrinsic.named_v3.Step
+
+/-- [noble_contracts::intrinsic::named_v3::find_lemma_proposition::{closure#1}]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 3016:61-3016:85 -/
+@[reducible]
+def intrinsic.named_v3.find_lemma_proposition.closure_1 := Str
+
+/-- [noble_contracts::intrinsic::named_v3::find_lemma_proposition::{closure}]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 2995:68-2995:92 -/
+@[reducible]
+def intrinsic.named_v3.find_lemma_proposition.closure := Str
+
+/-- [noble_contracts::intrinsic::named_v3::State]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 3096:0-3100:1 -/
+structure intrinsic.named_v3.State where
+  stack : alloc.vec.Vec intrinsic.named_v3.Term3
+  facts : alloc.vec.Vec intrinsic.named_v3.Prop3
+  ghosts : Std.U32
+
+/-- [noble_contracts::intrinsic::named_v3::WalkContext]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 4452:0-4466:1 -/
+structure intrinsic.named_v3.WalkContext where
+  nodes : Slice noble_kernel.untrusted.Node
+  named_uses : Slice intrinsic.NamedUseOrigin
+  occurrences : Slice Std.Usize
+  modules : Slice intrinsic.ResolvedSourceModule
+  callees : Slice intrinsic.named_v3.Callee
+  bridges : Slice (Option intrinsic.Form)
+  contracts : Slice String
+  lemmas : Slice intrinsic.named_v3.Lemma
+  dependencies : Slice intrinsic.ProofDependency
+  «local» : Slice intrinsic.ProofObligation
+  inputs : Slice (String × intrinsic.named_v3.Sort3)
+  outputs : Slice (String × intrinsic.named_v3.Sort3)
+  span : Span
+
+/-- [noble_contracts::intrinsic::named_v3::CallSite]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 3194:0-3199:1 -/
+structure intrinsic.named_v3.CallSite where
+  callee : intrinsic.named_v3.Callee
+  bridge : intrinsic.Form
+  context : intrinsic.named_v3.WalkContext
+  span : Span
+
+/-- [noble_contracts::intrinsic::named_v3::CallStepInfo]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 3302:0-3308:1 -/
+structure intrinsic.named_v3.CallStepInfo where
+  callee_inputs : alloc.vec.Vec (String × intrinsic.named_v3.Sort3)
+  callee_outputs : alloc.vec.Vec (String × intrinsic.named_v3.Sort3)
+  callee_requires : intrinsic.named_v3.Prop3
+  callee_ensures : intrinsic.named_v3.Prop3
+  direct_outputs : alloc.vec.Vec (Option intrinsic.named_v3.Term3)
+
+/-- [noble_contracts::intrinsic::named_v3::check_accepted_definitions_traced::{closure}]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 3587:61-3589:17 -/
+@[reducible]
+def intrinsic.named_v3.check_accepted_definitions_traced.closure :=
+  noble_kernel.contracts.Definition
+
+/-- [noble_contracts::intrinsic::check_flat_nodes::{closure}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 5422:62-5422:98 -/
+@[reducible]
+def intrinsic.check_flat_nodes.closure := noble_kernel.untrusted.Request
+
+/-- [noble_contracts::intrinsic::named_v3::ReplayAction]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 3691:0-3695:1 -/
+@[discriminant isize]
+inductive intrinsic.named_v3.ReplayAction where
+| Dep :
+  intrinsic.ProofDependency →
+  Std.U32 →
+  intrinsic.named_v3.ReplayAction
+| Local :
+  intrinsic.ProofObligation →
+  Std.U32 →
+  intrinsic.named_v3.ReplayAction
+| Finish : String → intrinsic.named_v3.ReplayAction
+
+/-- [noble_contracts::intrinsic::named_v3::ReplayLocalSpec]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 3698:0-3705:1 -/
+structure intrinsic.named_v3.ReplayLocalSpec where
+  obligation : intrinsic.ProofObligation
+  contract : intrinsic.ContractGoal
+  dependencies : Slice intrinsic.ProofDependency
+  «local» : Slice intrinsic.ProofObligation
+  identity : String
+  depth : Std.U32
 
 /-- [noble_contracts::intrinsic::DependencyCopy]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 457:0-462:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 468:0-473:1 -/
 @[discriminant isize]
 inductive intrinsic.DependencyCopy where
 | Nodes : Slice intrinsic.ProofDependency → intrinsic.DependencyCopy
 | Close : intrinsic.ProofDependency → intrinsic.DependencyCopy
 
-/-- [noble_contracts::intrinsic::ProofBatch]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 536:0-547:1
-    Visibility: public -/
-structure intrinsic.ProofBatch where
+/-- [noble_contracts::intrinsic::named_v3::CallStepMeta]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 4644:0-4652:1 -/
+structure intrinsic.named_v3.CallStepMeta where
+  occ_idx : Std.Usize
+  occ_pos : Std.Usize
+  callee : intrinsic.named_v3.Callee
+  bridge : intrinsic.Form
+  info : intrinsic.named_v3.CallStepInfo
+  pre_stack : alloc.vec.Vec intrinsic.named_v3.Term3
+  pre_facts : alloc.vec.Vec intrinsic.named_v3.Prop3
+
+/-- [noble_contracts::intrinsic::named_v3::WalkAccum]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 4468:0-4476:1 -/
+structure intrinsic.named_v3.WalkAccum where
+  records : alloc.vec.Vec intrinsic.named_v3.CallRecord
+  plan : alloc.vec.Vec intrinsic.ProofDependency
+  local_plan : alloc.vec.Vec intrinsic.ProofObligation
+  distinct_callees : alloc.vec.Vec intrinsic.ContractGoal
+  distinct_refs : alloc.vec.Vec String
+  steps : alloc.vec.Vec intrinsic.named_v3.TraceStep
+  calls : alloc.vec.Vec intrinsic.named_v3.CallTrace
+
+/-- [noble_contracts::intrinsic::named_v3::SingleOutcome]
+    Source: 'crates/noble-contracts/src/intrinsic/named_v3.rs', lines 3994:0-3999:1 -/
+structure intrinsic.named_v3.SingleOutcome where
+  envelope_base : intrinsic.named_v3.Envelope
+  plan : alloc.vec.Vec intrinsic.ProofDependency
+  local_plan : alloc.vec.Vec intrinsic.ProofObligation
+  trace : intrinsic.named_v3.LowerTrace
+
+/-- [noble_contracts::intrinsic::matches_eq_add::{closure}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 5258:39-5258:70 -/
+@[reducible]
+def intrinsic.matches_eq_add.closure := Unit
+
+/-- [noble_contracts::intrinsic::contract_proof::{closure}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4435:37-4440:5 -/
+@[reducible]
+def intrinsic.contract_proof.closure := intrinsic.ProofObligation
+
+/-- [noble_contracts::intrinsic::rev1_dependency_step::{closure}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4325:20-4325:61 -/
+@[reducible]
+def intrinsic.rev1_dependency_step.closure := intrinsic.ProofDependency
+
+/-- [noble_contracts::intrinsic::DependencyIdentity]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4042:0-4046:1 -/
+structure intrinsic.DependencyIdentity where
   module : String
   version : Std.U32
-  source : alloc.vec.Vec Std.U8
-  generation : Std.U64
-  dependencies : alloc.vec.Vec intrinsic.ProofDependency
-  obligations : alloc.vec.Vec intrinsic.ProofObligation
-  elaborations : alloc.vec.Vec intrinsic.elaborate.ElaborationRecord
-  elaboration_work : intrinsic.ProofWork
+  «name» : String
 
-/-- [noble_contracts::intrinsic::ValidationFrame]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 975:0-978:1 -/
+/-- [noble_contracts::intrinsic::DependencyFrame]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3948:0-3960:1 -/
 @[discriminant isize]
-inductive intrinsic.ValidationFrame where
-| Enter : intrinsic.Form → Std.U32 → intrinsic.ValidationFrame
-| Children :
-  Slice intrinsic.Form →
-  Std.Usize →
+inductive intrinsic.DependencyFrame where
+| Enter :
+  intrinsic.ProofDependency →
   Std.U32 →
-  intrinsic.ValidationFrame
-
-/-- [noble_contracts::intrinsic::validation_step::{closure#3}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1054:25-1054:50 -/
-@[reducible]
-def intrinsic.validation_step.closure_3 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::validation_step::{closure#2}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1051:25-1051:50 -/
-@[reducible]
-def intrinsic.validation_step.closure_2 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::validation_step::{closure#1}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1044:55-1044:78 -/
-@[reducible]
-def intrinsic.validation_step.closure_1 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::validation_step::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1034:37-1034:62 -/
-@[reducible]
-def intrinsic.validation_step.closure := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::validate_tree::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 992:17-992:42 -/
-@[reducible]
-def intrinsic.validate_tree.closure := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::SizeNode]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1072:0-1076:1 -/
-@[discriminant isize]
-inductive intrinsic.SizeNode where
-| Code : intrinsic.Code → intrinsic.SizeNode
-| «Sort» : intrinsic.Sort → intrinsic.SizeNode
-| Proposition : intrinsic.Proposition → intrinsic.SizeNode
+  Option intrinsic.ProofDependency →
+  intrinsic.DependencyFrame
+| Children :
+  intrinsic.ProofDependency →
+  Std.U32 →
+  Std.Usize →
+  Std.Usize →
+  intrinsic.DependencyFrame
 
 /-- [noble_contracts::intrinsic::Available]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1168:0-1172:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1236:0-1242:1 -/
 structure intrinsic.Available where
   «name» : String
-  goal : intrinsic.Proposition
+  goal : Option intrinsic.Proposition
   lean_term : String
 
-/-- [noble_contracts::intrinsic::infer_step::{closure#3}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
-@[reducible]
-def intrinsic.infer_step.closure_3 := intrinsic.Form
+/-- [noble_contracts::intrinsic::DependencyWalk]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4048:0-4059:1 -/
+structure intrinsic.DependencyWalk where
+  frames : intrinsic.WorkStack intrinsic.DependencyFrame
+  active : intrinsic.WorkStack intrinsic.DependencyIdentity
+  completed : Option intrinsic.Available
+  allow_contracts : Bool
+  available : alloc.vec.Vec intrinsic.Available
+  available_bound : Std.Usize
 
-/-- [noble_contracts::intrinsic::infer_step::{closure#4}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
+/-- [noble_contracts::intrinsic::dependency_step_advance::{closure#5}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4265:25-4265:70 -/
 @[reducible]
-def intrinsic.infer_step.closure_4 := Slice intrinsic.Form
+def intrinsic.dependency_step_advance.closure_5 := intrinsic.ProofDependency
 
-/-- [noble_contracts::intrinsic::check_step::{closure#1}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
+/-- [noble_contracts::intrinsic::dependency_step_advance::{closure#4}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4255:25-4255:70 -/
 @[reducible]
-def intrinsic.check_step.closure_1 := intrinsic.Form
+def intrinsic.dependency_step_advance.closure_4 := intrinsic.ProofDependency
 
-/-- [noble_contracts::intrinsic::check_step::{closure#2}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
+/-- [noble_contracts::intrinsic::dependency_step_advance::{closure#3}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4244:32-4244:75 -/
 @[reducible]
-def intrinsic.check_step.closure_2 := intrinsic.Form
+def intrinsic.dependency_step_advance.closure_3 := intrinsic.ProofDependency
 
-/-- [noble_contracts::intrinsic::check_step::{closure#4}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
+/-- [noble_contracts::intrinsic::dependency_step_advance::{closure#2}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4231:32-4231:73 -/
 @[reducible]
-def intrinsic.check_step.closure_4 := intrinsic.Form
+def intrinsic.dependency_step_advance.closure_2 := intrinsic.ProofDependency
 
-/-- [noble_contracts::intrinsic::check_step::{closure#5}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
+/-- [noble_contracts::intrinsic::dependency_step_advance::{closure#1}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4218:21-4218:64 -/
 @[reducible]
-def intrinsic.check_step.closure_5 := Slice intrinsic.Form
+def intrinsic.dependency_step_advance.closure_1 := intrinsic.ProofDependency
 
-/-- [noble_contracts::intrinsic::check_step::{closure#6}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
+/-- [noble_contracts::intrinsic::dependency_step_advance::{closure}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4207:21-4207:64 -/
 @[reducible]
-def intrinsic.check_step.closure_6 := intrinsic.Form
+def intrinsic.dependency_step_advance.closure := intrinsic.ProofDependency
 
-/-- [noble_contracts::intrinsic::check_step::{closure#7}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
+/-- [noble_contracts::intrinsic::continuation_step::{closure#13}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3728:36-3728:59 -/
 @[reducible]
-def intrinsic.check_step.closure_7 := Slice intrinsic.Form
+def intrinsic.continuation_step.closure_13 := intrinsic.Form
 
-/-- [noble_contracts::intrinsic::check_step::{closure#8}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
+/-- [noble_contracts::intrinsic::continuation_step::{closure#12}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3699:36-3699:59 -/
 @[reducible]
-def intrinsic.check_step.closure_8 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::check_step::{closure#9}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
-@[reducible]
-def intrinsic.check_step.closure_9 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::subst_equation_step::{closure#5}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
-@[reducible]
-def intrinsic.subst_equation_step.closure_5 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::subst_equation_step::{closure#6}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
-@[reducible]
-def intrinsic.subst_equation_step.closure_6 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::continuation_step::{closure#10}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
-@[reducible]
-def intrinsic.continuation_step.closure_10 := intrinsic.Form
+def intrinsic.continuation_step.closure_12 := intrinsic.Form
 
 /-- [noble_contracts::intrinsic::continuation_step::{closure#11}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1660:52-1660:71 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3607:62-3607:85 -/
 @[reducible]
 def intrinsic.continuation_step.closure_11 := intrinsic.Form
 
+/-- [noble_contracts::intrinsic::continuation_step::{closure#7}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3607:62-3607:85 -/
+@[reducible]
+def intrinsic.continuation_step.closure_7 := intrinsic.Form
+
+/-- [noble_contracts::intrinsic::continuation_step::{closure#3}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3607:62-3607:85 -/
+@[reducible]
+def intrinsic.continuation_step.closure_3 := intrinsic.Form
+
+/-- [noble_contracts::intrinsic::continuation_step::{closure#10}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3600:36-3600:59 -/
+@[reducible]
+def intrinsic.continuation_step.closure_10 := intrinsic.Form
+
+/-- [noble_contracts::intrinsic::continuation_step::{closure#6}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3600:36-3600:59 -/
+@[reducible]
+def intrinsic.continuation_step.closure_6 := intrinsic.Form
+
+/-- [noble_contracts::intrinsic::continuation_step::{closure#2}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3600:36-3600:59 -/
+@[reducible]
+def intrinsic.continuation_step.closure_2 := intrinsic.Form
+
+/-- [noble_contracts::intrinsic::continuation_step::{closure#9}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3592:28-3592:51 -/
+@[reducible]
+def intrinsic.continuation_step.closure_9 := intrinsic.Form
+
+/-- [noble_contracts::intrinsic::continuation_step::{closure#5}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3592:28-3592:51 -/
+@[reducible]
+def intrinsic.continuation_step.closure_5 := intrinsic.Form
+
+/-- [noble_contracts::intrinsic::continuation_step::{closure#1}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3592:28-3592:51 -/
+@[reducible]
+def intrinsic.continuation_step.closure_1 := intrinsic.Form
+
+/-- [noble_contracts::intrinsic::continuation_step::{closure#8}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3591:26-3591:54 -/
+@[reducible]
+def intrinsic.continuation_step.closure_8 := Unit
+
+/-- [noble_contracts::intrinsic::continuation_step::{closure#4}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3591:26-3591:54 -/
+@[reducible]
+def intrinsic.continuation_step.closure_4 := Unit
+
+/-- [noble_contracts::intrinsic::continuation_step::{closure}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3591:26-3591:54 -/
+@[reducible]
+def intrinsic.continuation_step.closure := Unit
+
+/-- [noble_contracts::intrinsic::apply_value_argument::{closure#1}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3543:49-3543:76 -/
+@[reducible]
+def intrinsic.apply_value_argument.closure_1 := intrinsic.Form
+
+/-- [noble_contracts::intrinsic::apply_value_argument::{closure}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3521:59-3521:86 -/
+@[reducible]
+def intrinsic.apply_value_argument.closure := intrinsic.Form
+
+/-- [noble_contracts::intrinsic::lean_step::{closure#2}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2428:28-2428:52 -/
+@[reducible]
+def intrinsic.lean_step.closure_2 := Std.Usize
+
+/-- [noble_contracts::intrinsic::lean_step::{closure#1}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2423:32-2423:50 -/
+@[reducible]
+def intrinsic.lean_step.closure_1 := Span
+
+/-- [noble_contracts::intrinsic::lean_step::{closure}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2421:29-2421:48 -/
+@[reducible]
+def intrinsic.lean_step.closure := Span
+
+/-- [noble_contracts::intrinsic::lean_step::{closure#12}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2403:28-2403:52 -/
+@[reducible]
+def intrinsic.lean_step.closure_12 := Std.Usize
+
+/-- [noble_contracts::intrinsic::lean_step::{closure#11}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2403:28-2403:52 -/
+@[reducible]
+def intrinsic.lean_step.closure_11 := Std.Usize
+
+/-- [noble_contracts::intrinsic::lean_step::{closure#10}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2403:28-2403:52 -/
+@[reducible]
+def intrinsic.lean_step.closure_10 := Std.Usize
+
+/-- [noble_contracts::intrinsic::lean_step::{closure#9}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2403:28-2403:52 -/
+@[reducible]
+def intrinsic.lean_step.closure_9 := Std.Usize
+
+/-- [noble_contracts::intrinsic::lean_step::{closure#8}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2403:28-2403:52 -/
+@[reducible]
+def intrinsic.lean_step.closure_8 := Std.Usize
+
+/-- [noble_contracts::intrinsic::lean_step::{closure#7}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2403:28-2403:52 -/
+@[reducible]
+def intrinsic.lean_step.closure_7 := Std.Usize
+
+/-- [noble_contracts::intrinsic::lean_step::{closure#6}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2403:28-2403:52 -/
+@[reducible]
+def intrinsic.lean_step.closure_6 := Std.Usize
+
+/-- [noble_contracts::intrinsic::lean_step::{closure#5}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2403:28-2403:52 -/
+@[reducible]
+def intrinsic.lean_step.closure_5 := Std.Usize
+
+/-- [noble_contracts::intrinsic::lean_step::{closure#4}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2403:28-2403:52 -/
+@[reducible]
+def intrinsic.lean_step.closure_4 := Std.Usize
+
+/-- [noble_contracts::intrinsic::lean_step::{closure#3}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2403:28-2403:52 -/
+@[reducible]
+def intrinsic.lean_step.closure_3 := Std.Usize
+
 /-- [noble_contracts::intrinsic::LeanFrame]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2118:0-2126:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2338:0-2347:1 -/
 @[discriminant isize]
 inductive intrinsic.LeanFrame where
 | Code : intrinsic.Code → intrinsic.LeanFrame
 | «Sort» : intrinsic.Sort → intrinsic.LeanFrame
 | Proposition : intrinsic.Proposition → intrinsic.LeanFrame
+| Term : intrinsic.Term → intrinsic.LeanFrame
 | Text : Str → intrinsic.LeanFrame
 | Number : Std.Usize → intrinsic.LeanFrame
 | PiOpen : intrinsic.LeanFrame
 
-/-- [noble_contracts::intrinsic::lean_step::{closure#2}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2207:28-2207:52 -/
-@[reducible]
-def intrinsic.lean_step.closure_2 := Std.Usize
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#1}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2202:32-2202:50 -/
-@[reducible]
-def intrinsic.lean_step.closure_1 := Span
-
-/-- [noble_contracts::intrinsic::lean_step::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2200:29-2200:48 -/
-@[reducible]
-def intrinsic.lean_step.closure := Span
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#19}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2182:28-2182:52 -/
-@[reducible]
-def intrinsic.lean_step.closure_19 := Std.Usize
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#8}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2182:28-2182:52 -/
-@[reducible]
-def intrinsic.lean_step.closure_8 := Std.Usize
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#7}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2182:28-2182:52 -/
-@[reducible]
-def intrinsic.lean_step.closure_7 := Std.Usize
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#6}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2182:28-2182:52 -/
-@[reducible]
-def intrinsic.lean_step.closure_6 := Std.Usize
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#5}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2182:28-2182:52 -/
-@[reducible]
-def intrinsic.lean_step.closure_5 := Std.Usize
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#4}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2182:28-2182:52 -/
-@[reducible]
-def intrinsic.lean_step.closure_4 := Std.Usize
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#3}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2182:28-2182:52 -/
-@[reducible]
-def intrinsic.lean_step.closure_3 := Std.Usize
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#34}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
-@[reducible]
-def intrinsic.lean_step.closure_34 := Span
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#33}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
-@[reducible]
-def intrinsic.lean_step.closure_33 := Span
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#32}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
-@[reducible]
-def intrinsic.lean_step.closure_32 := Span
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#31}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
-@[reducible]
-def intrinsic.lean_step.closure_31 := Span
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#30}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
-@[reducible]
-def intrinsic.lean_step.closure_30 := Span
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#29}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
-@[reducible]
-def intrinsic.lean_step.closure_29 := Span
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#28}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
-@[reducible]
-def intrinsic.lean_step.closure_28 := Span
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#27}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
-@[reducible]
-def intrinsic.lean_step.closure_27 := Span
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#26}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
-@[reducible]
-def intrinsic.lean_step.closure_26 := Span
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#25}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
-@[reducible]
-def intrinsic.lean_step.closure_25 := Span
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#24}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
-@[reducible]
-def intrinsic.lean_step.closure_24 := Span
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#23}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
-@[reducible]
-def intrinsic.lean_step.closure_23 := Span
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#22}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
-@[reducible]
-def intrinsic.lean_step.closure_22 := Span
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#21}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
-@[reducible]
-def intrinsic.lean_step.closure_21 := Span
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#20}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
-@[reducible]
-def intrinsic.lean_step.closure_20 := Span
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#18}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
-@[reducible]
-def intrinsic.lean_step.closure_18 := Span
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#17}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
-@[reducible]
-def intrinsic.lean_step.closure_17 := Span
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#16}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
-@[reducible]
-def intrinsic.lean_step.closure_16 := Span
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#15}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
-@[reducible]
-def intrinsic.lean_step.closure_15 := Span
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#14}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
-@[reducible]
-def intrinsic.lean_step.closure_14 := Span
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#13}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
-@[reducible]
-def intrinsic.lean_step.closure_13 := Span
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#12}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
-@[reducible]
-def intrinsic.lean_step.closure_12 := Span
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#11}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
-@[reducible]
-def intrinsic.lean_step.closure_11 := Span
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#10}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
-@[reducible]
-def intrinsic.lean_step.closure_10 := Span
-
-/-- [noble_contracts::intrinsic::lean_step::{closure#9}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2173:63-2173:83 -/
-@[reducible]
-def intrinsic.lean_step.closure_9 := Span
-
 /-- [noble_contracts::intrinsic::lean_text::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2129:53-2129:73 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2350:53-2350:73 -/
 @[reducible]
 def intrinsic.lean_text.closure := Span
 
+/-- [noble_contracts::intrinsic::SizeNode]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1122:0-1127:1 -/
+@[discriminant isize]
+inductive intrinsic.SizeNode where
+| Code : intrinsic.Code → intrinsic.SizeNode
+| «Sort» : intrinsic.Sort → intrinsic.SizeNode
+| Proposition : intrinsic.Proposition → intrinsic.SizeNode
+| Term : intrinsic.Term → intrinsic.SizeNode
+
+/-- [noble_contracts::intrinsic::ProofValue]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2770:0-2773:1 -/
+@[discriminant isize]
+inductive intrinsic.ProofValue where
+| Inferred : intrinsic.Proposition → String → intrinsic.ProofValue
+| Checked : String → intrinsic.ProofValue
+
 /-- [noble_contracts::intrinsic::ProofGoal]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2435:0-2438:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2695:0-2698:1 -/
 @[discriminant isize]
 inductive intrinsic.ProofGoal where
 | Borrowed : intrinsic.Proposition → intrinsic.ProofGoal
 | Owned : intrinsic.Proposition → intrinsic.ProofGoal
 
-/-- [noble_contracts::intrinsic::ProofSort]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2451:0-2454:1 -/
-@[discriminant isize]
-inductive intrinsic.ProofSort where
-| Borrowed : intrinsic.Sort → intrinsic.ProofSort
-| Owned : intrinsic.Sort → intrinsic.ProofSort
-
 /-- [noble_contracts::intrinsic::SubstEquation]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2499:0-2509:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2759:0-2769:1 -/
 structure intrinsic.SubstEquation where
   term : intrinsic.Form
   goal : intrinsic.ProofGoal
@@ -5322,8 +5914,15 @@ structure intrinsic.SubstEquation where
   premise : intrinsic.Form
   depth : Std.U32
 
+/-- [noble_contracts::intrinsic::ProofSort]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2711:0-2714:1 -/
+@[discriminant isize]
+inductive intrinsic.ProofSort where
+| Borrowed : intrinsic.Sort → intrinsic.ProofSort
+| Owned : intrinsic.Sort → intrinsic.ProofSort
+
 /-- [noble_contracts::intrinsic::ProofFrame]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2464:0-2497:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2724:0-2757:1 -/
 @[discriminant isize]
 inductive intrinsic.ProofFrame where
 | Infer : intrinsic.Form → Std.U32 → intrinsic.ProofFrame
@@ -5363,95 +5962,8 @@ inductive intrinsic.ProofFrame where
   String →
   intrinsic.ProofFrame
 
-/-- [noble_contracts::intrinsic::ProofValue]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2510:0-2513:1 -/
-@[discriminant isize]
-inductive intrinsic.ProofValue where
-| Inferred : intrinsic.Proposition → String → intrinsic.ProofValue
-| Checked : String → intrinsic.ProofValue
-
-/-- [noble_contracts::intrinsic::continuation_step::{closure#17}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3313:36-3313:59 -/
-@[reducible]
-def intrinsic.continuation_step.closure_17 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::continuation_step::{closure#16}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3284:36-3284:59 -/
-@[reducible]
-def intrinsic.continuation_step.closure_16 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::continuation_step::{closure#5}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3220:67-3220:94 -/
-@[reducible]
-def intrinsic.continuation_step.closure_5 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::continuation_step::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3216:36-3216:86 -/
-@[reducible]
-def intrinsic.continuation_step.closure := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::continuation_step::{closure#15}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3173:62-3173:85 -/
-@[reducible]
-def intrinsic.continuation_step.closure_15 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::continuation_step::{closure#9}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3173:62-3173:85 -/
-@[reducible]
-def intrinsic.continuation_step.closure_9 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::continuation_step::{closure#4}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3173:62-3173:85 -/
-@[reducible]
-def intrinsic.continuation_step.closure_4 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::continuation_step::{closure#14}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3166:36-3166:59 -/
-@[reducible]
-def intrinsic.continuation_step.closure_14 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::continuation_step::{closure#8}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3166:36-3166:59 -/
-@[reducible]
-def intrinsic.continuation_step.closure_8 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::continuation_step::{closure#3}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3166:36-3166:59 -/
-@[reducible]
-def intrinsic.continuation_step.closure_3 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::continuation_step::{closure#13}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3158:28-3158:51 -/
-@[reducible]
-def intrinsic.continuation_step.closure_13 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::continuation_step::{closure#7}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3158:28-3158:51 -/
-@[reducible]
-def intrinsic.continuation_step.closure_7 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::continuation_step::{closure#2}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3158:28-3158:51 -/
-@[reducible]
-def intrinsic.continuation_step.closure_2 := intrinsic.Form
-
-/-- [noble_contracts::intrinsic::continuation_step::{closure#12}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3157:26-3157:54 -/
-@[reducible]
-def intrinsic.continuation_step.closure_12 := Unit
-
-/-- [noble_contracts::intrinsic::continuation_step::{closure#6}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3157:26-3157:54 -/
-@[reducible]
-def intrinsic.continuation_step.closure_6 := Unit
-
-/-- [noble_contracts::intrinsic::continuation_step::{closure#1}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3157:26-3157:54 -/
-@[reducible]
-def intrinsic.continuation_step.closure_1 := Unit
-
 /-- [noble_contracts::intrinsic::ProofWalk]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2524:0-2529:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2784:0-2789:1 -/
 structure intrinsic.ProofWalk where
   frames : intrinsic.WorkStack intrinsic.ProofFrame
   context : intrinsic.WorkStack intrinsic.Binder
@@ -5459,209 +5971,187 @@ structure intrinsic.ProofWalk where
   failure : Option Diagnostic
 
 /-- [noble_contracts::intrinsic::subst_equation_step::{closure#4}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3085:28-3085:51 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3470:28-3470:51 -/
 @[reducible]
 def intrinsic.subst_equation_step.closure_4 := intrinsic.Form
 
 /-- [noble_contracts::intrinsic::subst_equation_step::{closure#2}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3077:20-3077:43 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3462:20-3462:43 -/
 @[reducible]
 def intrinsic.subst_equation_step.closure_2 := intrinsic.Form
 
 /-- [noble_contracts::intrinsic::subst_equation_step::{closure#1}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3076:18-3076:44 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3461:18-3461:44 -/
 @[reducible]
 def intrinsic.subst_equation_step.closure_1 := Unit
 
 /-- [noble_contracts::intrinsic::subst_equation_step::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3060:13-3060:40 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3445:13-3445:40 -/
 @[reducible]
 def intrinsic.subst_equation_step.closure := intrinsic.Form
 
 /-- [noble_contracts::intrinsic::subst_equation_step::{closure#3}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3043:47-3043:74 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3428:47-3428:74 -/
 @[reducible]
 def intrinsic.subst_equation_step.closure_3 := intrinsic.Form
 
 /-- [noble_contracts::intrinsic::check_step::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2912:21-2912:49 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3285:21-3285:49 -/
 @[reducible]
 def intrinsic.check_step.closure := Slice intrinsic.Form
 
-/-- [noble_contracts::intrinsic::check_step::{closure#3}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2891:37-2891:63 -/
+/-- [noble_contracts::intrinsic::check_step::{closure#1}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3264:37-3264:63 -/
 @[reducible]
-def intrinsic.check_step.closure_3 := Slice intrinsic.Form
-
-/-- [noble_contracts::intrinsic::infer_step::{closure#1}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2809:24-2809:69 -/
-@[reducible]
-def intrinsic.infer_step.closure_1 := Slice intrinsic.Form
+def intrinsic.check_step.closure_1 := Slice intrinsic.Form
 
 /-- [noble_contracts::intrinsic::infer_step::{closure#2}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2776:69-2776:92 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3094:53-3094:79 -/
 @[reducible]
-def intrinsic.infer_step.closure_2 := intrinsic.Form
+def intrinsic.infer_step.closure_2 := Slice intrinsic.Form
+
+/-- [noble_contracts::intrinsic::infer_step::{closure#1}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3042:68-3042:91 -/
+@[reducible]
+def intrinsic.infer_step.closure_1 := intrinsic.Form
 
 /-- [noble_contracts::intrinsic::infer_step::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2766:68-2771:9 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3026:68-3031:9 -/
 @[reducible]
 def intrinsic.infer_step.closure := intrinsic.Form
 
 /-- [noble_contracts::intrinsic::charge_intro::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2662:20-2662:38 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2922:20-2922:38 -/
 @[reducible]
 def intrinsic.charge_intro.closure := Span
 
 /-- [noble_contracts::intrinsic::finish_intro::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2637:43-2637:66 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2897:43-2897:66 -/
 @[reducible]
 def intrinsic.finish_intro.closure := intrinsic.Form
 
 /-- [noble_contracts::intrinsic::proof_tree::{closure#1}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2586:30-2586:48 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2846:30-2846:48 -/
 @[reducible]
 def intrinsic.proof_tree.closure_1 := Span
 
 /-- [noble_contracts::intrinsic::proof_tree::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2548:44-2548:64 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 2808:44-2808:64 -/
 @[reducible]
 def intrinsic.proof_tree.closure := Span
 
-/-- [noble_contracts::intrinsic::matches_eq_add::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4672:39-4672:70 -/
+/-- [noble_contracts::intrinsic::validation_step::{closure#3}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1104:25-1104:50 -/
 @[reducible]
-def intrinsic.matches_eq_add.closure := Unit
+def intrinsic.validation_step.closure_3 := intrinsic.Form
 
-/-- [noble_contracts::intrinsic::contract_proof::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3849:37-3854:5 -/
+/-- [noble_contracts::intrinsic::validation_step::{closure#2}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1101:25-1101:50 -/
 @[reducible]
-def intrinsic.contract_proof.closure := intrinsic.ProofObligation
+def intrinsic.validation_step.closure_2 := intrinsic.Form
+
+/-- [noble_contracts::intrinsic::validation_step::{closure#1}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1094:55-1094:78 -/
+@[reducible]
+def intrinsic.validation_step.closure_1 := intrinsic.Form
+
+/-- [noble_contracts::intrinsic::validation_step::{closure}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1084:37-1084:62 -/
+@[reducible]
+def intrinsic.validation_step.closure := intrinsic.Form
+
+/-- [noble_contracts::intrinsic::ValidationFrame]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1025:0-1028:1 -/
+@[discriminant isize]
+inductive intrinsic.ValidationFrame where
+| Enter : intrinsic.Form → Std.U32 → intrinsic.ValidationFrame
+| Children :
+  Slice intrinsic.Form →
+  Std.Usize →
+  Std.U32 →
+  intrinsic.ValidationFrame
+
+/-- [noble_contracts::intrinsic::validate_tree::{closure}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 1042:17-1042:42 -/
+@[reducible]
+def intrinsic.validate_tree.closure := intrinsic.Form
+
+/-- [noble_contracts::intrinsic::rev1_dependency_proof::{closure}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4133:20-4133:61 -/
+@[reducible]
+def intrinsic.rev1_dependency_proof.closure := intrinsic.ProofDependency
+
+/-- [noble_contracts::intrinsic::init_dependency_walk::{closure#1}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4083:13-4083:56 -/
+@[reducible]
+def intrinsic.init_dependency_walk.closure_1 := intrinsic.ProofDependency
+
+/-- [noble_contracts::intrinsic::init_dependency_walk::{closure}]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4072:52-4072:94 -/
+@[reducible]
+def intrinsic.init_dependency_walk.closure := intrinsic.ProofDependency
+
+/-- [noble_contracts::intrinsic::ListPair]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 232:0-235:1 -/
+structure intrinsic.ListPair where
+  left : Slice intrinsic.Form
+  right : Slice intrinsic.Form
+
+/-- [noble_contracts::intrinsic::ProofBatch]
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 547:0-558:1
+    Visibility: public -/
+structure intrinsic.ProofBatch where
+  module : String
+  version : Std.U32
+  source : alloc.vec.Vec Std.U8
+  generation : Std.U64
+  dependencies : alloc.vec.Vec intrinsic.ProofDependency
+  obligations : alloc.vec.Vec intrinsic.ProofObligation
+  elaborations : alloc.vec.Vec intrinsic.elaborate.ElaborationRecord
+  elaboration_work : intrinsic.ProofWork
 
 /-- [noble_contracts::intrinsic::Admitted]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3406:0-3411:1 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3848:0-3853:1 -/
 structure intrinsic.Admitted where
   available : alloc.vec.Vec intrinsic.Available
   available_bound : Std.Usize
   result : alloc.vec.Vec intrinsic.CheckedProof
   result_bound : Std.Usize
 
-/-- [noble_contracts::intrinsic::DependencyIdentity]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3563:0-3567:1 -/
-structure intrinsic.DependencyIdentity where
-  module : String
-  version : Std.U32
-  «name» : String
-
-/-- [noble_contracts::intrinsic::dependency_step::{closure#7}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3763:47-3768:13 -/
-@[reducible]
-def intrinsic.dependency_step.closure_7 := intrinsic.ProofDependency
-
-/-- [noble_contracts::intrinsic::dependency_step::{closure#6}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3756:28-3756:69 -/
-@[reducible]
-def intrinsic.dependency_step.closure_6 := intrinsic.ProofDependency
-
-/-- [noble_contracts::intrinsic::dependency_step::{closure#5}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3751:25-3751:70 -/
-@[reducible]
-def intrinsic.dependency_step.closure_5 := intrinsic.ProofDependency
-
-/-- [noble_contracts::intrinsic::dependency_step::{closure#4}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3741:25-3741:70 -/
-@[reducible]
-def intrinsic.dependency_step.closure_4 := intrinsic.ProofDependency
-
-/-- [noble_contracts::intrinsic::dependency_step::{closure#3}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3730:32-3730:75 -/
-@[reducible]
-def intrinsic.dependency_step.closure_3 := intrinsic.ProofDependency
-
-/-- [noble_contracts::intrinsic::dependency_step::{closure#2}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3717:32-3717:73 -/
-@[reducible]
-def intrinsic.dependency_step.closure_2 := intrinsic.ProofDependency
-
-/-- [noble_contracts::intrinsic::dependency_step::{closure#1}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3705:21-3705:64 -/
-@[reducible]
-def intrinsic.dependency_step.closure_1 := intrinsic.ProofDependency
-
 /-- [noble_contracts::intrinsic::dependency_step::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3694:21-3694:64 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4348:20-4348:61 -/
 @[reducible]
 def intrinsic.dependency_step.closure := intrinsic.ProofDependency
 
-/-- [noble_contracts::intrinsic::DependencyFrame]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3542:0-3554:1 -/
-@[discriminant isize]
-inductive intrinsic.DependencyFrame where
-| Enter :
-  intrinsic.ProofDependency →
-  Std.U32 →
-  Option intrinsic.ProofDependency →
-  intrinsic.DependencyFrame
-| Children :
-  intrinsic.ProofDependency →
-  Std.U32 →
-  Std.Usize →
-  Std.Usize →
-  intrinsic.DependencyFrame
-
-/-- [noble_contracts::intrinsic::DependencyWalk]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3569:0-3577:1 -/
-structure intrinsic.DependencyWalk where
-  frames : intrinsic.WorkStack intrinsic.DependencyFrame
-  active : intrinsic.WorkStack intrinsic.DependencyIdentity
-  completed : Option intrinsic.Available
-  available : alloc.vec.Vec intrinsic.Available
-  available_bound : Std.Usize
-
-/-- [noble_contracts::intrinsic::dependency_proof::{closure#2}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3621:20-3621:61 -/
-@[reducible]
-def intrinsic.dependency_proof.closure_2 := intrinsic.ProofDependency
-
-/-- [noble_contracts::intrinsic::dependency_proof::{closure#1}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3604:13-3604:56 -/
-@[reducible]
-def intrinsic.dependency_proof.closure_1 := intrinsic.ProofDependency
-
 /-- [noble_contracts::intrinsic::dependency_proof::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3593:52-3593:94 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4112:20-4112:61 -/
 @[reducible]
 def intrinsic.dependency_proof.closure := intrinsic.ProofDependency
 
 /-- [noble_contracts::intrinsic::check_batch_with_budgets::{closure#3}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3375:20-3375:59 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3802:20-3802:59 -/
 @[reducible]
 def intrinsic.check_batch_with_budgets.closure_3 := Unit
 
 /-- [noble_contracts::intrinsic::check_batch_with_budgets::{closure#2}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3370:46-3370:86 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3797:46-3797:86 -/
 @[reducible]
 def intrinsic.check_batch_with_budgets.closure_2 := Unit
 
 /-- [noble_contracts::intrinsic::check_batch_with_budgets::{closure#1}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3355:56-3355:95 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3782:56-3782:95 -/
 @[reducible]
 def intrinsic.check_batch_with_budgets.closure_1 := Unit
 
 /-- [noble_contracts::intrinsic::check_batch_with_budgets::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3349:54-3349:78 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3776:54-3776:78 -/
 @[reducible]
 def intrinsic.check_batch_with_budgets.closure := Std.U32
 
 /-- [noble_contracts::intrinsic::check_batch::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3338:13-3338:35 -/
+    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 3765:13-3765:35 -/
 @[reducible]
 def intrinsic.check_batch.closure := Unit
-
-/-- [noble_contracts::intrinsic::prepare_contract::{closure}]
-    Source: 'crates/noble-contracts/src/intrinsic.rs', lines 4043:51-4043:75 -/
-@[reducible]
-def intrinsic.prepare_contract.closure := Unit
 
 /-- [noble_contracts::source::chunks::Scalar]
     Source: 'crates/noble-contracts/src/source/chunks.rs', lines 90:0-95:1
@@ -7751,50 +8241,77 @@ structure source.declared.state.register.schema.nominals.Candidate where
 @[reducible]
 def source.declared.state.register.schema.nominals.declare.closure := Unit
 
+/-- [noble_contracts::source::declared::state::register::logical::resolve_module::{closure#4}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1638:92-1644:5 -/
+@[reducible]
+def source.declared.state.register.logical.resolve_module.closure_4 := Span
+
+/-- [noble_contracts::source::declared::state::register::logical::resolve_module::{closure#3}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1638:46-1638:79 -/
+@[reducible]
+def source.declared.state.register.logical.resolve_module.closure_3 := Std.U64
+
+/-- [noble_contracts::source::declared::state::register::logical::resolve_module::{closure#2}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1627:60-1627:92 -/
+@[reducible]
+def source.declared.state.register.logical.resolve_module.closure_2 := Str
+
+/-- [noble_contracts::source::declared::state::register::logical::resolve_module::{closure#1}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1611:24-1617:13 -/
+@[reducible]
+def source.declared.state.register.logical.resolve_module.closure_1 := Span
+
+/-- [noble_contracts::source::declared::state::register::logical::resolve_module::{closure}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1608:67-1610:13 -/
+def source.declared.state.register.logical.resolve_module.closure :=
+  Str × Option Std.U32
+
+/-- [noble_contracts::source::declared::state::register::logical::Snapshot]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1277:0-1280:1 -/
+structure source.declared.state.register.logical.Snapshot where
+  imports : Slice intrinsic.ProofImportBinding
+  dependencies : Slice intrinsic.ResolvedSourceModule
+
+/-- [noble_contracts::source::declared::state::register::logical::imported_module::{closure#3}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1234:22-1240:5 -/
+@[reducible]
+def source.declared.state.register.logical.imported_module.closure_3 := Span
+
+/-- [noble_contracts::source::declared::state::register::logical::imported_module::{closure#2}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1227:44-1229:5 -/
+@[reducible]
+def source.declared.state.register.logical.imported_module.closure_2 := Str
+
+/-- [noble_contracts::source::declared::state::register::logical::imported_module::{closure#1}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1219:20-1225:9 -/
+@[reducible]
+def source.declared.state.register.logical.imported_module.closure_1 := Span
+
+/-- [noble_contracts::source::declared::state::register::logical::imported_module::{closure}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1216:57-1218:9 -/
+def source.declared.state.register.logical.imported_module.closure :=
+  Str × Option Std.U32
+
 /-- [noble_contracts::source::declared::state::register::logical::resolve_reference::{closure#3}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1490:45-1490:77 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1560:45-1560:77 -/
 @[reducible]
 def source.declared.state.register.logical.resolve_reference.closure_3 :=
   String
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_reference::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1481:66-1483:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1551:66-1553:5 -/
 @[reducible]
 def source.declared.state.register.logical.resolve_reference.closure_2 := Str
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_reference::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1468:42-1468:68 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1533:42-1533:68 -/
 @[reducible]
 def source.declared.state.register.logical.resolve_reference.closure_1 := Str
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_reference::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1458:42-1458:74 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1523:42-1523:74 -/
 @[reducible]
 def source.declared.state.register.logical.resolve_reference.closure := String
-
-/-- [noble_contracts::source::declared::state::register::logical::imported_module::{closure#3}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1216:22-1222:5 -/
-@[reducible]
-def source.declared.state.register.logical.imported_module.closure_3 := Span
-
-/-- [noble_contracts::source::declared::state::register::logical::imported_module::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1209:44-1211:5 -/
-@[reducible]
-def source.declared.state.register.logical.imported_module.closure_2 := Str
-
-/-- [noble_contracts::source::declared::state::register::logical::imported_module::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1201:20-1207:9 -/
-@[reducible]
-def source.declared.state.register.logical.imported_module.closure_1 := Span
-
-/-- [noble_contracts::source::declared::state::register::logical::imported_module::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1198:57-1200:9 -/
-def source.declared.state.register.logical.imported_module.closure :=
-  Str × Option Std.U32
-
-/-- [noble_contracts::source::declared::state::register::logical::is_current::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1177:58-1180:5 -/
-def source.declared.state.register.logical.is_current.closure := Str × Std.U32
 
 /-- [noble_contracts::source::declared::state::register::logical::Request]
     Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 15:0-24:1 -/
@@ -7808,8 +8325,19 @@ structure source.declared.state.register.logical.Request where
   generation : Std.U64
   limits : Limits
 
+/-- [noble_contracts::source::declared::state::register::logical::UseContext]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1283:0-1287:1 -/
+structure source.declared.state.register.logical.UseContext where
+  request : source.declared.state.register.logical.Request
+  prior : Slice intrinsic.ProofObligation
+  snapshot : Option source.declared.state.register.logical.Snapshot
+
+/-- [noble_contracts::source::declared::state::register::logical::is_current::{closure}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1195:58-1198:5 -/
+def source.declared.state.register.logical.is_current.closure := Str × Std.U32
+
 /-- [noble_contracts::source::declared::state::register::logical::UseVisit]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1237:0-1240:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1255:0-1258:1 -/
 @[discriminant isize]
 inductive source.declared.state.register.logical.UseVisit where
 | Done : source.declared.state.register.logical.UseVisit
@@ -7818,119 +8346,119 @@ inductive source.declared.state.register.logical.UseVisit where
   source.declared.state.register.logical.UseVisit
 
 /-- [noble_contracts::source::declared::state::register::logical::UseFrame]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1230:0-1233:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1248:0-1251:1 -/
 structure source.declared.state.register.logical.UseFrame where
   items : alloc.vec.Vec intrinsic.Form
   visited : Std.Usize
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#8}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1163:16-1169:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1181:16-1187:5 -/
 @[reducible]
 def source.declared.state.register.logical.resolve_contract.closure_8 := Span
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#7}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1162:9-1162:41 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1180:9-1180:41 -/
 @[reducible]
 def source.declared.state.register.logical.resolve_contract.closure_7 := Unit
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#6}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1159:47-1161:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1177:47-1179:5 -/
 @[reducible]
 def source.declared.state.register.logical.resolve_contract.closure_6 := Str
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#5}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1150:24-1156:13 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1168:24-1174:13 -/
 @[reducible]
 def source.declared.state.register.logical.resolve_contract.closure_5 := Span
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#4}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1149:17-1149:49 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1167:17-1167:49 -/
 @[reducible]
 def source.declared.state.register.logical.resolve_contract.closure_4 := Unit
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#3}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1148:47-1148:79 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1166:47-1166:79 -/
 @[reducible]
 def source.declared.state.register.logical.resolve_contract.closure_3 := Str
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1139:24-1145:13 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1157:24-1163:13 -/
 @[reducible]
 def source.declared.state.register.logical.resolve_contract.closure_2 := Span
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1138:17-1138:49 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1156:17-1156:49 -/
 @[reducible]
 def source.declared.state.register.logical.resolve_contract.closure_1 := Unit
 
 /-- [noble_contracts::source::declared::state::register::logical::resolve_contract::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1137:47-1137:84 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1155:47-1155:84 -/
 @[reducible]
 def source.declared.state.register.logical.resolve_contract.closure := Str
 
 /-- [noble_contracts::source::declared::state::register::logical::FormLevel]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 309:0-312:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 321:0-324:1 -/
 structure source.declared.state.register.logical.FormLevel where
   index : Std.Usize
   len : Std.Usize
 
 /-- [noble_contracts::source::declared::state::register::logical::HoleMode]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 302:0-305:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 314:0-317:1 -/
 @[discriminant isize]
 inductive source.declared.state.register.logical.HoleMode where
 | ProofTerm : Bool → source.declared.state.register.logical.HoleMode
 | OutsideTerm : source.declared.state.register.logical.HoleMode
 
 /-- [noble_contracts::source::declared::state::register::logical::subject_dependency::{closure#3}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1106:73-1108:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1124:73-1126:5 -/
 @[reducible]
 def source.declared.state.register.logical.subject_dependency.closure_3 :=
   Std.U64
 
 /-- [noble_contracts::source::declared::state::register::logical::subject_dependency::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1095:38-1095:79 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1113:38-1113:79 -/
 @[reducible]
 def source.declared.state.register.logical.subject_dependency.closure_2 :=
   Std.U64
 
 /-- [noble_contracts::source::declared::state::register::logical::subject_dependency::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1089:20-1094:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1107:20-1112:9 -/
 @[reducible]
 def source.declared.state.register.logical.subject_dependency.closure_1 := Unit
 
 /-- [noble_contracts::source::declared::state::register::logical::subject_dependency::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1077:59-1082:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 1095:59-1100:5 -/
 @[reducible]
 def source.declared.state.register.logical.subject_dependency.closure := Unit
 
 /-- [noble_contracts::source::declared::state::register::logical::bind_subject::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 917:56-917:82 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 929:56-929:82 -/
 @[reducible]
 def source.declared.state.register.logical.bind_subject.closure := Str
 
 /-- [noble_contracts::source::declared::state::register::logical::{noble_contracts::source::declared::state::register::logical::SourceOrigin<'_0>}::definition_source::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 889:54-894:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 901:54-906:9 -/
 @[reducible]
 def source.declared.state.register.logical.SourceOrigin.definition_source.closure_2
   :=
 Unit
 
 /-- [noble_contracts::source::declared::state::register::logical::{noble_contracts::source::declared::state::register::logical::SourceOrigin<'_0>}::definition_source::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 883:68-888:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 895:68-900:9 -/
 @[reducible]
 def source.declared.state.register.logical.SourceOrigin.definition_source.closure_1
   :=
 Unit
 
 /-- [noble_contracts::source::declared::state::register::logical::{noble_contracts::source::declared::state::register::logical::SourceOrigin<'_0>}::definition_source::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 877:72-882:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 889:72-894:9 -/
 @[reducible]
 def source.declared.state.register.logical.SourceOrigin.definition_source.closure
   :=
 Unit
 
 /-- [noble_contracts::source::declared::state::register::logical::SourceOrigin]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 710:0-717:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 722:0-729:1 -/
 structure source.declared.state.register.logical.SourceOrigin where
   module_name : Str
   version : Std.U32
@@ -7940,27 +8468,27 @@ structure source.declared.state.register.logical.SourceOrigin where
   owner : Std.U64
 
 /-- [noble_contracts::source::declared::state::register::logical::definition_span::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 831:39-831:67 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 843:39-843:67 -/
 @[reducible]
 def source.declared.state.register.logical.definition_span.closure_2 := Str
 
 /-- [noble_contracts::source::declared::state::register::logical::definition_span::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 825:47-830:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 837:47-842:5 -/
 @[reducible]
 def source.declared.state.register.logical.definition_span.closure_1 := Unit
 
 /-- [noble_contracts::source::declared::state::register::logical::definition_span::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 819:46-819:74 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 831:46-831:74 -/
 @[reducible]
 def source.declared.state.register.logical.definition_span.closure := Str
 
 /-- [noble_contracts::source::declared::state::register::logical::origin_module::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 792:60-792:93 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 804:60-804:93 -/
 @[reducible]
 def source.declared.state.register.logical.origin_module.closure := Std.U64
 
 /-- [noble_contracts::source::declared::state::register::logical::OwnerModule]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 761:0-769:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 773:0-781:1 -/
 structure source.declared.state.register.logical.OwnerModule where
   «name» : Str
   version : Std.U32
@@ -7968,28 +8496,28 @@ structure source.declared.state.register.logical.OwnerModule where
   spans : Slice source.declared.DefinitionSource
 
 /-- [noble_contracts::source::declared::state::register::logical::source_origin::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 740:44-746:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 752:44-758:5 -/
 @[reducible]
 def source.declared.state.register.logical.source_origin.closure := Span
 
 /-- [noble_contracts::source::declared::state::register::logical::contract_type::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 693:13-693:96 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 705:13-705:96 -/
 @[reducible]
 def source.declared.state.register.logical.contract_type.closure := Unit
 
 /-- [noble_contracts::source::declared::state::register::logical::pure_subtree::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 638:54-638:81 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 650:54-650:81 -/
 @[reducible]
 def source.declared.state.register.logical.pure_subtree.closure := Unit
 
 /-- [noble_contracts::source::declared::state::register::logical::origin::occurrence_span::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical/origin.rs', lines 508:20-508:79 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical/origin.rs', lines 623:20-623:79 -/
 @[reducible]
 def source.declared.state.register.logical.origin.occurrence_span.closure_1 :=
   Span
 
 /-- [noble_contracts::source::declared::state::register::logical::origin::occurrence_span::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical/origin.rs', lines 504:20-504:79 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical/origin.rs', lines 619:20-619:79 -/
 @[reducible]
 def source.declared.state.register.logical.origin.occurrence_span.closure :=
   Span
@@ -8005,7 +8533,7 @@ structure source.declared.state.register.logical.origin.PendingUse where
   candidate_node : noble_kernel.untrusted.NodeId
 
 /-- [noble_contracts::source::declared::state::register::logical::origin::trace_node::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical/origin.rs', lines 440:65-442:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical/origin.rs', lines 555:65-557:5 -/
 @[reducible]
 def source.declared.state.register.logical.origin.trace_node.closure := Unit
 
@@ -8018,24 +8546,24 @@ structure source.declared.state.register.logical.origin.BodyTrace where
   caller : noble_kernel.contracts.Definition
 
 /-- [noble_contracts::source::declared::state::register::logical::origin::trace_use::{closure#3}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical/origin.rs', lines 346:58-351:5 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical/origin.rs', lines 461:58-466:5 -/
 @[reducible]
 def source.declared.state.register.logical.origin.trace_use.closure_3 :=
   source.declared.DefinitionSource
 
 /-- [noble_contracts::source::declared::state::register::logical::origin::trace_use::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical/origin.rs', lines 333:17-338:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical/origin.rs', lines 448:17-453:9 -/
 @[reducible]
 def source.declared.state.register.logical.origin.trace_use.closure_2 :=
   source.declared.DefinitionSource
 
 /-- [noble_contracts::source::declared::state::register::logical::origin::trace_use::{closure#1}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical/origin.rs', lines 332:54-332:78 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical/origin.rs', lines 447:54-447:78 -/
 @[reducible]
 def source.declared.state.register.logical.origin.trace_use.closure_1 := Unit
 
 /-- [noble_contracts::source::declared::state::register::logical::origin::trace_use::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical/origin.rs', lines 313:76-318:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical/origin.rs', lines 428:76-433:9 -/
 @[reducible]
 def source.declared.state.register.logical.origin.trace_use.closure :=
   source.declared.DefinitionSource
@@ -8049,15 +8577,27 @@ structure source.declared.state.register.logical.origin.Tracer where
   span : Span
 
 /-- [noble_contracts::source::declared::state::register::logical::origin::has_ordered_slots::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical/origin.rs', lines 273:42-273:62 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical/origin.rs', lines 388:42-388:62 -/
 @[reducible]
 def source.declared.state.register.logical.origin.has_ordered_slots.closure :=
   Std.U32
 
 /-- [noble_contracts::source::declared::state::register::logical::origin::trace::{closure}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical/origin.rs', lines 188:38-188:57 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical/origin.rs', lines 303:38-303:57 -/
 @[reducible]
 def source.declared.state.register.logical.origin.trace.closure := Unit
+
+/-- [noble_contracts::source::declared::state::register::logical::origin::proof_imports::{closure#1}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical/origin.rs', lines 100:16-105:5 -/
+@[reducible]
+def source.declared.state.register.logical.origin.proof_imports.closure_1 :=
+Unit
+
+/-- [noble_contracts::source::declared::state::register::logical::origin::proof_imports::{closure}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical/origin.rs', lines 97:69-99:5 -/
+@[reducible]
+def source.declared.state.register.logical.origin.proof_imports.closure :=
+  Std.U64
 
 /-- [noble_contracts::source::declared::state::register::logical::origin::imports::{closure#1}]
     Source: 'crates/noble-contracts/src/source/declared/state/register/logical/origin.rs', lines 62:16-67:5 -/
@@ -8069,8 +8609,13 @@ def source.declared.state.register.logical.origin.imports.closure_1 := Unit
 @[reducible]
 def source.declared.state.register.logical.origin.imports.closure := Std.U64
 
+/-- [noble_contracts::source::declared::state::register::logical::stage_contract::{closure#3}]
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 205:25-208:9 -/
+@[reducible]
+def source.declared.state.register.logical.stage_contract.closure_3 := Unit
+
 /-- [noble_contracts::source::declared::state::register::logical::stage_contract::{closure#2}]
-    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 201:25-204:9 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/register/logical.rs', lines 195:70-195:76 -/
 @[reducible]
 def source.declared.state.register.logical.stage_contract.closure_2 := Unit
 
@@ -8553,13 +9098,13 @@ def source.declared.state.prepare.ModuleSession.current_snapshot.closure :=
 Unit
 
 /-- [noble_contracts::source::declared::state::prepare::ItemCursor]
-    Source: 'crates/noble-contracts/src/source/declared/state/prepare.rs', lines 1130:0-1133:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/prepare.rs', lines 1133:0-1136:1 -/
 structure source.declared.state.prepare.ItemCursor where
   items : alloc.vec.Vec intrinsic.Form
   next : Std.Usize
 
 /-- [noble_contracts::source::declared::state::prepare::ChildCursor]
-    Source: 'crates/noble-contracts/src/source/declared/state/prepare.rs', lines 1011:0-1015:1 -/
+    Source: 'crates/noble-contracts/src/source/declared/state/prepare.rs', lines 1013:0-1017:1 -/
 structure source.declared.state.prepare.ChildCursor where
   siblings : alloc.vec.Vec intrinsic.ProofDependency
   next : Std.Usize
