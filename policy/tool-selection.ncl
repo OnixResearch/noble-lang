@@ -126,10 +126,10 @@ in
     aeneas_args | Array String = ["-backend", "lean", "-abort-on-error", "-warnings-as-errors", "-no-progress-bar", "-emit-json"],
     # Charon's Cargo subcommand compiles the selected Rust subject before extraction.
     charon_timeout_seconds | Number = 900,
-    # A hang guard, not a performance claim: whole-contract translation took
-    # 147-166 s idle and 425 s under concurrent builds, so it shares the
-    # Charon and Lean bound.
-    translator_timeout_seconds | Number = 900,
+    # A hang guard, not a performance claim: whole-contract translation
+    # reached 902.86 s direct on the host after integrating named_v3, so it
+    # shares the 1800-second hang guard.
+    translator_timeout_seconds | Number = 1800,
     # Also a hang guard: the fresh three-subject build exceeded 900 s when
     # NobleContractImpl.Funs alone took 720 s at load 45 on 32 cores.
     lean_timeout_seconds | Number = 1800,

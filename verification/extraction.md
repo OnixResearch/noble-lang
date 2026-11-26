@@ -178,10 +178,10 @@ added. The regenerated kernel passed declaration accounting and 231 native
 tests, with one historical measurement ignored; this is not a complete
 multi-subject extraction receipt.
 
-The reviewed whole-subject translator wall limit is 900 seconds, the same hang
-guard as the Charon and Lean bounds. Translating the renewed contracts subject
-took 147 to 166 seconds on an idle host and 425 seconds while other builds ran,
-so the historical 120-second limit no longer fits. This resource change does not
+The reviewed whole-subject translator wall limit is now 1800 seconds, matching
+the fresh proof-build hang guard. After integrating `named_v3`, direct
+whole-contract Aeneas translation reached 902.86 seconds on the build host,
+exceeding the historical 900-second limit. This resource change does not
 relax source, generated-byte, model or axiom checks; receipts produced under the
 old configuration remain historical.
 
