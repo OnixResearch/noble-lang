@@ -20,7 +20,7 @@ let BuildReportPins = fun leanPin toolPaths verification => {
     count | Number = 27,
     # SHA-256 over `<path> <sha256>` plus a newline, for every embedded helper
     # in ascending path order.
-    set_sha256 | String = "211d016d58265968082e383f78790c26c20d8eaf135b0dd401253fa3c238639f",
+    set_sha256 | String = "8aef2642c1cf5c14443aac6d0609b4de5d479fd94107bd605e53bf229221f313",
   },
   lean = {
     toolchain | String = leanPin.toolchain,
