@@ -131,7 +131,23 @@ fn verify_trusted_dir(
             path.display()
         ));
     }
-    if stat.st_uid != euid && stat.st_uid != 0 {
+    // In an unprivileged user namespace without uid 0 mapped (e.g. Nix sandbox),
+    // host-root system ancestors such as /, /proc, and /dev appear as overflowuid (65534).
+    let is_unmapped_host_root = std::fs::read_to_string("/proc/self/uid_map").is_ok_and(|map| {
+            let overflow = std::fs::read_to_string("/proc/sys/kernel/overflowuid")
+                .ok()
+                .and_then(|raw| raw.trim().parse::<u32>().ok())
+                .unwrap_or(65534);
+            let zero_mapped = map.lines().any(|line| {
+                let mut cols = line.split_whitespace();
+                matches!(
+                    (cols.next().and_then(|v| v.parse::<u32>().ok()), cols.nth(1).and_then(|v| v.parse::<u32>().ok())),
+                    (Some(0), Some(len)) if len > 0
+                )
+            });
+            !zero_mapped && euid != overflow && stat.st_uid == overflow
+        });
+    if stat.st_uid != euid && stat.st_uid != 0 && !is_unmapped_host_root {
         return Err(format!(
             "{}: ancestor {component:?} is owned by uid {}, not the current user or root",
             path.display(),
