@@ -11,8 +11,8 @@
   "lane": "document-validation-only",
   "result": "passed",
   "runner": {
-    "bun": "1.4.4",
-    "node_api": "26.3.0"
+    "bun": null,
+    "node_api": "24.13.0"
   },
   "documents": 16,
   "requirements": 645,
