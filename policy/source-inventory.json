@@ -200258,326 +200258,6 @@
       "disposition": "open",
       "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:10976:10978",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:11605:11612",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:11700:11707",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:13949:13956",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:14044:14051",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:14351:14358",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:15165:15167",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:15583:15590",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:16121:16128",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:16219:16226",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:16361:16368",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:17431:17434",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:17545:17548",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:17757:20523",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:17844:17868",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:18024:18027",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:18105:18107",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:18266:18269",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:18365:18368",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:18431:18434",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:18492:18495",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:19135:19138",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:19349:19352",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:19549:19573",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:19687:19690",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:19847:19850",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:20114:20117",
-      "refinement": "open"
-    },
-    {
-      "category": "generated",
-      "disposition": "generated",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C.: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:20541:22329",
-      "refinement": "not-applicable"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:20806:20808",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:20863:20866",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:20936:20939",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:21027:21030",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:21338:21340",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:21394:21397",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:21466:21469",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:21600:21603",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:21886:21889",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:22011:22013",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:22062:22065",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:22126:22129",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
       "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:2594:2597",
       "refinement": "open"
     },
@@ -200635,102 +200315,6 @@
       "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-cli",
       "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:4658:4665",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:5683:5690",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:6165:6172",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:6606:6613",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:7149:7156",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:7663:7670",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:7779:7786",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:8001:8008",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:8141:8148",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:8455:8462",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:9482:9489",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:9657:9664",
-      "refinement": "open"
-    },
-    {
-      "category": "body",
-      "disposition": "open",
-      "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
-      "package": "noble-cli",
-      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:9977:9984",
       "refinement": "open"
     },
     {
@@ -214499,6 +214083,462 @@
       "note": "Renewed Cairn push D: integrate bounded-wasm-correspondence, ownership-lifetime-contract, allocation-strategy-contract, proof-automation-diagnostics, calculator-v1, c-backend, cranelift-backend-evaluation, and preuse-r3 onto Push C. from compiler kind function: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
       "package": "noble-contracts",
       "qualified_path": "noble_contracts::source::declared::state::register::logical::visit_pc_call",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:10409:10416",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:10584:10591",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:10904:10911",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:11903:11905",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:12532:12539",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:12627:12634",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:14876:14883",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:14971:14978",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:15278:15285",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:16092:16094",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:16510:16517",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:17048:17055",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:17146:17153",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:17288:17295",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:18358:18361",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:18472:18475",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:18684:21450",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:18771:18795",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:18951:18954",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:19032:19034",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:19193:19196",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:19292:19295",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:19358:19361",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:19419:19422",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:20062:20065",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:20276:20279",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:20476:20500",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:20614:20617",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:20774:20777",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:21041:21044",
+      "refinement": "open"
+    },
+    {
+      "category": "generated",
+      "disposition": "generated",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix: every observing compiler fact (other) is macro-expanded; accounting only, with no authored body obligation.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:21468:23256",
+      "refinement": "not-applicable"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:21733:21735",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:21790:21793",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:21863:21866",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:21954:21957",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:22265:22267",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:22321:22324",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:22393:22396",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:22527:22530",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:22813:22816",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:22938:22940",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:22989:22992",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:23053:23056",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:5167:5172",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:5306:5311",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:5425:5431",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:5558:5561",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:5607:5610",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:6610:6617",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:7092:7099",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:7533:7540",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:8076:8083",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:8590:8597",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:8706:8713",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:8928:8935",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:9068:9075",
+      "refinement": "open"
+    },
+    {
+      "category": "body",
+      "disposition": "open",
+      "note": "Renewed Cairn push D: renew source inventory after c_backend unmapped userns root fix from compiler kind other: authored source-body semantics; extraction and refinement remain open. Conservative classification, not an exemption or proof.",
+      "package": "noble-cli",
+      "qualified_path": "noble-cli::closure@crates/noble-cli/src/c_backend/inputs.rs:9382:9389",
       "refinement": "open"
     }
   ],
