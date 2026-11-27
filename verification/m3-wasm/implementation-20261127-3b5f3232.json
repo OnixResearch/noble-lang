@@ -10,13 +10,13 @@
         "--version",
         "--verbose"
       ],
-      "cwd": "/dev/shm/noble-builds/pd-lanes/m3wasm/workspace",
+      "cwd": "/dev/shm/noble-builds/pd2-lanes/m3wasm/workspace",
       "timeout_ms": 1800000,
       "log": "rust-version.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.085Z",
+      "started_at": "2026-11-27T07:56:01.062Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.107Z",
+      "finished_at": "2026-11-27T07:56:01.139Z",
       "signal": null,
       "output_sha256": "d0649b01a781d86379bb1a715fa52307742c27f4b2529c2cd3a1922d9563b6b8"
     },
@@ -26,13 +26,13 @@
       "args": [
         "version"
       ],
-      "cwd": "/dev/shm/noble-builds/pd-lanes/m3wasm/workspace",
+      "cwd": "/dev/shm/noble-builds/pd2-lanes/m3wasm/workspace",
       "timeout_ms": 1800000,
       "log": "charon-version.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.107Z",
+      "started_at": "2026-11-27T07:56:01.139Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.122Z",
+      "finished_at": "2026-11-27T07:56:01.177Z",
       "signal": null,
       "output_sha256": "618a15a4a7c2eab90ae6f027ecef92458e78c4673533f69800c7e763b0a6b484"
     },
@@ -42,13 +42,13 @@
       "args": [
         "-version"
       ],
-      "cwd": "/dev/shm/noble-builds/pd-lanes/m3wasm/workspace",
+      "cwd": "/dev/shm/noble-builds/pd2-lanes/m3wasm/workspace",
       "timeout_ms": 1800000,
       "log": "aeneas-version.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.122Z",
+      "started_at": "2026-11-27T07:56:01.177Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.349Z",
+      "finished_at": "2026-11-27T07:56:01.480Z",
       "signal": null,
       "output_sha256": "6089464751cbb76d9d7544172b49cfbd3df5cb4ca123c6558a11105649b57f82"
     },
@@ -58,13 +58,13 @@
       "args": [
         "--version"
       ],
-      "cwd": "/dev/shm/noble-builds/pd-lanes/m3wasm/workspace",
+      "cwd": "/dev/shm/noble-builds/pd2-lanes/m3wasm/workspace",
       "timeout_ms": 1800000,
       "log": "lean-version.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.349Z",
+      "started_at": "2026-11-27T07:56:01.480Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.416Z",
+      "finished_at": "2026-11-27T07:56:01.556Z",
       "signal": null,
       "output_sha256": "eb22144228dd41cd51a0c84af4f976cd0cef473102dcf99b60be756b11f2b95a"
     },
@@ -74,13 +74,13 @@
       "args": [
         "--version"
       ],
-      "cwd": "/dev/shm/noble-builds/pd-lanes/m3wasm/workspace",
+      "cwd": "/dev/shm/noble-builds/pd2-lanes/m3wasm/workspace",
       "timeout_ms": 1800000,
       "log": "cargo-version.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.417Z",
+      "started_at": "2026-11-27T07:56:01.556Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.429Z",
+      "finished_at": "2026-11-27T07:56:01.585Z",
       "signal": null,
       "output_sha256": "e1336e16827e8d27e114e7fccc22081eee63900b684e5708b82d3f083eecf770"
     },
@@ -90,13 +90,13 @@
       "args": [
         "--version"
       ],
-      "cwd": "/dev/shm/noble-builds/pd-lanes/m3wasm/workspace",
+      "cwd": "/dev/shm/noble-builds/pd2-lanes/m3wasm/workspace",
       "timeout_ms": 1800000,
       "log": "lake-version.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.429Z",
+      "started_at": "2026-11-27T07:56:01.585Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.488Z",
+      "finished_at": "2026-11-27T07:56:01.651Z",
       "signal": null,
       "output_sha256": "165f92ed239a8c7db772bf5ee9d58c59357b489951582a12c86dc9d8e06b23a2"
     },
@@ -106,13 +106,13 @@
       "args": [
         "--version"
       ],
-      "cwd": "/dev/shm/noble-builds/pd-lanes/m3wasm/workspace",
+      "cwd": "/dev/shm/noble-builds/pd2-lanes/m3wasm/workspace",
       "timeout_ms": 1800000,
       "log": "git-version.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.488Z",
+      "started_at": "2026-11-27T07:56:01.652Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.499Z",
+      "finished_at": "2026-11-27T07:56:01.663Z",
       "signal": null,
       "output_sha256": "c9e40977101870d17ec3a0ac1e444ceb5e268d1c0a37d6edd8a5ed477734a53c"
     },
@@ -127,9 +127,9 @@
       "timeout_ms": 1800000,
       "log": "before-aeneas-revision.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.500Z",
+      "started_at": "2026-11-27T07:56:01.664Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.508Z",
+      "finished_at": "2026-11-27T07:56:01.674Z",
       "signal": null,
       "output_sha256": "bdbde4660eed09fdbaf31abe856dcad17bb6840e9e30086984964fcd9a3dc9bc"
     },
@@ -146,9 +146,9 @@
       "timeout_ms": 1800000,
       "log": "before-aeneas-clean.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.508Z",
+      "started_at": "2026-11-27T07:56:01.675Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.523Z",
+      "finished_at": "2026-11-27T07:56:01.762Z",
       "signal": null,
       "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -163,9 +163,9 @@
       "timeout_ms": 1800000,
       "log": "before-mathlib-revision.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.523Z",
+      "started_at": "2026-11-27T07:56:01.763Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.532Z",
+      "finished_at": "2026-11-27T07:56:01.773Z",
       "signal": null,
       "output_sha256": "b8229665c405f86369704b424ffcfc2e08db2b809280cab9e0aaaa806fddf2e7"
     },
@@ -182,9 +182,9 @@
       "timeout_ms": 1800000,
       "log": "before-mathlib-clean.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.532Z",
+      "started_at": "2026-11-27T07:56:01.774Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.569Z",
+      "finished_at": "2026-11-27T07:56:01.916Z",
       "signal": null,
       "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -199,9 +199,9 @@
       "timeout_ms": 1800000,
       "log": "before-plausible-revision.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.569Z",
+      "started_at": "2026-11-27T07:56:01.917Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.576Z",
+      "finished_at": "2026-11-27T07:56:01.927Z",
       "signal": null,
       "output_sha256": "d730b95c27722b2eb44f818512df47ab62e115e1ed64fe79c5e4ef63a2985415"
     },
@@ -218,9 +218,9 @@
       "timeout_ms": 1800000,
       "log": "before-plausible-clean.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.576Z",
+      "started_at": "2026-11-27T07:56:01.927Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.584Z",
+      "finished_at": "2026-11-27T07:56:02.012Z",
       "signal": null,
       "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -235,9 +235,9 @@
       "timeout_ms": 1800000,
       "log": "before-LeanSearchClient-revision.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.584Z",
+      "started_at": "2026-11-27T07:56:02.013Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.593Z",
+      "finished_at": "2026-11-27T07:56:02.022Z",
       "signal": null,
       "output_sha256": "ff5938c8d727868a984ba7e3a53351458fcb498ab525e4541eaab4717936df11"
     },
@@ -254,9 +254,9 @@
       "timeout_ms": 1800000,
       "log": "before-LeanSearchClient-clean.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.593Z",
+      "started_at": "2026-11-27T07:56:02.022Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.601Z",
+      "finished_at": "2026-11-27T07:56:02.033Z",
       "signal": null,
       "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -271,9 +271,9 @@
       "timeout_ms": 1800000,
       "log": "before-importGraph-revision.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.601Z",
+      "started_at": "2026-11-27T07:56:02.034Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.608Z",
+      "finished_at": "2026-11-27T07:56:02.043Z",
       "signal": null,
       "output_sha256": "e4f2c09ac2341eb19583e9ac452600614f5d57dd481407156846612d23bf52b3"
     },
@@ -290,9 +290,9 @@
       "timeout_ms": 1800000,
       "log": "before-importGraph-clean.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.608Z",
+      "started_at": "2026-11-27T07:56:02.043Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.616Z",
+      "finished_at": "2026-11-27T07:56:02.057Z",
       "signal": null,
       "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -307,9 +307,9 @@
       "timeout_ms": 1800000,
       "log": "before-proofwidgets-revision.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.616Z",
+      "started_at": "2026-11-27T07:56:02.057Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.624Z",
+      "finished_at": "2026-11-27T07:56:02.066Z",
       "signal": null,
       "output_sha256": "931756f9a8b6c5f48bec79b679703b7b48d31b9c0cdc9ae3b3ed197d3da3b0f8"
     },
@@ -326,9 +326,9 @@
       "timeout_ms": 1800000,
       "log": "before-proofwidgets-clean.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.624Z",
+      "started_at": "2026-11-27T07:56:02.067Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.632Z",
+      "finished_at": "2026-11-27T07:56:02.078Z",
       "signal": null,
       "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -343,9 +343,9 @@
       "timeout_ms": 1800000,
       "log": "before-aesop-revision.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.632Z",
+      "started_at": "2026-11-27T07:56:02.079Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.639Z",
+      "finished_at": "2026-11-27T07:56:02.088Z",
       "signal": null,
       "output_sha256": "80e4949281db195075562868091bd1910a4a4f1480a8ec538ed93f50c53e5648"
     },
@@ -362,9 +362,9 @@
       "timeout_ms": 1800000,
       "log": "before-aesop-clean.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.639Z",
+      "started_at": "2026-11-27T07:56:02.088Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.650Z",
+      "finished_at": "2026-11-27T07:56:02.102Z",
       "signal": null,
       "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -379,9 +379,9 @@
       "timeout_ms": 1800000,
       "log": "before-Qq-revision.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.650Z",
+      "started_at": "2026-11-27T07:56:02.102Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.659Z",
+      "finished_at": "2026-11-27T07:56:02.112Z",
       "signal": null,
       "output_sha256": "02650859e6949cf622ec0737a58200ec93ae4fcb947a26e880259c5a5eb7b23d"
     },
@@ -398,9 +398,9 @@
       "timeout_ms": 1800000,
       "log": "before-Qq-clean.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.660Z",
+      "started_at": "2026-11-27T07:56:02.112Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.668Z",
+      "finished_at": "2026-11-27T07:56:02.123Z",
       "signal": null,
       "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -415,9 +415,9 @@
       "timeout_ms": 1800000,
       "log": "before-batteries-revision.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.668Z",
+      "started_at": "2026-11-27T07:56:02.123Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.675Z",
+      "finished_at": "2026-11-27T07:56:02.133Z",
       "signal": null,
       "output_sha256": "1e0930b192dd58d5d04b1a588f0e2431d4e888cacdc95723384c5dcdfa410ae8"
     },
@@ -434,9 +434,9 @@
       "timeout_ms": 1800000,
       "log": "before-batteries-clean.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.675Z",
+      "started_at": "2026-11-27T07:56:02.133Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.686Z",
+      "finished_at": "2026-11-27T07:56:02.165Z",
       "signal": null,
       "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -451,9 +451,9 @@
       "timeout_ms": 1800000,
       "log": "before-Cli-revision.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.687Z",
+      "started_at": "2026-11-27T07:56:02.166Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.694Z",
+      "finished_at": "2026-11-27T07:56:02.175Z",
       "signal": null,
       "output_sha256": "74d733b897b8c450f0880d93ab02593440b80760b7ac10cdbe9a2fd8268dd6ec"
     },
@@ -470,9 +470,9 @@
       "timeout_ms": 1800000,
       "log": "before-Cli-clean.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.695Z",
+      "started_at": "2026-11-27T07:56:02.175Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:44.703Z",
+      "finished_at": "2026-11-27T07:56:02.187Z",
       "signal": null,
       "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -485,7 +485,7 @@
         "--error-on-warnings",
         "--inline-anon-consts",
         "--dest-file",
-        "/dev/shm/noble-builds/pd-lanes/m3wasm/kernel/noble_kernel.llbc",
+        "/dev/shm/noble-builds/pd2-lanes/m3wasm/kernel/noble_kernel.llbc",
         "--",
         "--manifest-path",
         "crates/noble-kernel/Cargo.toml",
@@ -496,15 +496,15 @@
         "--locked",
         "--offline"
       ],
-      "cwd": "/dev/shm/noble-builds/pd-lanes/m3wasm/workspace",
+      "cwd": "/dev/shm/noble-builds/pd2-lanes/m3wasm/workspace",
       "timeout_ms": 900000,
       "log": "kernel-charon.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:44.706Z",
+      "started_at": "2026-11-27T07:56:02.188Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:12:48.558Z",
+      "finished_at": "2026-11-27T07:56:06.792Z",
       "signal": null,
-      "output_sha256": "00be0d5453fa5b0d133d1795a33540fbf1530686a84acb59827920dc0f58369c"
+      "output_sha256": "3b0fecd4b2bb490dbc0f529a67afa3d0069f960c2b80a768ca617b65ca394795"
     },
     {
       "label": "kernel-aeneas",
@@ -520,18 +520,18 @@
         "-gen-lib-entry",
         "-all-computable",
         "-dest",
-        "/dev/shm/noble-builds/pd-lanes/m3wasm/kernel/generated",
-        "/dev/shm/noble-builds/pd-lanes/m3wasm/kernel/noble_kernel.llbc"
+        "/dev/shm/noble-builds/pd2-lanes/m3wasm/kernel/generated",
+        "/dev/shm/noble-builds/pd2-lanes/m3wasm/kernel/noble_kernel.llbc"
       ],
-      "cwd": "/dev/shm/noble-builds/pd-lanes/m3wasm/workspace",
+      "cwd": "/dev/shm/noble-builds/pd2-lanes/m3wasm/workspace",
       "timeout_ms": 1800000,
       "log": "kernel-aeneas.log",
       "environment": {},
-      "started_at": "2026-11-26T14:12:48.558Z",
+      "started_at": "2026-11-27T07:56:06.793Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:14:28.654Z",
+      "finished_at": "2026-11-27T07:57:45.608Z",
       "signal": null,
-      "output_sha256": "6d2760bb06548bbbae85a00821bba7cad23b40e340d47eb94e45752cd37ad5ba"
+      "output_sha256": "dea3186040367703adf1176e2d4d3df8620639da9e841c2e8a1bdeb0cd882fed"
     },
     {
       "label": "wasm-charon",
@@ -542,7 +542,7 @@
         "--error-on-warnings",
         "--inline-anon-consts",
         "--dest-file",
-        "/dev/shm/noble-builds/pd-lanes/m3wasm/wasm/noble_wasm_impl.llbc",
+        "/dev/shm/noble-builds/pd2-lanes/m3wasm/wasm/noble_wasm_impl.llbc",
         "--",
         "--manifest-path",
         "crates/noble-wasm/Cargo.toml",
@@ -553,15 +553,15 @@
         "--locked",
         "--offline"
       ],
-      "cwd": "/dev/shm/noble-builds/pd-lanes/m3wasm/workspace",
+      "cwd": "/dev/shm/noble-builds/pd2-lanes/m3wasm/workspace",
       "timeout_ms": 900000,
       "log": "wasm-charon.log",
       "environment": {},
-      "started_at": "2026-11-26T14:14:28.745Z",
+      "started_at": "2026-11-27T07:57:45.724Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:14:40.790Z",
+      "finished_at": "2026-11-27T07:57:56.246Z",
       "signal": null,
-      "output_sha256": "f275139b7895b1e53ac6d0eed69b851e5ced040bd1ad93775b9a5d18c923b363"
+      "output_sha256": "542b507a90da0305114dd3514cf3afc38b0682b6bd0fa6081fcfbcc7c8817b4d"
     },
     {
       "label": "wasm-aeneas",
@@ -577,18 +577,18 @@
         "-gen-lib-entry",
         "-all-computable",
         "-dest",
-        "/dev/shm/noble-builds/pd-lanes/m3wasm/wasm/generated",
-        "/dev/shm/noble-builds/pd-lanes/m3wasm/wasm/noble_wasm_impl.llbc"
+        "/dev/shm/noble-builds/pd2-lanes/m3wasm/wasm/generated",
+        "/dev/shm/noble-builds/pd2-lanes/m3wasm/wasm/noble_wasm_impl.llbc"
       ],
-      "cwd": "/dev/shm/noble-builds/pd-lanes/m3wasm/workspace",
+      "cwd": "/dev/shm/noble-builds/pd2-lanes/m3wasm/workspace",
       "timeout_ms": 1800000,
       "log": "wasm-aeneas.log",
       "environment": {},
-      "started_at": "2026-11-26T14:14:40.791Z",
+      "started_at": "2026-11-27T07:57:56.246Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:15:24.625Z",
+      "finished_at": "2026-11-27T07:58:41.521Z",
       "signal": null,
-      "output_sha256": "83c7819cb8925e2bfaf0377f730b577378d75efb4e66291451fa5f3c8cdab00a"
+      "output_sha256": "de782c608edd5d9533b2c91e204eb29f92e2296b3571c36e06f15df8a5c99a45"
     },
     {
       "label": "lean-build",
@@ -597,15 +597,15 @@
         "build",
         "NobleWasmImpl"
       ],
-      "cwd": "/dev/shm/noble-builds/pd-lanes/m3wasm/workspace/proofs/m3-wasm",
+      "cwd": "/dev/shm/noble-builds/pd2-lanes/m3wasm/workspace/proofs/m3-wasm",
       "timeout_ms": 1800000,
       "log": "lean-build.log",
       "environment": {},
-      "started_at": "2026-11-26T14:15:24.731Z",
+      "started_at": "2026-11-27T07:58:41.659Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:28:19.146Z",
+      "finished_at": "2026-11-27T08:10:07.814Z",
       "signal": null,
-      "output_sha256": "2947b6007b01329ee45988266a2505942023ea8386ffce98b42c608d3ce2f1b0"
+      "output_sha256": "0adcc0597ee1aa09f28e057956462b34cc2e1daa01ddbed7841a39ab0375c39f"
     },
     {
       "label": "extraction-audit",
@@ -615,15 +615,15 @@
         "lean",
         "ExtractionGate.lean"
       ],
-      "cwd": "/dev/shm/noble-builds/pd-lanes/m3wasm/workspace/proofs/m3-wasm",
+      "cwd": "/dev/shm/noble-builds/pd2-lanes/m3wasm/workspace/proofs/m3-wasm",
       "timeout_ms": 1800000,
       "log": "extraction-audit.log",
       "environment": {
-        "NOBLE_M3_EXTRACTION_SUBJECTS": "/dev/shm/noble-builds/pd-lanes/m3wasm/audit-input.json"
+        "NOBLE_M3_EXTRACTION_SUBJECTS": "/dev/shm/noble-builds/pd2-lanes/m3wasm/audit-input.json"
       },
-      "started_at": "2026-11-26T14:28:19.147Z",
+      "started_at": "2026-11-27T08:10:07.832Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:30:18.594Z",
+      "finished_at": "2026-11-27T08:12:10.574Z",
       "signal": null,
       "output_sha256": "1f9ab452c39c3b82ce3276bbd31a2f33f985f754c84914b29d4dde2c66ab92ce"
     },
@@ -638,9 +638,9 @@
       "timeout_ms": 1800000,
       "log": "after-aeneas-revision.log",
       "environment": {},
-      "started_at": "2026-11-26T14:30:18.667Z",
+      "started_at": "2026-11-27T08:12:10.812Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:30:18.684Z",
+      "finished_at": "2026-11-27T08:12:10.826Z",
       "signal": null,
       "output_sha256": "bdbde4660eed09fdbaf31abe856dcad17bb6840e9e30086984964fcd9a3dc9bc"
     },
@@ -657,9 +657,9 @@
       "timeout_ms": 1800000,
       "log": "after-aeneas-clean.log",
       "environment": {},
-      "started_at": "2026-11-26T14:30:18.685Z",
+      "started_at": "2026-11-27T08:12:10.826Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:30:18.738Z",
+      "finished_at": "2026-11-27T08:12:10.843Z",
       "signal": null,
       "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -674,9 +674,9 @@
       "timeout_ms": 1800000,
       "log": "after-mathlib-revision.log",
       "environment": {},
-      "started_at": "2026-11-26T14:30:18.739Z",
+      "started_at": "2026-11-27T08:12:10.844Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:30:18.749Z",
+      "finished_at": "2026-11-27T08:12:10.853Z",
       "signal": null,
       "output_sha256": "b8229665c405f86369704b424ffcfc2e08db2b809280cab9e0aaaa806fddf2e7"
     },
@@ -693,9 +693,9 @@
       "timeout_ms": 1800000,
       "log": "after-mathlib-clean.log",
       "environment": {},
-      "started_at": "2026-11-26T14:30:18.749Z",
+      "started_at": "2026-11-27T08:12:10.853Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:30:18.785Z",
+      "finished_at": "2026-11-27T08:12:10.988Z",
       "signal": null,
       "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -710,9 +710,9 @@
       "timeout_ms": 1800000,
       "log": "after-plausible-revision.log",
       "environment": {},
-      "started_at": "2026-11-26T14:30:18.786Z",
+      "started_at": "2026-11-27T08:12:10.988Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:30:18.793Z",
+      "finished_at": "2026-11-27T08:12:10.997Z",
       "signal": null,
       "output_sha256": "d730b95c27722b2eb44f818512df47ab62e115e1ed64fe79c5e4ef63a2985415"
     },
@@ -729,9 +729,9 @@
       "timeout_ms": 1800000,
       "log": "after-plausible-clean.log",
       "environment": {},
-      "started_at": "2026-11-26T14:30:18.793Z",
+      "started_at": "2026-11-27T08:12:10.998Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:30:18.800Z",
+      "finished_at": "2026-11-27T08:12:11.007Z",
       "signal": null,
       "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -746,9 +746,9 @@
       "timeout_ms": 1800000,
       "log": "after-LeanSearchClient-revision.log",
       "environment": {},
-      "started_at": "2026-11-26T14:30:18.800Z",
+      "started_at": "2026-11-27T08:12:11.008Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:30:18.807Z",
+      "finished_at": "2026-11-27T08:12:11.016Z",
       "signal": null,
       "output_sha256": "ff5938c8d727868a984ba7e3a53351458fcb498ab525e4541eaab4717936df11"
     },
@@ -765,9 +765,9 @@
       "timeout_ms": 1800000,
       "log": "after-LeanSearchClient-clean.log",
       "environment": {},
-      "started_at": "2026-11-26T14:30:18.807Z",
+      "started_at": "2026-11-27T08:12:11.037Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:30:18.815Z",
+      "finished_at": "2026-11-27T08:12:11.047Z",
       "signal": null,
       "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -782,9 +782,9 @@
       "timeout_ms": 1800000,
       "log": "after-importGraph-revision.log",
       "environment": {},
-      "started_at": "2026-11-26T14:30:18.816Z",
+      "started_at": "2026-11-27T08:12:11.049Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:30:18.823Z",
+      "finished_at": "2026-11-27T08:12:11.057Z",
       "signal": null,
       "output_sha256": "e4f2c09ac2341eb19583e9ac452600614f5d57dd481407156846612d23bf52b3"
     },
@@ -801,9 +801,9 @@
       "timeout_ms": 1800000,
       "log": "after-importGraph-clean.log",
       "environment": {},
-      "started_at": "2026-11-26T14:30:18.823Z",
+      "started_at": "2026-11-27T08:12:11.058Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:30:18.831Z",
+      "finished_at": "2026-11-27T08:12:11.068Z",
       "signal": null,
       "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -818,9 +818,9 @@
       "timeout_ms": 1800000,
       "log": "after-proofwidgets-revision.log",
       "environment": {},
-      "started_at": "2026-11-26T14:30:18.831Z",
+      "started_at": "2026-11-27T08:12:11.069Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:30:18.838Z",
+      "finished_at": "2026-11-27T08:12:11.078Z",
       "signal": null,
       "output_sha256": "931756f9a8b6c5f48bec79b679703b7b48d31b9c0cdc9ae3b3ed197d3da3b0f8"
     },
@@ -837,9 +837,9 @@
       "timeout_ms": 1800000,
       "log": "after-proofwidgets-clean.log",
       "environment": {},
-      "started_at": "2026-11-26T14:30:18.839Z",
+      "started_at": "2026-11-27T08:12:11.078Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:30:18.846Z",
+      "finished_at": "2026-11-27T08:12:11.090Z",
       "signal": null,
       "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -854,9 +854,9 @@
       "timeout_ms": 1800000,
       "log": "after-aesop-revision.log",
       "environment": {},
-      "started_at": "2026-11-26T14:30:18.847Z",
+      "started_at": "2026-11-27T08:12:11.092Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:30:18.854Z",
+      "finished_at": "2026-11-27T08:12:11.102Z",
       "signal": null,
       "output_sha256": "80e4949281db195075562868091bd1910a4a4f1480a8ec538ed93f50c53e5648"
     },
@@ -873,9 +873,9 @@
       "timeout_ms": 1800000,
       "log": "after-aesop-clean.log",
       "environment": {},
-      "started_at": "2026-11-26T14:30:18.854Z",
+      "started_at": "2026-11-27T08:12:11.102Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:30:18.863Z",
+      "finished_at": "2026-11-27T08:12:11.113Z",
       "signal": null,
       "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -890,9 +890,9 @@
       "timeout_ms": 1800000,
       "log": "after-Qq-revision.log",
       "environment": {},
-      "started_at": "2026-11-26T14:30:18.863Z",
+      "started_at": "2026-11-27T08:12:11.115Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:30:18.871Z",
+      "finished_at": "2026-11-27T08:12:11.123Z",
       "signal": null,
       "output_sha256": "02650859e6949cf622ec0737a58200ec93ae4fcb947a26e880259c5a5eb7b23d"
     },
@@ -909,9 +909,9 @@
       "timeout_ms": 1800000,
       "log": "after-Qq-clean.log",
       "environment": {},
-      "started_at": "2026-11-26T14:30:18.872Z",
+      "started_at": "2026-11-27T08:12:11.124Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:30:18.879Z",
+      "finished_at": "2026-11-27T08:12:11.136Z",
       "signal": null,
       "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -926,9 +926,9 @@
       "timeout_ms": 1800000,
       "log": "after-batteries-revision.log",
       "environment": {},
-      "started_at": "2026-11-26T14:30:18.880Z",
+      "started_at": "2026-11-27T08:12:11.137Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:30:18.887Z",
+      "finished_at": "2026-11-27T08:12:11.145Z",
       "signal": null,
       "output_sha256": "1e0930b192dd58d5d04b1a588f0e2431d4e888cacdc95723384c5dcdfa410ae8"
     },
@@ -945,9 +945,9 @@
       "timeout_ms": 1800000,
       "log": "after-batteries-clean.log",
       "environment": {},
-      "started_at": "2026-11-26T14:30:18.887Z",
+      "started_at": "2026-11-27T08:12:11.146Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:30:18.896Z",
+      "finished_at": "2026-11-27T08:12:11.158Z",
       "signal": null,
       "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
@@ -962,9 +962,9 @@
       "timeout_ms": 1800000,
       "log": "after-Cli-revision.log",
       "environment": {},
-      "started_at": "2026-11-26T14:30:18.896Z",
+      "started_at": "2026-11-27T08:12:11.158Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:30:18.904Z",
+      "finished_at": "2026-11-27T08:12:11.166Z",
       "signal": null,
       "output_sha256": "74d733b897b8c450f0880d93ab02593440b80760b7ac10cdbe9a2fd8268dd6ec"
     },
@@ -981,9 +981,9 @@
       "timeout_ms": 1800000,
       "log": "after-Cli-clean.log",
       "environment": {},
-      "started_at": "2026-11-26T14:30:18.904Z",
+      "started_at": "2026-11-27T08:12:11.166Z",
       "exit": 0,
-      "finished_at": "2026-11-26T14:30:18.913Z",
+      "finished_at": "2026-11-27T08:12:11.176Z",
       "signal": null,
       "output_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     }
@@ -1017,7 +1017,7 @@
           "byte_identical": true
         }
       ],
-      "llbc_sha256": "a258539df12a906e9e38f1d5768dfd7afb6991d9c2d9fa319d600779e913bd1e",
+      "llbc_sha256": "d9602f74d283085d5aebd57940f615060e6349b33e95c5b0eb911f8f48f6b400",
       "translation_sha256": "9c4a800b39b5b3cc5516f36e084f382a7afbaece64c11887fcef46f8fe81f8f7",
       "local_functions": 1607,
       "local_opaque_functions": [
@@ -4896,7 +4896,7 @@
           "byte_identical": true
         }
       ],
-      "llbc_sha256": "188d0a6dcf5b40a20c1e11b450e8cb0b97252414f5917c9144c37d79bf500124",
+      "llbc_sha256": "1b09c31d09e858f99d467bb46bfbfb1ad23b785b72ccd5c2afde53b2428f6bd4",
       "translation_sha256": "9fa6ea013ccd28dce3e3a69e0768f1d79e5e6f5a6021f0093d2f29bf190ae463",
       "local_functions": 1531,
       "local_opaque_functions": [
@@ -12010,13 +12010,13 @@
   "environment": {
     "PATH": "/nix/store/hwnilj8cghz1kjkz7f636kz2clla03vr-rust-default-1.100.0-nightly-2026-09-17/bin:/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin:/nix/store/kwvw84h9r7w0q40d3cm5xgfz0rpv7yzc-noble-lean-release-4.35.0/bin:/nix/store/788mx070y81zjlg5ipcl0cra3afviw9k-gcc-wrapper-15.2.0/bin:/run/current-system/sw/bin:/usr/bin:/bin",
     "HOME": "/dev/shm/noble-builds/lanes-work/home",
-    "CARGO_HOME": "/dev/shm/noble-builds/pd-lanes/m3wasm/cargo-home",
-    "CARGO_TARGET_DIR": "/dev/shm/noble-builds/pd-lanes/m3wasm/cargo-target",
+    "CARGO_HOME": "/dev/shm/noble-builds/pd2-lanes/m3wasm/cargo-home",
+    "CARGO_TARGET_DIR": "/dev/shm/noble-builds/pd2-lanes/m3wasm/cargo-target",
     "CARGO_BUILD_JOBS": "6",
     "RUSTC_WRAPPER": ""
   },
   "cargo_configuration": {
-    "path": "/dev/shm/noble-builds/pd-lanes/m3wasm/cargo-home/config.toml",
+    "path": "/dev/shm/noble-builds/pd2-lanes/m3wasm/cargo-home/config.toml",
     "sha256": "a4518e87a0906445b4eeb99b0b43ee29947b4ccf9d1cbaed3dde25f416214202",
     "vendor": "/nix/store/yzbn175x9008mr2dvr81bbbn8yslf7zs-noble-reviewed-offline-vendor",
     "vendor_nar_hash": "sha256-caCeh5ZG2xBXQqHG/GOjf4QlMjhDxcOvOeS1LcyPwiA="
@@ -12045,7 +12045,7 @@
     "crates/noble-cli/src/build/report/release.rs": "1bc68b2a37ee52bba04083ed5753a618d240d3e731d1d3e2af2336ac4172a015",
     "crates/noble-cli/src/build/report/toolchain.rs": "ed952e30c5c61dafc61f9f11c652f0b6cb16ce2c112c91e6f465c5393b4eab8e",
     "crates/noble-cli/src/c_backend.rs": "c4b560dc854f25d07f6d06be213612235deffad59b4a72ccb9b0054963fed690",
-    "crates/noble-cli/src/c_backend/inputs.rs": "2a19df08320c14b8df5957a93845e309f101ab337dfd5c49814bde51ae1031d0",
+    "crates/noble-cli/src/c_backend/inputs.rs": "eb094fca2a9fdbffeb72bfc759d25ebaae5fe8f102189afaa2e1ebe41b0df639",
     "crates/noble-cli/src/calculator.rs": "549b6b4050842bc3b408746b469522648687b1c53db923b5d1fa0e3293aabfb0",
     "crates/noble-cli/src/calculator/cache.rs": "058b4e68f20e3bc1fdfdddeae88063d0e05aa380a5cac7f6a09c5e8e5762a3ef",
     "crates/noble-cli/src/calculator/metrics.rs": "0d4343148eaadeb352cddd0f2c3797c2d6c77effe7957ef2567c2b7bc3626322",
@@ -13447,7 +13447,7 @@
     "verification/worker-send/start-trap.wat": "8dc503b17d4ce170f00cfdf83c8a390afddc83b79fbdd43daf1f472475691d7b",
     "verification/worker-send/test.mjs": "ffaf91eff8c3d2422312a91755dd2aa7342c3fcbad312eb775c8df44bf8e1dc4"
   },
-  "source_revision": "sha256:ac08548aa369fb799baba305942dac8b9f0c8d7145ffadaa31869f0686e0761e",
+  "source_revision": "sha256:2d357e68b18a00ea514aec99b5a2eb04c8bb876a08ee06a46014b79da1a40d9c",
   "tools": {
     "charon": {
       "path": "/nix/store/dg8i5s1hl2lncdcjmi6iq98iq1dji5x3-charon/bin/charon",

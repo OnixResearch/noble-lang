@@ -1,8 +1,8 @@
 {
   "schema": "noble-foundation-check/v1",
   "scope": "Lean model statements only (MC1 model, Mathlib oracle, transcribed literal accumulator and runtime helpers, pinned NamedV1 normal-return linking and operand/continuation ABI model, the selected v3 labelled interaction-net model, and issue #107's parsed-I64-instruction semantic model). No implementation theorem; in particular, no Rust implementation-correspondence theorem. The private_theorems list names every private or protected helper theorem: those are existence-checked by name, and their axioms are audited transitively through every inventoried theorem that depends on them, because Lean private names are not addressable from another module. The ownership per-word trace module and the `ownership-corpus` rows are kernel-decided statements about the model own checker; neither is an implementation theorem.",
-  "source_commit": "e0df8ee29d0dc4f94ccb46cb59090668c466fd82",
-  "source_tree": "f639192ef164b9e562d3925a8b751c230874ae26",
+  "source_commit": "3b5f3232513e3bd52db2e4c8d769c89a18fb8cfe",
+  "source_tree": "047c8b053c01eb04a6f50563c74c7f69b378c525",
   "clean_source": true,
   "allow_dirty": false,
   "lean": "Lean (version 4.35.0, x86_64-unknown-linux-gnu, commit eb6cafb7290e8bd5f2937522d8d804f58f02bafc, Release)",
@@ -33386,5 +33386,5 @@
     }
   ],
   "implementation_theorem": false,
-  "artifact_directory": "/dev/shm/noble-builds/pd-foundation/foundation"
+  "artifact_directory": "/dev/shm/noble-builds/pd2-foundation/foundation"
 }
