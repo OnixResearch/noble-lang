@@ -137,13 +137,13 @@ theorems are checked again against the selected new subject and trusted models.
 
 ## Retained runs
 
-### `3b5f3232`: [receipt-3b5f3232.json](receipt-3b5f3232.json)
+### `c926460e`: [receipt-c926460e.json](receipt-c926460e.json)
 
 Cairn push D kept the kernel subject byte-identical to push C while renewing
-the M4 lock (`796bae96`) and check receipt (`7d478fcc`) from discovery at
-`bb0b90d3`; `verification/service-wire-refinement/model-inputs.json` binds the
-regenerated kernel digests alongside the renewed lock and receipt (`7f87189f`).
-This clean run at `3b5f3232` re-elaborates the refinement proofs with the same
+the M4 lock (`fc1cea54`) and check receipt (`cb4dc5e5`) from discovery at
+`6983d2cd`; `verification/service-wire-refinement/model-inputs.json` binds the
+regenerated kernel digests alongside the renewed lock and receipt (`c926460e`).
+This clean run at `c926460e` re-elaborates the refinement proofs with the same
 61 theorems and the same refusals of all eleven mutation controls (8, 8, 9, 9,
 8, 10, 8, 3, 3, 3 and 3 strict theorems lost).
 

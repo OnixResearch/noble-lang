@@ -3,7 +3,7 @@
   "scope": "first-class-certified-programs",
   "mode": "check",
   "result": "passed",
-  "source_revision": "sha256:d14bdfaabfe7e307649df5f7c550e9591fefedd1035ca0963e99937c166ee7f4",
+  "source_revision": "sha256:71e5b37c95a9c289c0097d1e17ccf6e549ed287928386c9bb79073ab966783f6",
   "source_files": {
     ".pre-commit-config.yaml": "548cb1a1e56a47c8154dd20e58256033f4fa4d6f94fc20445ff5af45f9c1bdf4",
     "Cargo.lock": "582a7c91d10c3a6cbdaec2968b61e878821acc9781dfb84d53df096a778a862c",
@@ -1326,8 +1326,8 @@
     "policy/m1-acceptance.ncl": "41719cdc0311b97d1d12cea15e8cc26e0be2894f6b3094331f0e4c1700825827",
     "policy/native-assurance.json": "1e3d9f0f1f7a2c0e214e43aaaffda2da8c67a94f69c0279fe504f4ec8b565fa8",
     "policy/native-assurance.ncl": "2a0d8d86156d462db669f31cb4dcf7847b4888b4f478789d11b42fb77787524d",
-    "policy/source-inventory.json": "b564cf8264427634b021c7e51f2bb79a951012bc40e745091867555ae2433d88",
-    "policy/source-inventory.ncl": "aac0e46696623ab7250a87e150196b049d419e2f69b97075a7b152def17d3d81",
+    "policy/source-inventory.json": "cb1d97c9d684099358ae8eb8f9317d28839b9cf8e1f1c24528533c8a88e30755",
+    "policy/source-inventory.ncl": "1a4c74398d2301693039fb9e9514ed1e0710105ded4b754070522ddc89e53406",
     "policy/tool-selection-files.ncl": "a69b3e56c4ec7f1ff20db7c309e8bbda8da4a17b6541bc6d6b1bd47f01ed37eb",
     "policy/tool-selection-tools.ncl": "97bc18de4b08bed2bcefe6499c46f84426d79a74cf7e64c0cf80e3c8e78e958f",
     "policy/tool-selection.json": "164884920f8d601b610c70f77ad62ec64a80893595d66427101f5d4833fb0159",
@@ -1724,7 +1724,7 @@
     "verification/intrinsic-proofs/plan.mjs": "f98c91dc790df6d7a9e46ebdb0c356806e1bd37fac558f9a17acac597d9a03fa",
     "verification/m4/accounting.mjs": "ccb35e0c31e6adb4eb4c2f22341b125382606a4e1a5c4c4f4553b59e92f46526",
     "verification/m4/documentation.mjs": "7a0cb970a34ae325a702494c171ad7a92468fff9fda37f6af48fa8a800176970",
-    "verification/m4/extraction-lock.json.gz": "d1e79fbe5de53da267f4a050f400b3f4d1004186d0b68fcbf6dcd2e65e4a5790",
+    "verification/m4/extraction-lock.json.gz": "e645e201d4fbe7faf1e431d28c3e40621c50057b36ed85f31fd3e56e9c00b4c5",
     "verification/m4/gate.mjs": "f65c516f592ae9e8885a4be9f75bf2924bc9da0f7183e83aeb99549a274b148b",
     "verification/m4/implementation.mjs": "c0862e31bdf040733f84157b0c5522c94e0bc1f24e6db57a786bb2f91acfbd17",
     "verification/m4/inherited-boundaries.json": "0724a876b1e337aec268aea9b6dafbcd910cdc450d58e0af9e6564c17737acc8",
@@ -1821,8 +1821,8 @@
   },
   "conformance_workload_sha256": "1d5393dc46a500a31a245b1f79d7a34813d18fdc933e9944b2e316012e26f810",
   "binary": {
-    "path": "/dev/shm/noble-builds/pd2-lanes/mc2/cargo-target/debug/noble",
-    "sha256": "02410513070f88a3eeef77e1b334b42dcd0e1b0ba30893ef3f9d44236b2bbdd3"
+    "path": "/dev/shm/noble-builds/pd3-lanes/mc2/cargo-target/debug/noble",
+    "sha256": "7c08e1d620a35315a613f3870691e7f1f8a2169bac6cfcb30b7fc675e64dac66"
   },
   "versions": {
     "quality_rust": "rustc 1.96.0-nightly (ac7f9ec7d 2026-03-20)\nbinary: rustc\ncommit-hash: ac7f9ec7da74d37fd28667c86bf117a39ba5b02a\ncommit-date: 2026-03-20\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0-nightly\nLLVM version: 22.1.0",
@@ -1841,10 +1841,10 @@
       "cwd": ".",
       "environment": {},
       "log": "quality_rust-version.log",
-      "started_at": "2026-11-27T08:12:12.469Z",
+      "started_at": "2026-11-27T22:45:23.346Z",
       "exit": 0,
       "signal": null,
-      "finished_at": "2026-11-27T08:12:12.519Z",
+      "finished_at": "2026-11-27T22:45:23.398Z",
       "output_sha256": "84b4e7c5b7101a7898364d68a143152a0f12017def08ec96521325f45ce89d0f"
     },
     {
@@ -1856,10 +1856,10 @@
       "cwd": ".",
       "environment": {},
       "log": "lean-version.log",
-      "started_at": "2026-11-27T08:12:12.519Z",
+      "started_at": "2026-11-27T22:45:23.399Z",
       "exit": 0,
       "signal": null,
-      "finished_at": "2026-11-27T08:12:12.581Z",
+      "finished_at": "2026-11-27T22:45:23.451Z",
       "output_sha256": "eb22144228dd41cd51a0c84af4f976cd0cef473102dcf99b60be756b11f2b95a"
     },
     {
@@ -1871,10 +1871,10 @@
       "cwd": ".",
       "environment": {},
       "log": "lake-version.log",
-      "started_at": "2026-11-27T08:12:12.581Z",
+      "started_at": "2026-11-27T22:45:23.451Z",
       "exit": 0,
       "signal": null,
-      "finished_at": "2026-11-27T08:12:12.645Z",
+      "finished_at": "2026-11-27T22:45:23.507Z",
       "output_sha256": "165f92ed239a8c7db772bf5ee9d58c59357b489951582a12c86dc9d8e06b23a2"
     },
     {
@@ -1886,10 +1886,10 @@
       "cwd": ".",
       "environment": {},
       "log": "node-version.log",
-      "started_at": "2026-11-27T08:12:12.645Z",
+      "started_at": "2026-11-27T22:45:23.507Z",
       "exit": 0,
       "signal": null,
-      "finished_at": "2026-11-27T08:12:12.663Z",
+      "finished_at": "2026-11-27T22:45:23.523Z",
       "output_sha256": "3ebea09fcbed81499165f8bb4d650d8307e4a759136e5411b9a726504b8fc2ac"
     },
     {
@@ -1905,11 +1905,11 @@
       "cwd": ".",
       "environment": {},
       "log": "cli-build.log",
-      "started_at": "2026-11-27T08:12:12.663Z",
+      "started_at": "2026-11-27T22:45:23.523Z",
       "exit": 0,
       "signal": null,
-      "finished_at": "2026-11-27T08:13:08.298Z",
-      "output_sha256": "c36ee0a8ab2290d25f716c681b67a8a0cbafac534d896c12b42439b8dd42cfa8"
+      "finished_at": "2026-11-27T22:46:19.644Z",
+      "output_sha256": "cd3ac4d2f483eb4eaecd591c50692dace3d6236dfdd10a91d6973d788910025b"
     },
     {
       "label": "consumer-library-build",
@@ -1922,11 +1922,11 @@
       "cwd": "proofs/mc1",
       "environment": {},
       "log": "consumer-library-build.log",
-      "started_at": "2026-11-27T08:13:08.298Z",
+      "started_at": "2026-11-27T22:46:19.644Z",
       "exit": 0,
       "signal": null,
-      "finished_at": "2026-11-27T08:13:10.532Z",
-      "output_sha256": "eb0156228c74c3fabcdb4c480610249f854844018bb504ae4fa968ceaa173138"
+      "finished_at": "2026-11-27T22:46:21.449Z",
+      "output_sha256": "45ccd6210b858d4872eac8be7e30b9a1a1cff05e88dc3ac5ed4211eeb5453a2c"
     },
     {
       "label": "proof-build",
@@ -1937,10 +1937,10 @@
       "cwd": "proofs/mc2",
       "environment": {},
       "log": "proof-build.log",
-      "started_at": "2026-11-27T08:13:10.533Z",
+      "started_at": "2026-11-27T22:46:21.449Z",
       "exit": 0,
       "signal": null,
-      "finished_at": "2026-11-27T08:13:12.041Z",
+      "finished_at": "2026-11-27T22:46:22.679Z",
       "output_sha256": "2dfc0b59b3e1edf54b0da0ae43980245c0e769b85837aeb86c697099f0b0170a"
     },
     {
@@ -1954,10 +1954,10 @@
       "cwd": "proofs/mc2",
       "environment": {},
       "log": "proof-gate.log",
-      "started_at": "2026-11-27T08:13:12.041Z",
+      "started_at": "2026-11-27T22:46:22.679Z",
       "exit": 0,
       "signal": null,
-      "finished_at": "2026-11-27T08:13:15.170Z",
+      "finished_at": "2026-11-27T22:46:25.422Z",
       "output_sha256": "34426b035bac256a30d50f03eddc499552148a74f19312c89f77459b7fe74f92"
     },
     {
@@ -1972,28 +1972,28 @@
       "cwd": ".",
       "environment": {},
       "log": "workspace-tests.log",
-      "started_at": "2026-11-27T08:13:15.171Z",
+      "started_at": "2026-11-27T22:46:25.423Z",
       "exit": 0,
       "signal": null,
-      "finished_at": "2026-11-27T08:35:01.920Z",
-      "output_sha256": "58af02aee6c266e88e1e988525a7f5eb24f88b990148b4d9a5b51f94d148db00"
+      "finished_at": "2026-11-27T23:09:36.115Z",
+      "output_sha256": "1deadbcc67a855be30f1e5ee9191228e9fd51a3fe39458597f4990ad4b443adc"
     },
     {
       "label": "acceptance",
       "binary": "/nix/store/h4apbnz8p5fmjwcmzlaxcjm5vr70d97x-nodejs-slim-24.13.0/bin/node",
       "args": [
         "/home/brittonr/noble-builds/wt/pushd-integration/verification/mc2/gate.mjs",
-        "/dev/shm/noble-builds/pd2-lanes/mc2/cargo-target/debug/noble",
-        "/dev/shm/noble-builds/pd2-lanes/mc2/acceptance.json"
+        "/dev/shm/noble-builds/pd3-lanes/mc2/cargo-target/debug/noble",
+        "/dev/shm/noble-builds/pd3-lanes/mc2/acceptance.json"
       ],
       "cwd": ".",
       "environment": {},
       "log": "acceptance.log",
-      "started_at": "2026-11-27T08:35:01.921Z",
+      "started_at": "2026-11-27T23:09:36.117Z",
       "exit": 0,
       "signal": null,
-      "finished_at": "2026-11-27T09:46:17.785Z",
-      "output_sha256": "307819e60004214a3123468c8e2265abcb5629aadbea800b4764018e42f3c629"
+      "finished_at": "2026-11-28T00:25:35.127Z",
+      "output_sha256": "9b606ecce250185617d9f7aebbde9f2be82fcbf90aa5798f71b933522a45661f"
     },
     {
       "label": "extraction-check",
@@ -2001,7 +2001,7 @@
       "args": [
         "/home/brittonr/noble-builds/wt/pushd-integration/verification/m4/implementation.mjs",
         "check",
-        "/dev/shm/noble-builds/pd2-lanes/mc2/extraction-check"
+        "/dev/shm/noble-builds/pd3-lanes/mc2/extraction-check"
       ],
       "cwd": ".",
       "environment": {
@@ -2010,11 +2010,11 @@
         "CARGO_TARGET_DIR": ""
       },
       "log": "extraction-check.log",
-      "started_at": "2026-11-27T08:35:01.925Z",
+      "started_at": "2026-11-27T23:09:36.122Z",
       "exit": 0,
       "signal": null,
-      "finished_at": "2026-11-27T10:22:16.297Z",
-      "output_sha256": "be6ce09d64e9216e1ed01fb94e50c8224eae1cbd9475d57ea2bb946824fdea5e"
+      "finished_at": "2026-11-28T01:03:53.149Z",
+      "output_sha256": "6ae1c0336f8d839a5c8d81aefb350404a2a943a82592fb7382a3f6aab4a414d4"
     }
   ],
   "proof_gate": {
@@ -2032,8 +2032,8 @@
     ]
   },
   "acceptance": {
-    "path": "/dev/shm/noble-builds/pd2-lanes/mc2/acceptance.json",
-    "sha256": "cfb47f007af30a745aec06043a70291ab3c6012473df8c654b41cd474bbcc307",
+    "path": "/dev/shm/noble-builds/pd3-lanes/mc2/acceptance.json",
+    "sha256": "b5b0b8ca560bfa2a8d9b784565c373d567d7557d56269334cf69e06eb2e017df",
     "schema": "noble-mc2-acceptance/v1",
     "cases": [
       {
@@ -2100,9 +2100,9 @@
   },
   "extraction": {
     "status": "passed",
-    "path": "/dev/shm/noble-builds/pd2-lanes/mc2/extraction-check/implementation.json",
-    "sha256": "2023e7cdab7a15ef00344b2829562f7d287c3a40652bca196b19c5a03346f977",
-    "source_revision": "sha256:a11080767d927efa2f9d3b10d26f0d27ef81bdf1e2a17964135f4996dd4030e2",
+    "path": "/dev/shm/noble-builds/pd3-lanes/mc2/extraction-check/implementation.json",
+    "sha256": "615b566c8e7c92238d9e0e2c21bf28fe5954bbc358338e46f62d98ebf15fff08",
+    "source_revision": "sha256:d16516ad4d1d74e74affadda45bb4de53c0c961f76e0d0ed39954cc2dffc9fc1",
     "mc2": {
       "coverage": {
         "schema": "mc2-compiled-coverage/v2",
